@@ -1,0 +1,11 @@
+linters:
+  enable:
+    - govet
+    - errcheck
+    - staticcheck
+    - ineffassign
+    - typecheck
+    - unused
+
+issues:
+  exclude-use-default: false

@@ -1,0 +1,24 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-go@v5
+      with:
+        go-version: 1.23
+    - run: go mod download
+    - run: go test -v -race -coverprofile=coverage.out ./...
+    - name: Upload coverage
+      uses: codecov/codecov-action@v4
+    - name: Check coverage >90%
+      run: |
+        coverage=$(go tool cover -func=coverage.out | tail -1 | awk \"{print \\$3}\" | sed s/%//)
+        if [ \"$coverage\" -lt 90 ]; then exit 1; fi
