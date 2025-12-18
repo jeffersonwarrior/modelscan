@@ -1,0 +1,247 @@
+# github.com/nexora/modelscan/archives/examples.bak/agents
+archives/examples.bak/agents/main.go:10:2: no required module provides package github.com/nexora/modelscan/sdk/agents; to add it:
+	go get github.com/nexora/modelscan/sdk/agents
+# github.com/nexora/modelscan/archives/examples.bak/agents
+archives/examples.bak/agents/main.go:9:2: no required module provides package github.com/nexora/modelscan/sdk/ai; to add it:
+	go get github.com/nexora/modelscan/sdk/ai
+# github.com/nexora/modelscan/archives/examples.bak/agents
+archives/examples.bak/agents/main.go:12:2: no required module provides package github.com/nexora/modelscan/sdk/errors; to add it:
+	go get github.com/nexora/modelscan/sdk/errors
+# github.com/nexora/modelscan/archives/examples.bak/agents
+archives/examples.bak/agents/main.go:11:2: no required module provides package github.com/nexora/modelscan/sdk/oauth; to add it:
+	go get github.com/nexora/modelscan/sdk/oauth
+# github.com/nexora/modelscan/archives/examples.bak/agents
+archives/examples.bak/agents/main.go:13:2: no required module provides package github.com/nexora/modelscan/sdk/telemetry; to add it:
+	go get github.com/nexora/modelscan/sdk/telemetry
+FAIL	github.com/nexora/modelscan/archives/examples.bak/agents [setup failed]
+# github.com/nexora/modelscan/archives/examples.bak/basic
+archives/examples.bak/basic/main.go:11:2: no required module provides package github.com/nexora/modelscan/sdk/openai; to add it:
+	go get github.com/nexora/modelscan/sdk/openai
+FAIL	github.com/nexora/modelscan/archives/examples.bak/basic [setup failed]
+# github.com/nexora/modelscan/archives/examples.bak/multi-provider
+archives/examples.bak/multi-provider/main.go:12:2: no required module provides package github.com/nexora/modelscan/sdk/groq; to add it:
+	go get github.com/nexora/modelscan/sdk/groq
+# github.com/nexora/modelscan/archives/examples.bak/multi-provider
+archives/examples.bak/basic/main.go:11:2: no required module provides package github.com/nexora/modelscan/sdk/openai; to add it:
+	go get github.com/nexora/modelscan/sdk/openai
+# github.com/nexora/modelscan/archives/examples.bak/multi-provider
+archives/examples.bak/multi-provider/main.go:14:2: no required module provides package github.com/nexora/modelscan/sdk/together; to add it:
+	go get github.com/nexora/modelscan/sdk/together
+FAIL	github.com/nexora/modelscan/archives/examples.bak/multi-provider [setup failed]
+# github.com/nexora/modelscan/archives/examples.bak/multimodal
+archives/examples.bak/agents/main.go:9:2: no required module provides package github.com/nexora/modelscan/sdk/ai; to add it:
+	go get github.com/nexora/modelscan/sdk/ai
+# github.com/nexora/modelscan/archives/examples.bak/multimodal
+archives/examples.bak/multimodal/main.go:10:2: no required module provides package github.com/nexora/modelscan/sdk/multimodal; to add it:
+	go get github.com/nexora/modelscan/sdk/multimodal
+FAIL	github.com/nexora/modelscan/archives/examples.bak/multimodal [setup failed]
+# github.com/nexora/modelscan/archives/examples.bak/quickstart
+archives/examples.bak/agents/main.go:9:2: no required module provides package github.com/nexora/modelscan/sdk/ai; to add it:
+	go get github.com/nexora/modelscan/sdk/ai
+FAIL	github.com/nexora/modelscan/archives/examples.bak/quickstart [setup failed]
+# github.com/nexora/modelscan/archives/examples.bak/unified
+archives/examples.bak/unified/main.go:9:2: no required module provides package github.com/nexora/modelscan/sdk; to add it:
+	go get github.com/nexora/modelscan/sdk
+FAIL	github.com/nexora/modelscan/archives/examples.bak/unified [setup failed]
+# github.com/nexora/modelscan/archives/sdk.bak
+archives/sdk.bak/sdk.go:26:2: no required module provides package github.com/nexora/modelscan/sdk/anthropic; to add it:
+	go get github.com/nexora/modelscan/sdk/anthropic
+# github.com/nexora/modelscan/archives/sdk.bak
+archives/sdk.bak/sdk.go:27:2: no required module provides package github.com/nexora/modelscan/sdk/cohere; to add it:
+	go get github.com/nexora/modelscan/sdk/cohere
+# github.com/nexora/modelscan/archives/sdk.bak
+archives/sdk.bak/sdk.go:28:2: no required module provides package github.com/nexora/modelscan/sdk/deepinfra; to add it:
+	go get github.com/nexora/modelscan/sdk/deepinfra
+# github.com/nexora/modelscan/archives/sdk.bak
+archives/sdk.bak/sdk.go:29:2: no required module provides package github.com/nexora/modelscan/sdk/deepseek; to add it:
+	go get github.com/nexora/modelscan/sdk/deepseek
+# github.com/nexora/modelscan/archives/sdk.bak
+archives/sdk.bak/sdk.go:30:2: no required module provides package github.com/nexora/modelscan/sdk/fireworks; to add it:
+	go get github.com/nexora/modelscan/sdk/fireworks
+# github.com/nexora/modelscan/archives/sdk.bak
+archives/sdk.bak/sdk.go:31:2: no required module provides package github.com/nexora/modelscan/sdk/google; to add it:
+	go get github.com/nexora/modelscan/sdk/google
+# github.com/nexora/modelscan/archives/sdk.bak
+archives/examples.bak/multi-provider/main.go:12:2: no required module provides package github.com/nexora/modelscan/sdk/groq; to add it:
+	go get github.com/nexora/modelscan/sdk/groq
+# github.com/nexora/modelscan/archives/sdk.bak
+archives/sdk.bak/sdk.go:33:2: no required module provides package github.com/nexora/modelscan/sdk/hyperbolic; to add it:
+	go get github.com/nexora/modelscan/sdk/hyperbolic
+# github.com/nexora/modelscan/archives/sdk.bak
+archives/sdk.bak/sdk.go:34:2: no required module provides package github.com/nexora/modelscan/sdk/kimi; to add it:
+	go get github.com/nexora/modelscan/sdk/kimi
+# github.com/nexora/modelscan/archives/sdk.bak
+archives/sdk.bak/sdk.go:35:2: no required module provides package github.com/nexora/modelscan/sdk/minimax; to add it:
+	go get github.com/nexora/modelscan/sdk/minimax
+# github.com/nexora/modelscan/archives/sdk.bak
+archives/sdk.bak/sdk.go:36:2: no required module provides package github.com/nexora/modelscan/sdk/mistral; to add it:
+	go get github.com/nexora/modelscan/sdk/mistral
+# github.com/nexora/modelscan/archives/sdk.bak
+archives/sdk.bak/sdk.go:37:2: no required module provides package github.com/nexora/modelscan/sdk/nanogpt; to add it:
+	go get github.com/nexora/modelscan/sdk/nanogpt
+# github.com/nexora/modelscan/archives/sdk.bak
+archives/examples.bak/basic/main.go:11:2: no required module provides package github.com/nexora/modelscan/sdk/openai; to add it:
+	go get github.com/nexora/modelscan/sdk/openai
+# github.com/nexora/modelscan/archives/sdk.bak
+archives/sdk.bak/sdk.go:39:2: no required module provides package github.com/nexora/modelscan/sdk/openrouter; to add it:
+	go get github.com/nexora/modelscan/sdk/openrouter
+# github.com/nexora/modelscan/archives/sdk.bak
+archives/sdk.bak/sdk.go:40:2: no required module provides package github.com/nexora/modelscan/sdk/perplexity; to add it:
+	go get github.com/nexora/modelscan/sdk/perplexity
+# github.com/nexora/modelscan/archives/sdk.bak
+archives/sdk.bak/sdk.go:41:2: no required module provides package github.com/nexora/modelscan/sdk/replicate; to add it:
+	go get github.com/nexora/modelscan/sdk/replicate
+# github.com/nexora/modelscan/archives/sdk.bak
+archives/sdk.bak/sdk.go:42:2: no required module provides package github.com/nexora/modelscan/sdk/synthetic; to add it:
+	go get github.com/nexora/modelscan/sdk/synthetic
+# github.com/nexora/modelscan/archives/sdk.bak
+archives/examples.bak/multi-provider/main.go:14:2: no required module provides package github.com/nexora/modelscan/sdk/together; to add it:
+	go get github.com/nexora/modelscan/sdk/together
+# github.com/nexora/modelscan/archives/sdk.bak
+archives/sdk.bak/sdk.go:44:2: no required module provides package github.com/nexora/modelscan/sdk/vibe; to add it:
+	go get github.com/nexora/modelscan/sdk/vibe
+# github.com/nexora/modelscan/archives/sdk.bak
+archives/sdk.bak/sdk.go:45:2: no required module provides package github.com/nexora/modelscan/sdk/xai; to add it:
+	go get github.com/nexora/modelscan/sdk/xai
+# github.com/nexora/modelscan/archives/sdk.bak
+archives/sdk.bak/sdk.go:46:2: no required module provides package github.com/nexora/modelscan/sdk/zai; to add it:
+	go get github.com/nexora/modelscan/sdk/zai
+FAIL	github.com/nexora/modelscan/archives/sdk.bak [setup failed]
+# github.com/nexora/modelscan/archives/sdk.bak/agents
+archives/examples.bak/agents/main.go:9:2: no required module provides package github.com/nexora/modelscan/sdk/ai; to add it:
+	go get github.com/nexora/modelscan/sdk/ai
+FAIL	github.com/nexora/modelscan/archives/sdk.bak/agents [setup failed]
+# github.com/nexora/modelscan/archives/sdk.bak/ai
+archives/examples.bak/unified/main.go:9:2: no required module provides package github.com/nexora/modelscan/sdk; to add it:
+	go get github.com/nexora/modelscan/sdk
+# github.com/nexora/modelscan/archives/sdk.bak/ai
+archives/examples.bak/agents/main.go:10:2: no required module provides package github.com/nexora/modelscan/sdk/agents; to add it:
+	go get github.com/nexora/modelscan/sdk/agents
+# github.com/nexora/modelscan/archives/sdk.bak/ai
+archives/sdk.bak/sdk.go:26:2: no required module provides package github.com/nexora/modelscan/sdk/anthropic; to add it:
+	go get github.com/nexora/modelscan/sdk/anthropic
+# github.com/nexora/modelscan/archives/sdk.bak/ai
+archives/sdk.bak/ai/client.go:52:2: no required module provides package github.com/nexora/modelscan/sdk/azure; to add it:
+	go get github.com/nexora/modelscan/sdk/azure
+# github.com/nexora/modelscan/archives/sdk.bak/ai
+archives/sdk.bak/ai/client.go:50:2: no required module provides package github.com/nexora/modelscan/sdk/baseten; to add it:
+	go get github.com/nexora/modelscan/sdk/baseten
+# github.com/nexora/modelscan/archives/sdk.bak/ai
+archives/sdk.bak/ai/client.go:48:2: no required module provides package github.com/nexora/modelscan/sdk/cerebras; to add it:
+	go get github.com/nexora/modelscan/sdk/cerebras
+# github.com/nexora/modelscan/archives/sdk.bak/ai
+archives/examples.bak/agents/main.go:12:2: no required module provides package github.com/nexora/modelscan/sdk/errors; to add it:
+	go get github.com/nexora/modelscan/sdk/errors
+# github.com/nexora/modelscan/archives/sdk.bak/ai
+archives/sdk.bak/ai/client.go:53:2: no required module provides package github.com/nexora/modelscan/sdk/fal; to add it:
+	go get github.com/nexora/modelscan/sdk/fal
+# github.com/nexora/modelscan/archives/sdk.bak/ai
+archives/sdk.bak/sdk.go:31:2: no required module provides package github.com/nexora/modelscan/sdk/google; to add it:
+	go get github.com/nexora/modelscan/sdk/google
+# github.com/nexora/modelscan/archives/sdk.bak/ai
+archives/sdk.bak/ai/client.go:49:2: no required module provides package github.com/nexora/modelscan/sdk/luma; to add it:
+	go get github.com/nexora/modelscan/sdk/luma
+# github.com/nexora/modelscan/archives/sdk.bak/ai
+archives/sdk.bak/sdk.go:36:2: no required module provides package github.com/nexora/modelscan/sdk/mistral; to add it:
+	go get github.com/nexora/modelscan/sdk/mistral
+# github.com/nexora/modelscan/archives/sdk.bak/ai
+archives/examples.bak/multimodal/main.go:10:2: no required module provides package github.com/nexora/modelscan/sdk/multimodal; to add it:
+	go get github.com/nexora/modelscan/sdk/multimodal
+# github.com/nexora/modelscan/archives/sdk.bak/ai
+archives/examples.bak/agents/main.go:11:2: no required module provides package github.com/nexora/modelscan/sdk/oauth; to add it:
+	go get github.com/nexora/modelscan/sdk/oauth
+# github.com/nexora/modelscan/archives/sdk.bak/ai
+archives/examples.bak/basic/main.go:11:2: no required module provides package github.com/nexora/modelscan/sdk/openai; to add it:
+	go get github.com/nexora/modelscan/sdk/openai
+# github.com/nexora/modelscan/archives/sdk.bak/ai
+archives/sdk.bak/ai/client.go:51:2: no required module provides package github.com/nexora/modelscan/sdk/opencoder; to add it:
+	go get github.com/nexora/modelscan/sdk/opencoder
+# github.com/nexora/modelscan/archives/sdk.bak/ai
+archives/examples.bak/agents/main.go:13:2: no required module provides package github.com/nexora/modelscan/sdk/telemetry; to add it:
+	go get github.com/nexora/modelscan/sdk/telemetry
+FAIL	github.com/nexora/modelscan/archives/sdk.bak/ai [setup failed]
+# github.com/nexora/modelscan/archives/sdk.bak/baseten
+archives/examples.bak/agents/main.go:9:2: no required module provides package github.com/nexora/modelscan/sdk/ai; to add it:
+	go get github.com/nexora/modelscan/sdk/ai
+FAIL	github.com/nexora/modelscan/archives/sdk.bak/baseten [setup failed]
+# github.com/nexora/modelscan/archives/sdk.bak/cerebras
+archives/examples.bak/agents/main.go:9:2: no required module provides package github.com/nexora/modelscan/sdk/ai; to add it:
+	go get github.com/nexora/modelscan/sdk/ai
+FAIL	github.com/nexora/modelscan/archives/sdk.bak/cerebras [setup failed]
+# github.com/nexora/modelscan/archives/sdk.bak/luma
+archives/examples.bak/agents/main.go:9:2: no required module provides package github.com/nexora/modelscan/sdk/ai; to add it:
+	go get github.com/nexora/modelscan/sdk/ai
+FAIL	github.com/nexora/modelscan/archives/sdk.bak/luma [setup failed]
+# github.com/nexora/modelscan/archives/sdk.bak/multimodal
+archives/examples.bak/agents/main.go:9:2: no required module provides package github.com/nexora/modelscan/sdk/ai; to add it:
+	go get github.com/nexora/modelscan/sdk/ai
+FAIL	github.com/nexora/modelscan/archives/sdk.bak/multimodal [setup failed]
+# github.com/nexora/modelscan/archives/sdk.bak/oauth
+archives/examples.bak/agents/main.go:9:2: no required module provides package github.com/nexora/modelscan/sdk/ai; to add it:
+	go get github.com/nexora/modelscan/sdk/ai
+FAIL	github.com/nexora/modelscan/archives/sdk.bak/oauth [setup failed]
+# github.com/nexora/modelscan/archives/sdk.bak/telemetry
+archives/examples.bak/agents/main.go:9:2: no required module provides package github.com/nexora/modelscan/sdk/ai; to add it:
+	go get github.com/nexora/modelscan/sdk/ai
+# github.com/nexora/modelscan/archives/sdk.bak/telemetry
+archives/examples.bak/agents/main.go:12:2: no required module provides package github.com/nexora/modelscan/sdk/errors; to add it:
+	go get github.com/nexora/modelscan/sdk/errors
+FAIL	github.com/nexora/modelscan/archives/sdk.bak/telemetry [setup failed]
+# github.com/nexora/modelscan/archives/sdk.bak/errors
+archives/sdk.bak/errors/errors.go:5:2: "net/http" imported and not used
+	github.com/nexora/modelscan		coverage: 0.0% of statements
+ok  	github.com/nexora/modelscan/archives/sdk.bak/anthropic	0.011s	coverage: 83.7% of statements
+	github.com/nexora/modelscan/archives/sdk.bak/azure		coverage: 0.0% of statements
+	github.com/nexora/modelscan/archives/sdk.bak/cohere		coverage: 0.0% of statements
+	github.com/nexora/modelscan/archives/sdk.bak/deepinfra		coverage: 0.0% of statements
+	github.com/nexora/modelscan/archives/sdk.bak/deepseek		coverage: 0.0% of statements
+FAIL	github.com/nexora/modelscan/archives/sdk.bak/errors [build failed]
+	github.com/nexora/modelscan/archives/sdk.bak/fal		coverage: 0.0% of statements
+	github.com/nexora/modelscan/archives/sdk.bak/fireworks		coverage: 0.0% of statements
+ok  	github.com/nexora/modelscan/archives/sdk.bak/google	0.018s	coverage: 82.9% of statements
+	github.com/nexora/modelscan/archives/sdk.bak/groq		coverage: 0.0% of statements
+	github.com/nexora/modelscan/archives/sdk.bak/hyperbolic		coverage: 0.0% of statements
+	github.com/nexora/modelscan/archives/sdk.bak/kimi		coverage: 0.0% of statements
+	github.com/nexora/modelscan/archives/sdk.bak/minimax		coverage: 0.0% of statements
+ok  	github.com/nexora/modelscan/archives/sdk.bak/mistral	0.019s	coverage: 79.5% of statements
+	github.com/nexora/modelscan/archives/sdk.bak/nanogpt		coverage: 0.0% of statements
+ok  	github.com/nexora/modelscan/archives/sdk.bak/openai	0.018s	coverage: 81.0% of statements
+	github.com/nexora/modelscan/archives/sdk.bak/opencoder		coverage: 0.0% of statements
+	github.com/nexora/modelscan/archives/sdk.bak/openrouter		coverage: 0.0% of statements
+	github.com/nexora/modelscan/archives/sdk.bak/perplexity		coverage: 0.0% of statements
+	github.com/nexora/modelscan/archives/sdk.bak/replicate		coverage: 0.0% of statements
+	github.com/nexora/modelscan/archives/sdk.bak/synthetic		coverage: 0.0% of statements
+	github.com/nexora/modelscan/archives/sdk.bak/together		coverage: 0.0% of statements
+	github.com/nexora/modelscan/archives/sdk.bak/vibe		coverage: 0.0% of statements
+	github.com/nexora/modelscan/archives/sdk.bak/xai		coverage: 0.0% of statements
+	github.com/nexora/modelscan/archives/sdk.bak/zai		coverage: 0.0% of statements
+	github.com/nexora/modelscan/cmd/demo		coverage: 0.0% of statements
+	github.com/nexora/modelscan/cmd/modelscan		coverage: 0.0% of statements
+	github.com/nexora/modelscan/cmd/seed-db		coverage: 0.0% of statements
+ok  	github.com/nexora/modelscan/config	0.008s	coverage: 88.2% of statements
+ok  	github.com/nexora/modelscan/providers	1.033s	coverage: 33.0% of statements
+	github.com/nexora/modelscan/scraper		coverage: 0.0% of statements
+ok  	github.com/nexora/modelscan/sdk/agent	1.743s	coverage: 86.5% of statements
+ok  	github.com/nexora/modelscan/sdk/cli	0.031s	coverage: 71.0% of statements
+2025/12/18 18:03:57 Seeding initial rate limits for 15 core providers...
+2025/12/18 18:03:57 ✅ Inserted 50 rate limits for 15 providers
+2025/12/18 18:03:57 Seeding initial rate limits for 15 core providers...
+2025/12/18 18:03:57 ✅ Inserted 50 rate limits for 15 providers
+2025/12/18 18:03:57 Seeding initial rate limits for 15 core providers...
+2025/12/18 18:03:57 ✅ Inserted 50 rate limits for 15 providers
+2025/12/18 18:03:57 Seeding initial rate limits for 15 core providers...
+2025/12/18 18:03:57 ✅ Inserted 50 rate limits for 15 providers
+--- FAIL: TestEstimateTokens_ReasonableApproximation (0.00s)
+    bucket_test.go:271: EstimateTokens("The quick brown fox") = 4, expected 5
+2025/12/18 18:03:57 Seeding initial rate limits for 15 core providers...
+2025/12/18 18:03:57 ✅ Inserted 50 rate limits for 15 providers
+2025/12/18 18:03:57 Seeding initial rate limits for 15 core providers...
+2025/12/18 18:03:57 ✅ Inserted 50 rate limits for 15 providers
+FAIL
+coverage: 90.9% of statements
+FAIL	github.com/nexora/modelscan/sdk/ratelimit	0.239s
+ok  	github.com/nexora/modelscan/sdk/router	0.082s	coverage: 83.8% of statements
+ok  	github.com/nexora/modelscan/sdk/storage	0.018s	coverage: 33.3% of statements
+ok  	github.com/nexora/modelscan/sdk/stream	0.056s	coverage: 88.3% of statements
+ok  	github.com/nexora/modelscan/storage	0.027s	coverage: 63.9% of statements
+FAIL

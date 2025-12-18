@@ -1,0 +1,4 @@
+# Generated Code Documentation
+# This directory contains auto-generated API documentation
+*.md
+!README.md

@@ -1,0 +1,123 @@
+# Binaries
+modelscan
+pv
+validator
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Test binaries
+*.test
+
+# Coverage
+*.out
+*.coverage
+coverage.txt
+coverage.html
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.iml
+
+# Databases (SQLite)
+*.db
+*.db-shm
+*.db-wal
+providers.db
+providers_backup.db
+test_providers.db
+*.sqlite
+*.sqlite3
+
+# Examples binaries
+examples/basic/basic
+examples/multi-provider/multi-provider
+examples/unified/unified
+examples/*/main
+
+# Go workspace
+go.work
+go.work.sum
+
+# Environment & Secrets
+.env
+.env.local
+.env.*.local
+.env.development
+.env.production
+.env.test
+# But allow .env.example as a template
+!.env.example
+*.key
+*.pem
+*.p12
+*.pfx
+*.cer
+*.crt
+*secret*
+*token*
+*password*
+*.creds
+credentials.json
+config.json
+api-keys.txt
+test-config.txt
+keys.txt
+
+# API Keys in any format
+*_API_KEY*
+*_SECRET*
+*_TOKEN*
+*apikey*
+*api-key*
+
+# Logs
+*.log
+logs/
+*.log.*
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.bak
+*.backup
+
+# Build artifacts
+dist/
+build/
+bin/
+vendor/
+!vendor/modules.txt
+
+# OS specific
+Thumbs.db
+.DS_Store
+*.swp
+*.swo
+*~
+
+# Documentation builds
+docs/_build/
+site/
+
+# Node (if any docs tooling)
+node_modules/
+
+# Python (if any tooling)
+__pycache__/
+*.py[cod]
+venv/
+.venv/
+
+# Misc
+*.orig
+.tags
+tags
+archives/

@@ -299,11 +299,18 @@ func TestOpenAIProvider_EnrichModelDetails(t *testing.T) {
 		modelID       string
 		checkSupports bool
 		checkContext  bool
+		expectVision  bool
+		expectReason  bool
 	}{
-		{"GPT-4", "gpt-4", true, true},
-		{"GPT-4 Turbo", "gpt-4-turbo-preview", true, true},
-		{"GPT-3.5", "gpt-3.5-turbo", true, true},
-		{"Unknown", "unknown-model", true, false},
+		{"GPT-4", "gpt-4", true, true, false, true},
+		{"GPT-4 Turbo", "gpt-4-turbo-preview", true, true, true, true},
+		{"GPT-3.5", "gpt-3.5-turbo", true, true, false, false},
+		{"GPT-4o", "gpt-4o", true, true, true, true},
+		{"GPT-4o-mini", "gpt-4o-mini", true, true, true, false},
+		{"O1", "o1-2024-12-17", true, true, false, true},
+		{"O1-mini", "o1-mini", true, true, false, true},
+		{"O3", "o3-mini", true, true, true, true},
+		{"Unknown", "unknown-model", true, false, false, false},
 	}
 	
 	for _, tt := range tests {
@@ -325,6 +332,14 @@ func TestOpenAIProvider_EnrichModelDetails(t *testing.T) {
 			
 			if tt.checkContext && enriched.ContextWindow == 0 {
 				t.Error("Expected ContextWindow to be set")
+			}
+			
+			// Check vision and reasoning
+			if enriched.SupportsImages != tt.expectVision {
+				t.Errorf("Expected SupportsImages=%v, got %v", tt.expectVision, enriched.SupportsImages)
+			}
+			if enriched.CanReason != tt.expectReason {
+				t.Errorf("Expected CanReason=%v, got %v", tt.expectReason, enriched.CanReason)
 			}
 		})
 	}

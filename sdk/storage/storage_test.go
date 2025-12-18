@@ -3227,10 +3227,157 @@ func TestAgentRepository_UpdateStatus_ContextCancel(t *testing.T) {
 	s := NewStorage(db, time.Hour)
 	
 	ctx, cancel := context.WithCancel(context.Background())
-	cancel()
+	cancel() // Cancel immediately
 	
-	err := s.Agents.UpdateStatus(ctx, "agent-id", "active")
+	err := s.Agents.UpdateStatus(ctx, "test-agent", "active")
+	if err == nil || !strings.Contains(err.Error(), "context") {
+		t.Error("Expected context cancellation error")
+	}
+}
+
+func TestTeamRepository_AddMember_Errors(t *testing.T) {
+	tempDir := t.TempDir()
+	dbPath := filepath.Join(tempDir, "test.db")
+	adb, err := NewAgentDB(dbPath)
+	if err != nil {
+		t.Fatalf("Failed to create test database: %v", err)
+	}
+	defer adb.Close()
+	
+	teamRepo := NewTeamRepository(adb.GetDB())
+	
+	// Test adding member to non-existent team
+	ctx := context.Background()
+	err = teamRepo.AddMember(ctx, "non-existent-team", "agent-1", "member")
 	if err == nil {
-		t.Error("Expected context canceled error")
+		t.Error("Expected error when adding member to non-existent team")
+	}
+}
+
+func TestTeamRepository_RemoveMember_Errors(t *testing.T) {
+	tempDir := t.TempDir()
+	dbPath := filepath.Join(tempDir, "test.db")
+	adb, err := NewAgentDB(dbPath)
+	if err != nil {
+		t.Fatalf("Failed to create test database: %v", err)
+	}
+	defer adb.Close()
+	
+	teamRepo := NewTeamRepository(adb.GetDB())
+	
+	// Test removing member from non-existent team
+	ctx := context.Background()
+	err = teamRepo.RemoveMember(ctx, "non-existent-team", "agent-1")
+	if err == nil {
+		t.Error("Expected error when removing member from non-existent team")
+	}
+}
+
+func TestTeamRepository_UpdateMemberRole_Errors(t *testing.T) {
+	tempDir := t.TempDir()
+	dbPath := filepath.Join(tempDir, "test.db")
+	adb, err := NewAgentDB(dbPath)
+	if err != nil {
+		t.Fatalf("Failed to create test database: %v", err)
+	}
+	defer adb.Close()
+	
+	teamRepo := NewTeamRepository(adb.GetDB())
+	
+	// Test updating role for non-existent membership
+	ctx := context.Background()
+	err = teamRepo.UpdateMemberRole(ctx, "non-existent-team", "agent-1", "admin")
+	if err == nil {
+		t.Error("Expected error when updating non-existent membership")
+	}
+}
+
+func TestToolExecutionRepository_MarkCompleted_Errors(t *testing.T) {
+	tempDir := t.TempDir()
+	dbPath := filepath.Join(tempDir, "test.db")
+	adb, err := NewAgentDB(dbPath)
+	if err != nil {
+		t.Fatalf("Failed to create test database: %v", err)
+	}
+	defer adb.Close()
+	
+	toolRepo := NewToolExecutionRepository(adb.GetDB())
+	
+	// Test marking non-existent execution as completed
+	ctx := context.Background()
+	err = toolRepo.MarkCompleted(ctx, "non-existent-id", "success", "completed", 100)
+	if err == nil {
+		t.Error("Expected error when marking non-existent execution as completed")
+	}
+}
+
+func TestToolExecutionRepository_MarkFailed_Errors(t *testing.T) {
+	tempDir := t.TempDir()
+	dbPath := filepath.Join(tempDir, "test.db")
+	adb, err := NewAgentDB(dbPath)
+	if err != nil {
+		t.Fatalf("Failed to create test database: %v", err)
+	}
+	defer adb.Close()
+	
+	toolRepo := NewToolExecutionRepository(adb.GetDB())
+	
+	// Test marking non-existent execution as failed
+	ctx := context.Background()
+	err = toolRepo.MarkFailed(ctx, "non-existent-id", "test error", 100)
+	if err == nil {
+		t.Error("Expected error when marking non-existent execution as failed")
+	}
+}
+
+func TestToolExecutionRepository_DeleteByTask_Success(t *testing.T) {
+	tempDir := t.TempDir()
+	dbPath := filepath.Join(tempDir, "test.db")
+	adb, err := NewAgentDB(dbPath)
+	if err != nil {
+		t.Fatalf("Failed to create test database: %v", err)
+	}
+	defer adb.Close()
+	
+	toolRepo := NewToolExecutionRepository(adb.GetDB())
+	taskRepo := NewTaskRepository(adb.GetDB())
+	agentRepo := NewAgentRepository(adb.GetDB())
+	
+	// Create task and agent
+	ctx := context.Background()
+	agent := &Agent{ID: "agent-1", Name: "Test Agent"}
+	if err := agentRepo.Create(ctx, agent); err != nil {
+		t.Fatalf("Failed to create agent: %v", err)
+	}
+	
+	task := &Task{ID: "task-1", AgentID: "agent-1", Status: "pending"}
+	if err := taskRepo.Create(ctx, task); err != nil {
+		t.Fatalf("Failed to create task: %v", err)
+	}
+	
+	// Create tool execution
+	execution := &ToolExecution{
+		ID:       "exec-1",
+		TaskID:   "task-1",
+		AgentID:  "agent-1",
+		ToolName: "test-tool",
+		Status:   "completed",
+	}
+	if err := toolRepo.Create(ctx, execution); err != nil {
+		t.Fatalf("Failed to create execution: %v", err)
+	}
+	
+	// Delete by task
+	if err := toolRepo.DeleteByTask(ctx, "task-1"); err != nil {
+		t.Errorf("DeleteByTask failed: %v", err)
+	}
+	
+	// Verify deleted
+	executions, err := toolRepo.ListByTask(ctx, "task-1", 10, 0)
+	if err != nil {
+		t.Errorf("ListByTask failed: %v", err)
+	}
+	if len(executions) != 0 {
+		t.Errorf("Expected 0 executions after delete, got %d", len(executions))
 	}
 }

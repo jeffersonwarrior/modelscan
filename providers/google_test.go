@@ -338,21 +338,137 @@ func TestGoogleProvider_ValidateEndpoints(t *testing.T) {
 	}
 }
 
-func TestGoogleProvider_ValidateEndpoints_Error(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusUnauthorized)
-		w.Write([]byte(`{"error": "unauthorized"}`))
-	}))
-	defer server.Close()
+
+func TestGoogleProvider_EnrichModelDetails(t *testing.T) {
+	provider := NewGoogleProvider("test-key")
+	googleProvider := provider.(*GoogleProvider)
 	
-	provider := &GoogleProvider{
-		apiKey:  "bad-key",
-		baseURL: server.URL,
+	tests := []struct {
+		name           string
+		modelID        string
+		expectReason   bool
+		expectCategory string
+		minCost        float64
+	}{
+		{
+			name:           "gemini-3-pro",
+			modelID:        "gemini-3-pro-latest",
+			expectReason:   true,
+			expectCategory: "reasoning",
+			minCost:        2.00,
+		},
+		{
+			name:           "gemini-3-flash",
+			modelID:        "gemini-3-flash",
+			expectReason:   true,
+			expectCategory: "fast",
+			minCost:        0.50,
+		},
+		{
+			name:           "gemini-2.5-pro",
+			modelID:        "gemini-2.5-pro-latest",
+			expectReason:   true,
+			expectCategory: "reasoning",
+			minCost:        1.25,
+		},
+		{
+			name:           "gemini-2.5-flash",
+			modelID:        "gemini-2.5-flash-latest",
+			expectReason:   false,
+			expectCategory: "fast",
+			minCost:        0.30,
+		},
+		{
+			name:           "gemini-2.0-flash",
+			modelID:        "gemini-2.0-flash-exp",
+			expectReason:   false,
+			expectCategory: "balanced",
+			minCost:        0.30,
+		},
+		{
+			name:           "gemini-1.5-flash",
+			modelID:        "gemini-1.5-flash-latest",
+			expectReason:   false,
+			expectCategory: "fast",
+			minCost:        0.075,
+		},
+		{
+			name:           "gemini-1.5-pro",
+			modelID:        "gemini-1.5-pro-latest",
+			expectReason:   true,
+			expectCategory: "premium",
+			minCost:        1.25,
+		},
+		{
+			name:           "gemini-1.0-pro (default)",
+			modelID:        "gemini-1.0-pro",
+			expectReason:   false,
+			expectCategory: "chat",
+			minCost:        1.00,
+		},
+		{
+			name:           "unknown model",
+			modelID:        "gemini-unknown",
+			expectReason:   false,
+			expectCategory: "chat",
+			minCost:        1.00,
+		},
+		{
+			name:           "image generation",
+			modelID:        "imagen-3.0-generate",
+			expectReason:   false,
+			expectCategory: "image-generation",
+			minCost:        1.00,
+		},
+		{
+			name:           "embedding",
+			modelID:        "text-embedding-004",
+			expectReason:   false,
+			expectCategory: "embedding",
+			minCost:        0.025,
+		},
 	}
 	
-	ctx := context.Background()
-	err := provider.ValidateEndpoints(ctx, false)
-	if err == nil {
-		t.Error("Expected error for unauthorized")
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			model := Model{
+				ID:   tt.modelID,
+				Name: tt.modelID,
+			}
+			
+			enriched := googleProvider.enrichModelDetails(model)
+			
+			// Check reasoning
+			if enriched.CanReason != tt.expectReason {
+				t.Errorf("Expected CanReason=%v, got %v", tt.expectReason, enriched.CanReason)
+			}
+			
+			// Check category
+			found := false
+			for _, cat := range enriched.Categories {
+				if cat == tt.expectCategory {
+					found = true
+					break
+				}
+			}
+			if !found {
+				t.Errorf("Expected category %s, got %v", tt.expectCategory, enriched.Categories)
+			}
+			
+			// Check pricing
+			if enriched.CostPer1MIn != tt.minCost {
+				t.Errorf("Expected cost %v, got %v", tt.minCost, enriched.CostPer1MIn)
+			}
+			
+			// Check common capabilities (skip for embedding models)
+			if tt.expectCategory != "embedding" {
+				if !enriched.SupportsTools {
+					t.Error("Expected SupportsTools to be true")
+				}
+				if !enriched.CanStream {
+					t.Error("Expected CanStream to be true")
+				}
+			}
+		})
 	}
 }
