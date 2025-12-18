@@ -221,7 +221,7 @@ func TestGoogleProvider_TestModel(t *testing.T) {
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
-		
+
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`{
@@ -240,18 +240,18 @@ func TestGoogleProvider_TestModel(t *testing.T) {
 		}`))
 	}))
 	defer server.Close()
-	
+
 	provider := &GoogleProvider{
 		apiKey:  "test-key",
 		baseURL: server.URL,
 	}
-	
+
 	ctx := context.Background()
 	err := provider.TestModel(ctx, "gemini-1.5-flash", false)
 	if err != nil {
 		t.Errorf("TestModel failed: %v", err)
 	}
-	
+
 	err = provider.TestModel(ctx, "gemini-1.5-flash", true)
 	if err != nil {
 		t.Errorf("TestModel verbose failed: %v", err)
@@ -264,12 +264,12 @@ func TestGoogleProvider_TestModel_Error(t *testing.T) {
 		w.Write([]byte(`{"error": {"message": "invalid model"}}`))
 	}))
 	defer server.Close()
-	
+
 	provider := &GoogleProvider{
 		apiKey:  "test-key",
 		baseURL: server.URL,
 	}
-	
+
 	ctx := context.Background()
 	err := provider.TestModel(ctx, "invalid", false)
 	if err == nil {
@@ -303,18 +303,18 @@ func TestGoogleProvider_ListModels_HTTPMock(t *testing.T) {
 		}`))
 	}))
 	defer server.Close()
-	
+
 	provider := &GoogleProvider{
 		apiKey:  "test-key",
 		baseURL: server.URL,
 	}
-	
+
 	ctx := context.Background()
 	models, err := provider.ListModels(ctx, false)
 	if err != nil {
 		t.Fatalf("ListModels failed: %v", err)
 	}
-	
+
 	if len(models) < 2 {
 		t.Errorf("Expected at least 2 models, got %d", len(models))
 	}
@@ -326,12 +326,12 @@ func TestGoogleProvider_ValidateEndpoints(t *testing.T) {
 		w.Write([]byte(`{"models": []}`))
 	}))
 	defer server.Close()
-	
+
 	provider := &GoogleProvider{
 		apiKey:  "test-key",
 		baseURL: server.URL,
 	}
-	
+
 	ctx := context.Background()
 	err := provider.ValidateEndpoints(ctx, false)
 	if err != nil {
@@ -339,11 +339,10 @@ func TestGoogleProvider_ValidateEndpoints(t *testing.T) {
 	}
 }
 
-
 func TestGoogleProvider_EnrichModelDetails(t *testing.T) {
 	provider := NewGoogleProvider("test-key")
 	googleProvider := provider.(*GoogleProvider)
-	
+
 	tests := []struct {
 		name           string
 		modelID        string
@@ -429,21 +428,21 @@ func TestGoogleProvider_EnrichModelDetails(t *testing.T) {
 			minCost:        0.025,
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			model := Model{
 				ID:   tt.modelID,
 				Name: tt.modelID,
 			}
-			
+
 			enriched := googleProvider.enrichModelDetails(model)
-			
+
 			// Check reasoning
 			if enriched.CanReason != tt.expectReason {
 				t.Errorf("Expected CanReason=%v, got %v", tt.expectReason, enriched.CanReason)
 			}
-			
+
 			// Check category
 			found := false
 			for _, cat := range enriched.Categories {
@@ -455,12 +454,12 @@ func TestGoogleProvider_EnrichModelDetails(t *testing.T) {
 			if !found {
 				t.Errorf("Expected category %s, got %v", tt.expectCategory, enriched.Categories)
 			}
-			
+
 			// Check pricing
 			if enriched.CostPer1MIn != tt.minCost {
 				t.Errorf("Expected cost %v, got %v", tt.minCost, enriched.CostPer1MIn)
 			}
-			
+
 			// Check common capabilities (skip for embedding models)
 			if tt.expectCategory != "embedding" {
 				if !enriched.SupportsTools {
@@ -492,22 +491,22 @@ func TestGoogleProvider_ListModels_Verbose(t *testing.T) {
 		}`))
 	}))
 	defer server.Close()
-	
+
 	provider := &GoogleProvider{
 		apiKey:  "test-key",
 		baseURL: server.URL,
 	}
-	
+
 	ctx := context.Background()
 	models, err := provider.ListModels(ctx, true) // verbose mode
 	if err != nil {
 		t.Fatalf("ListModels failed: %v", err)
 	}
-	
+
 	if len(models) != 1 {
 		t.Errorf("Expected 1 model, got %d", len(models))
 	}
-	
+
 	// Verify model details
 	if models[0].ID != "gemini-2.0-flash" {
 		t.Errorf("Expected ID gemini-2.0-flash, got %s", models[0].ID)
@@ -549,18 +548,18 @@ func TestGoogleProvider_ListModels_NonGenerativeFiltered(t *testing.T) {
 		}`))
 	}))
 	defer server.Close()
-	
+
 	provider := &GoogleProvider{
 		apiKey:  "test-key",
 		baseURL: server.URL,
 	}
-	
+
 	ctx := context.Background()
 	models, err := provider.ListModels(ctx, false)
 	if err != nil {
 		t.Fatalf("ListModels failed: %v", err)
 	}
-	
+
 	// Should only get the generative model
 	if len(models) != 1 {
 		t.Errorf("Expected 1 generative model, got %d", len(models))
@@ -577,18 +576,18 @@ func TestGoogleProvider_ListModels_EmptyResponse(t *testing.T) {
 		w.Write([]byte(`{"models": []}`))
 	}))
 	defer server.Close()
-	
+
 	provider := &GoogleProvider{
 		apiKey:  "test-key",
 		baseURL: server.URL,
 	}
-	
+
 	ctx := context.Background()
 	models, err := provider.ListModels(ctx, true) // verbose to test that path
 	if err != nil {
 		t.Fatalf("ListModels failed: %v", err)
 	}
-	
+
 	if len(models) != 0 {
 		t.Errorf("Expected 0 models, got %d", len(models))
 	}
@@ -600,12 +599,12 @@ func TestGoogleProvider_ListModels_HTTPError(t *testing.T) {
 		w.Write([]byte(`{"error": "forbidden"}`))
 	}))
 	defer server.Close()
-	
+
 	provider := &GoogleProvider{
 		apiKey:  "test-key",
 		baseURL: server.URL,
 	}
-	
+
 	ctx := context.Background()
 	_, err := provider.ListModels(ctx, false)
 	if err == nil {
@@ -623,12 +622,12 @@ func TestGoogleProvider_ListModels_InvalidJSON(t *testing.T) {
 		w.Write([]byte(`invalid json`))
 	}))
 	defer server.Close()
-	
+
 	provider := &GoogleProvider{
 		apiKey:  "test-key",
 		baseURL: server.URL,
 	}
-	
+
 	ctx := context.Background()
 	_, err := provider.ListModels(ctx, false)
 	if err == nil {

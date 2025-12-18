@@ -359,13 +359,13 @@ func TestAnthropicProvider_ValidateEndpoints_Verbose(t *testing.T) {
 		}`))
 	}))
 	defer server.Close()
-	
+
 	provider := &AnthropicProvider{
 		apiKey:  "test-key",
 		baseURL: server.URL,
 		client:  &http.Client{Timeout: 10 * time.Second},
 	}
-	
+
 	ctx := context.Background()
 	// Test verbose mode
 	err := provider.ValidateEndpoints(ctx, true)

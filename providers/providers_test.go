@@ -59,11 +59,11 @@ func TestProviderCreation(t *testing.T) {
 
 func TestListProviders(t *testing.T) {
 	providers := ListProviders()
-	
+
 	if len(providers) == 0 {
 		t.Error("ListProviders() returned empty list")
 	}
-	
+
 	// Check that expected providers are in the list
 	expectedProviders := []string{"anthropic", "openai", "google", "mistral"}
 	for _, expected := range expectedProviders {
@@ -228,13 +228,14 @@ func TestEndpointStatus(t *testing.T) {
 		t.Run(string(tt.status), func(t *testing.T) {
 			if string(tt.status) != tt.want {
 				t.Errorf("EndpointStatus = %q, want %q", tt.status, tt.want)
-			}		})
+			}
+		})
 	}
 }
 
 func TestOpenAIProvider_IsUsableModel(t *testing.T) {
 	provider := NewOpenAIProvider("test-key").(*OpenAIProvider)
-	
+
 	tests := []struct {
 		name     string
 		modelID  string
@@ -253,7 +254,7 @@ func TestOpenAIProvider_IsUsableModel(t *testing.T) {
 		{"Old babbage", "text-babbage-001", false},
 		{"Old ada", "text-ada-001", false},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := provider.isUsableModel(tt.modelID)
@@ -266,7 +267,7 @@ func TestOpenAIProvider_IsUsableModel(t *testing.T) {
 
 func TestOpenAIProvider_FormatModelName(t *testing.T) {
 	provider := NewOpenAIProvider("test-key").(*OpenAIProvider)
-	
+
 	tests := []struct {
 		name     string
 		modelID  string
@@ -280,7 +281,7 @@ func TestOpenAIProvider_FormatModelName(t *testing.T) {
 		{"O3", "o3-mini", "O-Series Reasoning"},
 		{"Unknown", "unknown-model", "unknown-model"},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := provider.formatModelName(tt.modelID)
@@ -293,7 +294,7 @@ func TestOpenAIProvider_FormatModelName(t *testing.T) {
 
 func TestOpenAIProvider_EnrichModelDetails(t *testing.T) {
 	provider := NewOpenAIProvider("test-key").(*OpenAIProvider)
-	
+
 	tests := []struct {
 		name          string
 		modelID       string
@@ -312,15 +313,15 @@ func TestOpenAIProvider_EnrichModelDetails(t *testing.T) {
 		{"O3", "o3-mini", true, true, true, true},
 		{"Unknown", "unknown-model", true, false, false, false},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			model := Model{
 				ID: tt.modelID,
 			}
-			
+
 			enriched := provider.enrichModelDetails(model)
-			
+
 			if tt.checkSupports {
 				if !enriched.SupportsTools {
 					t.Error("Expected SupportsTools to be true")
@@ -329,11 +330,11 @@ func TestOpenAIProvider_EnrichModelDetails(t *testing.T) {
 					t.Error("Expected CanStream to be true")
 				}
 			}
-			
+
 			if tt.checkContext && enriched.ContextWindow == 0 {
 				t.Error("Expected ContextWindow to be set")
 			}
-			
+
 			// Check vision and reasoning
 			if enriched.SupportsImages != tt.expectVision {
 				t.Errorf("Expected SupportsImages=%v, got %v", tt.expectVision, enriched.SupportsImages)
@@ -347,7 +348,7 @@ func TestOpenAIProvider_EnrichModelDetails(t *testing.T) {
 
 func TestAnthropicProvider_EnrichModelDetails(t *testing.T) {
 	provider := NewAnthropicProvider("test-key").(*AnthropicProvider)
-	
+
 	tests := []struct {
 		name          string
 		modelID       string
@@ -359,15 +360,15 @@ func TestAnthropicProvider_EnrichModelDetails(t *testing.T) {
 		{"Claude 2", "claude-2", true},
 		{"Unknown", "unknown-model", false},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			model := Model{
 				ID: tt.modelID,
 			}
-			
+
 			enriched := provider.enrichModelDetails(model)
-			
+
 			if tt.expectContext && enriched.ContextWindow == 0 {
 				t.Errorf("Expected ContextWindow to be set for %s", tt.modelID)
 			}
@@ -381,7 +382,6 @@ func TestAnthropicProvider_EnrichModelDetails(t *testing.T) {
 	}
 }
 
-
 func TestProvider_GetEndpoints(t *testing.T) {
 	providers := map[string]Provider{
 		"openai":    NewOpenAIProvider("test-key"),
@@ -389,14 +389,14 @@ func TestProvider_GetEndpoints(t *testing.T) {
 		"google":    NewGoogleProvider("test-key"),
 		"mistral":   NewMistralProvider("test-key"),
 	}
-	
+
 	for name, provider := range providers {
 		t.Run(name, func(t *testing.T) {
 			endpoints := provider.GetEndpoints()
 			if len(endpoints) == 0 {
 				t.Errorf("%s: expected endpoints, got none", name)
 			}
-			
+
 			// Verify endpoint structure
 			for _, ep := range endpoints {
 				if ep.Path == "" {
@@ -417,16 +417,16 @@ func TestProvider_GetCapabilities(t *testing.T) {
 		"google":    NewGoogleProvider("test-key"),
 		"mistral":   NewMistralProvider("test-key"),
 	}
-	
+
 	for name, provider := range providers {
 		t.Run(name, func(t *testing.T) {
 			caps := provider.GetCapabilities()
-			
+
 			// All providers should support at least chat
 			if !caps.SupportsChat {
 				t.Errorf("%s: should support chat", name)
 			}
-			
+
 			// All providers should support streaming
 			if !caps.SupportsStreaming {
 				t.Errorf("%s: should support streaming", name)
@@ -438,11 +438,11 @@ func TestProvider_GetCapabilities(t *testing.T) {
 func TestOpenAIProvider_SpecificEndpoints(t *testing.T) {
 	provider := NewOpenAIProvider("test-key")
 	endpoints := provider.GetEndpoints()
-	
+
 	// Look for specific OpenAI endpoints
 	hasChatCompletions := false
 	hasModels := false
-	
+
 	for _, ep := range endpoints {
 		if strings.Contains(ep.Path, "chat/completions") {
 			hasChatCompletions = true
@@ -457,7 +457,7 @@ func TestOpenAIProvider_SpecificEndpoints(t *testing.T) {
 			}
 		}
 	}
-	
+
 	if !hasChatCompletions {
 		t.Error("Missing chat/completions endpoint")
 	}
@@ -475,7 +475,7 @@ func TestProviderCapabilities_Fields(t *testing.T) {
 		SupportsJSONMode:   true,
 		SupportsEmbeddings: true,
 	}
-	
+
 	if !caps.SupportsChat {
 		t.Error("Expected SupportsChat to be true")
 	}
@@ -494,14 +494,14 @@ func TestProvider_ValidateEndpoints_Structure(t *testing.T) {
 		"google":    NewGoogleProvider("test-key"),
 		"mistral":   NewMistralProvider("test-key"),
 	}
-	
+
 	for name, provider := range providers {
 		t.Run(name, func(t *testing.T) {
 			// Test ValidateEndpoints with cancelled context
 			// This will exercise the function without making real HTTP calls
 			ctx, cancel := context.WithCancel(context.Background())
 			cancel() // Cancel immediately
-			
+
 			err := provider.ValidateEndpoints(ctx, false)
 			// We expect either an error or success (depending on implementation)
 			// The important thing is the function doesn't panic
@@ -515,19 +515,19 @@ func TestProvider_ListModels_WithInvalidKey(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping integration test in short mode")
 	}
-	
+
 	providers := map[string]Provider{
 		"openai":    NewOpenAIProvider("invalid-key-test"),
 		"anthropic": NewAnthropicProvider("invalid-key-test"),
 		"google":    NewGoogleProvider("invalid-key-test"),
 		"mistral":   NewMistralProvider("invalid-key-test"),
 	}
-	
+
 	for name, provider := range providers {
 		t.Run(name, func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 			defer cancel()
-			
+
 			models, err := provider.ListModels(ctx, false)
 			// With invalid key, we expect an error
 			// But the function should not panic
@@ -555,7 +555,7 @@ func TestModel_Structure(t *testing.T) {
 		CanStream:      true,
 		Categories:     []string{"chat", "text"},
 	}
-	
+
 	if model.ID != "test-model" {
 		t.Error("Model ID not set correctly")
 	}
@@ -579,7 +579,7 @@ func TestEndpoint_Structure(t *testing.T) {
 		Status:      StatusWorking,
 		Latency:     100 * time.Millisecond,
 	}
-	
+
 	if endpoint.Path != "/v1/chat/completions" {
 		t.Error("Endpoint Path not set correctly")
 	}
@@ -598,7 +598,7 @@ func TestProviderMetadata_Complete(t *testing.T) {
 		"google":    NewGoogleProvider("test-key"),
 		"mistral":   NewMistralProvider("test-key"),
 	}
-	
+
 	for name, provider := range providers {
 		t.Run(name, func(t *testing.T) {
 			// Test GetEndpoints
@@ -606,10 +606,10 @@ func TestProviderMetadata_Complete(t *testing.T) {
 			if len(endpoints) == 0 {
 				t.Errorf("%s: No endpoints defined", name)
 			}
-			
+
 			// Test GetCapabilities
 			caps := provider.GetCapabilities()
-			
+
 			// Verify capabilities struct has some true fields
 			hasAnyCapability := caps.SupportsChat ||
 				caps.SupportsStreaming ||
@@ -618,7 +618,7 @@ func TestProviderMetadata_Complete(t *testing.T) {
 				caps.SupportsJSONMode ||
 				caps.SupportsFIM ||
 				caps.SupportsAgents
-			
+
 			if !hasAnyCapability {
 				t.Errorf("%s: Provider has no capabilities enabled", name)
 			}
