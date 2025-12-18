@@ -3041,3 +3041,95 @@ func TestStorage_Close_NilDB(t *testing.T) {
 		t.Errorf("Close with nil db should not error, got %v", err)
 	}
 }
+
+// Phase 4: Final push to 81%+
+
+func TestAgentDB_Close_DoubleClose(t *testing.T) {
+	tempDir := t.TempDir()
+	dbPath := filepath.Join(tempDir, "test.db")
+	
+	adb, err := NewAgentDB(dbPath)
+	if err != nil {
+		t.Fatalf("NewAgentDB failed: %v", err)
+	}
+	
+	err = adb.Close()
+	if err != nil {
+		t.Errorf("First close failed: %v", err)
+	}
+	
+	// Closing again should not panic
+	_ = adb.Close()
+}
+
+func TestToolExecutionRepository_Get_NotFound(t *testing.T) {
+	db, _ := setupTestDB(t)
+	defer db.Close()
+	
+	s := NewStorage(db, time.Hour)
+	ctx := context.Background()
+	
+	_, err := s.ToolExecutions.Get(ctx, "nonexistent-id")
+	if err == nil {
+		t.Error("Expected error for nonexistent tool execution")
+	}
+}
+
+func TestToolExecutionRepository_Update_AllFields(t *testing.T) {
+	db, _ := setupTestDB(t)
+	defer db.Close()
+	
+	s := NewStorage(db, time.Hour)
+	ctx := context.Background()
+	
+	// Create agent
+	agent := s.NewAgentWithDefaults("test-agent", "test", nil)
+	if err := s.Agents.Create(ctx, agent); err != nil {
+		t.Fatalf("Create agent: %v", err)
+	}
+	
+	// Create tool execution
+	toolExec := &ToolExecution{
+		ID:        "test-exec",
+		AgentID:   agent.ID,
+		ToolName:  "test-tool",
+		ToolType:  "test",
+		Status:    "pending",
+		StartedAt: time.Now(),
+		Metadata:  map[string]interface{}{"key": "value"},
+	}
+	if err := s.ToolExecutions.Create(ctx, toolExec); err != nil {
+		t.Fatalf("Create: %v", err)
+	}
+	
+	// Update all fields
+	toolExec.Status = "completed"
+	toolExec.Output = "success output"
+	toolExec.Duration = 1234
+	toolExec.Metadata["updated"] = true
+	completedAt := time.Now()
+	toolExec.CompletedAt = &completedAt
+	
+	if err := s.ToolExecutions.Update(ctx, toolExec); err != nil {
+		t.Fatalf("Update: %v", err)
+	}
+	
+	// Verify all fields updated
+	retrieved, err := s.ToolExecutions.Get(ctx, toolExec.ID)
+	if err != nil {
+		t.Fatalf("Get: %v", err)
+	}
+	
+	if retrieved.Status != "completed" {
+		t.Errorf("Expected status completed, got %s", retrieved.Status)
+	}
+	if retrieved.Output != "success output" {
+		t.Errorf("Expected output, got %s", retrieved.Output)
+	}
+	if retrieved.Duration != 1234 {
+		t.Errorf("Expected duration 1234, got %d", retrieved.Duration)
+	}
+	if retrieved.Metadata["updated"] != true {
+		t.Error("Expected updated=true in metadata")
+	}
+}
