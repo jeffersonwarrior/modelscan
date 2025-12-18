@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 )
 
@@ -470,5 +471,167 @@ func TestGoogleProvider_EnrichModelDetails(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestGoogleProvider_ListModels_Verbose(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{
+			"models": [
+				{
+					"name": "models/gemini-2.0-flash",
+					"displayName": "Gemini 2.0 Flash",
+					"description": "Latest flash model",
+					"inputTokenLimit": 1000000,
+					"outputTokenLimit": 8192,
+					"supportedGenerationMethods": ["generateContent"]
+				}
+			]
+		}`))
+	}))
+	defer server.Close()
+	
+	provider := &GoogleProvider{
+		apiKey:  "test-key",
+		baseURL: server.URL,
+	}
+	
+	ctx := context.Background()
+	models, err := provider.ListModels(ctx, true) // verbose mode
+	if err != nil {
+		t.Fatalf("ListModels failed: %v", err)
+	}
+	
+	if len(models) != 1 {
+		t.Errorf("Expected 1 model, got %d", len(models))
+	}
+	
+	// Verify model details
+	if models[0].ID != "gemini-2.0-flash" {
+		t.Errorf("Expected ID gemini-2.0-flash, got %s", models[0].ID)
+	}
+	if models[0].Name != "Gemini 2.0 Flash" {
+		t.Errorf("Expected name 'Gemini 2.0 Flash', got %s", models[0].Name)
+	}
+	if models[0].Description != "Latest flash model" {
+		t.Errorf("Expected description, got %s", models[0].Description)
+	}
+	if models[0].ContextWindow != 1000000 {
+		t.Errorf("Expected context window 1000000, got %d", models[0].ContextWindow)
+	}
+}
+
+func TestGoogleProvider_ListModels_NonGenerativeFiltered(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{
+			"models": [
+				{
+					"name": "models/gemini-1.5-flash",
+					"displayName": "Gemini 1.5 Flash",
+					"description": "Generative model",
+					"inputTokenLimit": 1000000,
+					"outputTokenLimit": 8192,
+					"supportedGenerationMethods": ["generateContent"]
+				},
+				{
+					"name": "models/embedding-001",
+					"displayName": "Embedding Model",
+					"description": "Embedding model",
+					"inputTokenLimit": 1000,
+					"outputTokenLimit": 0,
+					"supportedGenerationMethods": ["embedContent"]
+				}
+			]
+		}`))
+	}))
+	defer server.Close()
+	
+	provider := &GoogleProvider{
+		apiKey:  "test-key",
+		baseURL: server.URL,
+	}
+	
+	ctx := context.Background()
+	models, err := provider.ListModels(ctx, false)
+	if err != nil {
+		t.Fatalf("ListModels failed: %v", err)
+	}
+	
+	// Should only get the generative model
+	if len(models) != 1 {
+		t.Errorf("Expected 1 generative model, got %d", len(models))
+	}
+	if models[0].ID != "gemini-1.5-flash" {
+		t.Errorf("Expected gemini-1.5-flash, got %s", models[0].ID)
+	}
+}
+
+func TestGoogleProvider_ListModels_EmptyResponse(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"models": []}`))
+	}))
+	defer server.Close()
+	
+	provider := &GoogleProvider{
+		apiKey:  "test-key",
+		baseURL: server.URL,
+	}
+	
+	ctx := context.Background()
+	models, err := provider.ListModels(ctx, true) // verbose to test that path
+	if err != nil {
+		t.Fatalf("ListModels failed: %v", err)
+	}
+	
+	if len(models) != 0 {
+		t.Errorf("Expected 0 models, got %d", len(models))
+	}
+}
+
+func TestGoogleProvider_ListModels_HTTPError(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusForbidden)
+		w.Write([]byte(`{"error": "forbidden"}`))
+	}))
+	defer server.Close()
+	
+	provider := &GoogleProvider{
+		apiKey:  "test-key",
+		baseURL: server.URL,
+	}
+	
+	ctx := context.Background()
+	_, err := provider.ListModels(ctx, false)
+	if err == nil {
+		t.Error("Expected error for HTTP 403")
+	}
+	if !strings.Contains(err.Error(), "403") {
+		t.Errorf("Expected error to mention status 403, got: %v", err)
+	}
+}
+
+func TestGoogleProvider_ListModels_InvalidJSON(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`invalid json`))
+	}))
+	defer server.Close()
+	
+	provider := &GoogleProvider{
+		apiKey:  "test-key",
+		baseURL: server.URL,
+	}
+	
+	ctx := context.Background()
+	_, err := provider.ListModels(ctx, false)
+	if err == nil {
+		t.Error("Expected error for invalid JSON")
 	}
 }
