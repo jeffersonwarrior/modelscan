@@ -3133,3 +3133,104 @@ func TestToolExecutionRepository_Update_AllFields(t *testing.T) {
 		t.Error("Expected updated=true in metadata")
 	}
 }
+
+// Phase 5: Push to 82%+
+
+func TestTaskRepository_Update_ContextCancel(t *testing.T) {
+	db, _ := setupTestDB(t)
+	defer db.Close()
+	
+	s := NewStorage(db, time.Hour)
+	
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel() // Cancel immediately
+	
+	task := s.NewTaskWithDefaults("agent-id", "task-type", "input", 1)
+	err := s.Tasks.Update(ctx, task)
+	if err == nil {
+		t.Error("Expected context canceled error")
+	}
+}
+
+func TestTeamRepository_Update_ContextCancel(t *testing.T) {
+	db, _ := setupTestDB(t)
+	defer db.Close()
+	
+	s := NewStorage(db, time.Hour)
+	
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	
+	team := s.NewTeamWithDefaults("team-name", "description")
+	err := s.Teams.Update(ctx, team)
+	if err == nil {
+		t.Error("Expected context canceled error")
+	}
+}
+
+func TestTeamRepository_Delete_ContextCancel(t *testing.T) {
+	db, _ := setupTestDB(t)
+	defer db.Close()
+	
+	s := NewStorage(db, time.Hour)
+	
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	
+	err := s.Teams.Delete(ctx, "team-id")
+	if err == nil {
+		t.Error("Expected context canceled error")
+	}
+}
+
+func TestToolExecutionRepository_Update_ContextCancel(t *testing.T) {
+	db, _ := setupTestDB(t)
+	defer db.Close()
+	
+	s := NewStorage(db, time.Hour)
+	
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	
+	toolExec := &ToolExecution{
+		ID:        "test-id",
+		AgentID:   "agent-id",
+		ToolName:  "tool",
+		Status:    "pending",
+		StartedAt: time.Now(),
+	}
+	err := s.ToolExecutions.Update(ctx, toolExec)
+	if err == nil {
+		t.Error("Expected context canceled error")
+	}
+}
+
+func TestAgentRepository_Delete_ContextCancel(t *testing.T) {
+	db, _ := setupTestDB(t)
+	defer db.Close()
+	
+	s := NewStorage(db, time.Hour)
+	
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	
+	err := s.Agents.Delete(ctx, "agent-id")
+	if err == nil {
+		t.Error("Expected context canceled error")
+	}
+}
+
+func TestAgentRepository_UpdateStatus_ContextCancel(t *testing.T) {
+	db, _ := setupTestDB(t)
+	defer db.Close()
+	
+	s := NewStorage(db, time.Hour)
+	
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	
+	err := s.Agents.UpdateStatus(ctx, "agent-id", "active")
+	if err == nil {
+		t.Error("Expected context canceled error")
+	}
+}

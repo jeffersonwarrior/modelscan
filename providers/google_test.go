@@ -318,3 +318,41 @@ func TestGoogleProvider_ListModels_HTTPMock(t *testing.T) {
 		t.Errorf("Expected at least 2 models, got %d", len(models))
 	}
 }
+
+func TestGoogleProvider_ValidateEndpoints(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"models": []}`))
+	}))
+	defer server.Close()
+	
+	provider := &GoogleProvider{
+		apiKey:  "test-key",
+		baseURL: server.URL,
+	}
+	
+	ctx := context.Background()
+	err := provider.ValidateEndpoints(ctx, false)
+	if err != nil {
+		t.Errorf("ValidateEndpoints failed: %v", err)
+	}
+}
+
+func TestGoogleProvider_ValidateEndpoints_Error(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusUnauthorized)
+		w.Write([]byte(`{"error": "unauthorized"}`))
+	}))
+	defer server.Close()
+	
+	provider := &GoogleProvider{
+		apiKey:  "bad-key",
+		baseURL: server.URL,
+	}
+	
+	ctx := context.Background()
+	err := provider.ValidateEndpoints(ctx, false)
+	if err == nil {
+		t.Error("Expected error for unauthorized")
+	}
+}

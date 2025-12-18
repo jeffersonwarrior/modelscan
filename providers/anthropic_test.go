@@ -347,3 +347,29 @@ func TestAnthropicProvider_TestModel_ContextCancelled(t *testing.T) {
 		t.Error("Expected error with cancelled context")
 	}
 }
+
+func TestAnthropicProvider_ValidateEndpoints_Verbose(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{
+			"id": "msg_test",
+			"type": "message",
+			"role": "assistant",
+			"content": [{"type": "text", "text": "test"}]
+		}`))
+	}))
+	defer server.Close()
+	
+	provider := &AnthropicProvider{
+		apiKey:  "test-key",
+		baseURL: server.URL,
+		client:  &http.Client{Timeout: 10 * time.Second},
+	}
+	
+	ctx := context.Background()
+	// Test verbose mode
+	err := provider.ValidateEndpoints(ctx, true)
+	if err != nil {
+		t.Errorf("ValidateEndpoints verbose failed: %v", err)
+	}
+}
