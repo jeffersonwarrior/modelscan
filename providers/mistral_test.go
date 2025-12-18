@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 )
@@ -92,7 +93,28 @@ func TestMistralProvider_ListModels_HTTPMock(t *testing.T) {
 	}
 	
 	ctx := context.Background()
-	_, _ = provider.ListModels(ctx, false)
+	models, err := provider.ListModels(ctx, false)
+	if err != nil {
+		t.Fatalf("ListModels failed: %v", err)
+	}
+	
+	if len(models) != 1 {
+		t.Errorf("Expected 1 model, got %d", len(models))
+	}
+	
+	if models[0].ID != "mistral-small-latest" {
+		t.Errorf("Expected model ID mistral-small-latest, got %s", models[0].ID)
+	}
+	
+	// Check capabilities were parsed
+	if models[0].Capabilities["completion_chat"] != "true" {
+		t.Error("Expected completion_chat capability to be true")
+	}
+	
+	// Check categories were assigned
+	if len(models[0].Categories) == 0 {
+		t.Error("Expected categories to be assigned")
+	}
 }
 
 func TestGuessMistralModelCategories(t *testing.T) {
@@ -235,5 +257,173 @@ func TestMistralProvider_EnhanceModelInfo_Categories(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestMistralProvider_ListModels_Verbose(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{
+			"object": "list",
+			"data": [
+				{
+					"id": "mistral-large-latest",
+					"object": "model",
+					"created": 1234567890,
+					"owned_by": "mistralai",
+					"capabilities": {
+						"completion_chat": true,
+						"function_calling": true
+					},
+					"description": "Large model"
+				}
+			]
+		}`))
+	}))
+	defer server.Close()
+	
+	provider := &MistralProvider{
+		apiKey:  "test-key",
+		baseURL: server.URL,
+		client:  &http.Client{Timeout: 10 * time.Second},
+	}
+	
+	ctx := context.Background()
+	models, err := provider.ListModels(ctx, true) // verbose mode
+	if err != nil {
+		t.Fatalf("ListModels failed: %v", err)
+	}
+	
+	if len(models) != 1 {
+		t.Errorf("Expected 1 model, got %d", len(models))
+	}
+	
+	// Check description was parsed
+	if models[0].Description != "Large model" {
+		t.Errorf("Expected description 'Large model', got '%s'", models[0].Description)
+	}
+}
+
+func TestMistralProvider_ListModels_CapabilityTypes(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{
+			"object": "list",
+			"data": [
+				{
+					"id": "test-model",
+					"object": "model",
+					"created": 1234567890,
+					"owned_by": "mistralai",
+					"capabilities": {
+						"bool_true": true,
+						"bool_false": false,
+						"string_val": "supported",
+						"number_val": 12345
+					}
+				}
+			]
+		}`))
+	}))
+	defer server.Close()
+	
+	provider := &MistralProvider{
+		apiKey:  "test-key",
+		baseURL: server.URL,
+		client:  &http.Client{Timeout: 10 * time.Second},
+	}
+	
+	ctx := context.Background()
+	models, err := provider.ListModels(ctx, false)
+	if err != nil {
+		t.Fatalf("ListModels failed: %v", err)
+	}
+	
+	// Check all capability type conversions
+	if models[0].Capabilities["bool_true"] != "true" {
+		t.Error("Expected bool_true to be 'true'")
+	}
+	if models[0].Capabilities["bool_false"] != "false" {
+		t.Error("Expected bool_false to be 'false'")
+	}
+	if models[0].Capabilities["string_val"] != "supported" {
+		t.Error("Expected string_val to be 'supported'")
+	}
+	if models[0].Capabilities["number_val"] == "" {
+		t.Error("Expected number_val to be converted to string")
+	}
+}
+
+func TestMistralProvider_ListModels_EmptyResponse(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{
+			"object": "list",
+			"data": []
+		}`))
+	}))
+	defer server.Close()
+	
+	provider := &MistralProvider{
+		apiKey:  "test-key",
+		baseURL: server.URL,
+		client:  &http.Client{Timeout: 10 * time.Second},
+	}
+	
+	ctx := context.Background()
+	models, err := provider.ListModels(ctx, true) // verbose to test that path
+	if err != nil {
+		t.Fatalf("ListModels failed: %v", err)
+	}
+	
+	if len(models) != 0 {
+		t.Errorf("Expected 0 models, got %d", len(models))
+	}
+}
+
+func TestMistralProvider_ListModels_InvalidJSON(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`invalid json`))
+	}))
+	defer server.Close()
+	
+	provider := &MistralProvider{
+		apiKey:  "test-key",
+		baseURL: server.URL,
+		client:  &http.Client{Timeout: 10 * time.Second},
+	}
+	
+	ctx := context.Background()
+	_, err := provider.ListModels(ctx, false)
+	if err == nil {
+		t.Error("Expected error for invalid JSON")
+	}
+}
+
+func TestMistralProvider_ListModels_HTTPError(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusUnauthorized)
+		w.Write([]byte(`{"error": "unauthorized"}`))
+	}))
+	defer server.Close()
+	
+	provider := &MistralProvider{
+		apiKey:  "test-key",
+		baseURL: server.URL,
+		client:  &http.Client{Timeout: 10 * time.Second},
+	}
+	
+	ctx := context.Background()
+	_, err := provider.ListModels(ctx, false)
+	if err == nil {
+		t.Error("Expected error for HTTP 401")
+	}
+	if !strings.Contains(err.Error(), "401") {
+		t.Errorf("Expected error to mention status 401, got: %v", err)
 	}
 }
