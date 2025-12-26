@@ -1,74 +1,67 @@
 # Claude Orchestrator Progress Log
 # ===============================
 # Project: ~/modelscan
-# Started: 2025-12-26T19:48:51.969Z
-# Last Updated: 2025-12-26T20:08:40.747Z
+# Started: 2025-12-26T23:11:27.288Z
+# Last Updated: 2025-12-26T23:12:04.911Z
 # Status: in_progress
 
 ## Summary
-- Total Features: 19
-- Completed: 1
-- In Progress: 0
-- Pending: 18
+- Total Features: 18
+- Completed: 0
+- In Progress: 1
+- Pending: 17
 - Failed: 0
 
 ## Task Description
-Implement Tier 2: 18 production-ready AI providers with zero external dependencies (except stdlib, sqlite3, google/uuid). Replace all external SDKs with in-house HTTP client. Implement extended thinking for Anthropic and Gemini. Add JSON Schema validation framework. All providers must pass TDD requirements with 90%+ test coverage.
+Implement 18 AI provider SDKs with zero dependencies, 90%+ test coverage, and programmatic validation enforcement.
 
-Phase 1: Feature 0 - HTTP Foundation Layer
-Build production-grade HTTP client infrastructure that all 18 providers will use. Zero external dependencies except Go stdlib. Includes connection pooling, retry with exponential backoff, rate limit parsing, timeout management, context propagation, logging hooks.
+## Providers to Implement (Tier 2)
+1. ElevenLabs TTS - text-to-speech with voice cloning
+2. Deepgram STT - live streaming transcription
+3. OpenAI Whisper - audio transcription extension
+4. OpenAI TTS - text-to-speech extension
+5. PlayHT - ultra-realistic TTS
+6. Luma AI Video - Dream Machine video generation
+7. Runway ML - Gen-2 video generation
+8. OpenAI Extended - refactor to use internal HTTP client
+9. Anthropic Extended Thinking - extended thinking mode
+10. Google Gemini Thinking - thinking modes
+11. DeepSeek Extended - refactor to use internal HTTP client
+12. Cerebras Extended - refactor to use internal HTTP client
+13. FAL Extended - refactor to use internal HTTP client
+14. Midjourney - V6 text-to-image
+15. OpenAI Embeddings - embeddings extension
+16. Cohere Embeddings - embed-english-v3.0
+17. Voyage AI - embeddings provider
+18. OpenAI Realtime API - real-time voice conversation
 
-Phase 2: 18 Provider Implementations
-Audio (5): ElevenLabs, Deepgram, OpenAI Whisper, OpenAI TTS, PlayHT
-Video (2): Luma AI, Runway ML
-LLM (5): OpenAI (extend), Anthropic (extend), Google Gemini (extend), DeepSeek (extend), Cerebras (extend)
-Image (2): FAL (extend), Midjourney
-Embeddings (3): OpenAI Embeddings (extend), Cohere Embeddings, Voyage AI
-Real-Time (1): OpenAI Realtime API (extend)
-
-Each provider must:
-- Implement providers.Provider interface
-- Use shared HTTP client from Feature 0
-- Have 90%+ test coverage (unit, integration, E2E)
-- Support rate limiting, cost tracking, streaming
-- Remove all external SDK dependencies
-- Pass go vet, gofmt, race detector
-
-Target: Production-ready code with scientific validation through comprehensive testing.
+## Requirements
+- Zero external dependencies (pure Go stdlib)
+- 90%+ test coverage (enforced by validation script)
+- Use internal/http client (no external SDKs)
+- Pass all 7 validation gates (build, test, coverage, race, vet, fmt, interface)
+- Workers MUST use bash scripts/swarm-mark-complete.sh to mark complete
 
 ## Feature Status
-✅ [COMPLETED] feature-1: Feature 0: HTTP Foundation Layer - Build production-grade HTTP client (internal/http/) with connection pooling, retry logic, rate limit parsing, timeout management, context propagation. 95%+ test cove
-... (truncated)
-⏳ [PENDING] feature-2: Provider 1: ElevenLabs TTS - Implement ElevenLabs text-to-speech with voice cloning support. Audio streaming, character-based billing, rate limiting.
-⏳ [PENDING] feature-3: Provider 2: Deepgram STT - Implement Deepgram live streaming transcription with speaker diarization. WebSocket support for live audio.
-⏳ [PENDING] feature-4: Provider 3: OpenAI Whisper - Extend existing OpenAI provider to support Whisper transcription. 98 language support, file size limit handling.
-⏳ [PENDING] feature-5: Provider 4: OpenAI TTS - Extend existing OpenAI provider for TTS-1 and TTS-1-HD models. 6 voices, streaming support.
-⏳ [PENDING] feature-6: Provider 5: PlayHT - Implement PlayHT ultra-realistic TTS with voice cloning capabilities.
-⏳ [PENDING] feature-7: Provider 6: Luma AI Video - Implement Dream Machine video generation with text-to-video and image-to-video. Async generation with polling.
-⏳ [PENDING] feature-8: Provider 7: Runway ML - Implement Gen-2 video generation. Credit-based billing, async operations.
-⏳ [PENDING] feature-9: Provider 8: OpenAI Extended - Refactor existing OpenAI provider to remove external SDK (github.com/sashabaranov/go-openai). Use internal HTTP client. Support o1, o3, GPT-4o, GPT-4o-mini models.
-⏳ [PENDING] feature-10: Provider 9: Anthropic Extended Thinking - Refactor existing Anthropic provider to remove external SDK. Implement extended thinking with budget_tokens parameter and thinking block parsing. Support Clau
-... (truncated)
-⏳ [PENDING] feature-11: Provider 10: Google Gemini Thinking Modes - Refactor existing Google provider to remove external SDK. Implement Gemini 2.5 budgetTokens and Gemini 3.0 effort settings (adaptive/medium/high). Support 2
-... (truncated)
-⏳ [PENDING] feature-12: Provider 11: DeepSeek Extended - Refactor existing DeepSeek provider. Support DeepSeek V3 and R1 reasoning models. Ultra-low cost provider.
-⏳ [PENDING] feature-13: Provider 12: Cerebras Extended - Refactor existing Cerebras provider for ultra-fast inference (1800 tokens/sec). Llama 3.3 70B support.
-⏳ [PENDING] feature-14: Provider 13: FAL Extended - Refactor existing FAL provider for FLUX.1 models (pro, dev, schnell). ControlNet and LoRA support.
-⏳ [PENDING] feature-15: Provider 14: Midjourney - Implement Midjourney V6 text-to-image using unofficial API workarounds. Variations and upscaling support.
-⏳ [PENDING] feature-16: Provider 15: OpenAI Embeddings - Extend OpenAI provider for text-embedding-3-small and text-embedding-3-large models.
-⏳ [PENDING] feature-17: Provider 16: Cohere Embeddings - Implement Cohere embed-english-v3.0 and embed-multilingual-v3.0. Reranking support.
-⏳ [PENDING] feature-18: Provider 17: Voyage AI - Implement Voyage AI voyage-2, voyage-large-2, voyage-code-2 embeddings.
-⏳ [PENDING] feature-19: Provider 18: OpenAI Realtime API - Extend OpenAI provider for WebSocket voice streaming. Bidirectional audio, function calling in real-time, VAD support.
+🔄 [IN_PROGRESS] feature-1: Provider 1: ElevenLabs TTS - Implement ElevenLabs text-to-speech with voice cloning support
+⏳ [PENDING] feature-2: Provider 2: Deepgram STT - Implement Deepgram live streaming transcription
+⏳ [PENDING] feature-3: Provider 3: OpenAI Whisper - Extend existing OpenAI provider for audio transcription
+⏳ [PENDING] feature-4: Provider 4: OpenAI TTS - Extend existing OpenAI provider for text-to-speech
+⏳ [PENDING] feature-5: Provider 5: PlayHT - Implement PlayHT ultra-realistic TTS with voice cloning
+⏳ [PENDING] feature-6: Provider 6: Luma AI Video - Implement Dream Machine video generation API
+⏳ [PENDING] feature-7: Provider 7: Runway ML - Implement Gen-2 video generation with motion control
+⏳ [PENDING] feature-8: Provider 8: OpenAI Extended - Refactor existing OpenAI provider to use internal HTTP client
+⏳ [PENDING] feature-9: Provider 9: Anthropic Extended Thinking - Refactor existing Anthropic provider for extended thinking mode
+⏳ [PENDING] feature-10: Provider 10: Google Gemini Thinking Modes - Refactor existing Google provider for thinking modes
+⏳ [PENDING] feature-11: Provider 11: DeepSeek Extended - Refactor existing DeepSeek provider to use internal HTTP client
+⏳ [PENDING] feature-12: Provider 12: Cerebras Extended - Refactor existing Cerebras provider to use internal HTTP client
+⏳ [PENDING] feature-13: Provider 13: FAL Extended - Refactor existing FAL provider to use internal HTTP client
+⏳ [PENDING] feature-14: Provider 14: Midjourney - Implement Midjourney V6 text-to-image generation
+⏳ [PENDING] feature-15: Provider 15: OpenAI Embeddings - Extend OpenAI provider for embeddings API
+⏳ [PENDING] feature-16: Provider 16: Cohere Embeddings - Implement Cohere embed-english-v3.0 embeddings
+⏳ [PENDING] feature-17: Provider 17: Voyage AI - Implement Voyage AI voyage-2, voyage-code-2 embeddings
+⏳ [PENDING] feature-18: Provider 18: OpenAI Realtime API - Extend OpenAI provider for real-time voice conversation API
 
-## Progress Log (last 7 entries)
-[2025-12-26T19:48:51.969Z] Orchestration initialized with 19 features
-[2025-12-26T19:49:36.240Z] Started worker for feature-1: Feature 0: HTTP Foundation Layer - Build production-grade HTTP client (internal/http/) with connection pooling, retry logic, rate limit parsing, timeout management, context propagation. 95%+ test coverage required. Foundation for all 18 providers.
-[2025-12-26T19:50:12.020Z] ⚠️ Worker crashed: feature-1 - Worker session ended unexpectedly.  Last output: - Exponential backoff increases correctly - Jitter ... - use mark_complete to update status
-[2025-12-26T19:52:29.807Z] Started worker for feature-1: Feature 0: HTTP Foundation Layer - Build production-grade HTTP client (internal/http/) with connection pooling, retry logic, rate limit parsing, timeout management, context propagation. 95%+ test coverage required. Foundation for all 18 providers.
-[2025-12-26T20:04:06.026Z] Sent message to feature-1: Great progress! Tests passing, race detector clean, go vet clean.
-
-**Issues to fix:**
-
-1. **Coverage...
-[2025-12-26T20:06:22.558Z] 🔔 Worker completed: feature-1 - use mark_complete to update status
-[2025-12-26T20:08:40.747Z] ✅ Completed: feature-1 - Feature 0: HTTP Foundation Layer - Build production-grade HTTP client (internal/http/) with connection pooling, retry logic, rate limit parsing, timeout management, context propagation. 95%+ test coverage required. Foundation for all 18 providers.
+## Progress Log (last 2 entries)
+[2025-12-26T23:11:27.288Z] Orchestration initialized with 18 features
+[2025-12-26T23:12:04.911Z] Started worker for feature-1: Provider 1: ElevenLabs TTS - Implement ElevenLabs text-to-speech with voice cloning support

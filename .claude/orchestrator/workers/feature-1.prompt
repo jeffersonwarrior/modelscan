@@ -1,31 +1,37 @@
 You are a worker agent focused on implementing a single feature.
 
 ## Your Task
-Feature 0: HTTP Foundation Layer - Build production-grade HTTP client (internal/http/) with connection pooling, retry logic, rate limit parsing, timeout management, context propagation. 95%+ test coverage required. Foundation for all 18 providers.
+Provider 1: ElevenLabs TTS - Implement ElevenLabs text-to-speech with voice cloning support
 
 ## Orchestration Context
-Implement Tier 2: 18 production-ready AI providers with zero external dependencies (except stdlib, sqlite3, google/uuid). Replace all external SDKs with in-house HTTP client. Implement extended thinking for Anthropic and Gemini. Add JSON Schema validation framework. All providers must pass TDD requirements with 90%+ test coverage.
+Implement 18 AI provider SDKs with zero dependencies, 90%+ test coverage, and programmatic validation enforcement.
 
-Phase 1: Feature 0 - HTTP Foundation Layer
-Build production-grade HTTP client infrastructure that all 18 providers will use. Zero external dependencies except Go stdlib. Includes connection pooling, retry with exponential backoff, rate limit parsing, timeout management, context propagation, logging hooks.
+## Providers to Implement (Tier 2)
+1. ElevenLabs TTS - text-to-speech with voice cloning
+2. Deepgram STT - live streaming transcription
+3. OpenAI Whisper - audio transcription extension
+4. OpenAI TTS - text-to-speech extension
+5. PlayHT - ultra-realistic TTS
+6. Luma AI Video - Dream Machine video generation
+7. Runway ML - Gen-2 video generation
+8. OpenAI Extended - refactor to use internal HTTP client
+9. Anthropic Extended Thinking - extended thinking mode
+10. Google Gemini Thinking - thinking modes
+11. DeepSeek Extended - refactor to use internal HTTP client
+12. Cerebras Extended - refactor to use internal HTTP client
+13. FAL Extended - refactor to use internal HTTP client
+14. Midjourney - V6 text-to-image
+15. OpenAI Embeddings - embeddings extension
+16. Cohere Embeddings - embed-english-v3.0
+17. Voyage AI - embeddings provider
+18. OpenAI Realtime API - real-time voice conversation
 
-Phase 2: 18 Provider Implementations
-Audio (5): ElevenLabs, Deepgram, OpenAI Whisper, OpenAI TTS, PlayHT
-Video (2): Luma AI, Runway ML
-LLM (5): OpenAI (extend), Anthropic (extend), Google Gemini (extend), DeepSeek (extend), Cerebras (extend)
-Image (2): FAL (extend), Midjourney
-Embeddings (3): OpenAI Embeddings (extend), Cohere Embeddings, Voyage AI
-Real-Time (1): OpenAI Realtime API (extend)
-
-Each provider must:
-- Implement providers.Provider interface
-- Use shared HTTP client from Feature 0
-- Have 90%+ test coverage (unit, integration, E2E)
-- Support rate limiting, cost tracking, streaming
-- Remove all external SDK dependencies
-- Pass go vet, gofmt, race detector
-
-Target: Production-ready code with scientific validation through comprehensive testing.
+## Requirements
+- Zero external dependencies (pure Go stdlib)
+- 90%+ test coverage (enforced by validation script)
+- Use internal/http client (no external SDKs)
+- Pass all 7 validation gates (build, test, coverage, race, vet, fmt, interface)
+- Workers MUST use bash scripts/swarm-mark-complete.sh to mark complete
 
 ## Project Context Files
 ### From CLAUDE.md:
@@ -199,142 +205,117 @@ ModelScan supports Model Context Protocol (MCP) servers for extended functionali
 
 
 ## Additional Context
-You are implementing Feature 0: HTTP Foundation Layer for ModelScan.
+# Provider Implementation: ElevenLabs TTS
 
-## ANSWERS TO YOUR QUESTIONS
+## Mission
+Implement ElevenLabs text-to-speech provider with **90%+ test coverage** and full validation compliance.
 
-### Q1: API Key Sanitization Strategy
-✅ **Answer**: Yes, create `sanitizeAPIKey(key string) string` in `client.go`.
-- Apply automatically in logging hook if Logger is set
-- Format: `"sk-...abc123"` → `"sk-***abc123"` (show first 3 chars + last 7 chars)
-- This protects against accidental key leakage in logs
+## Non-Negotiable Requirements
 
-### Q2: Hooks System Details
-✅ **Answer**: 
-- Hook signature: `type BeforeRequestHook func(req *http.Request) error`
-- Hooks are OPTIONAL (nil-safe - check before calling)
-- Hook errors ABORT the request (return error to caller)
-- Execute order: BeforeRequest → Do Request → AfterResponse → OnError (if error)
-
-### Q3: Rate Limit Header Parsing
-✅ **Answer**:
-- Return structured `RateLimitInfo` type with parsed values
-- Handle missing headers gracefully (return nil, not error)
-- Called automatically in `Do()` method, stored in Response struct
-- Providers can access via `resp.RateLimit` if not nil
-
-### Q4: Connection Pool Configuration
-✅ **Answer**: Configurable via `Config` struct with sane defaults:
-```go
-type Config struct {
-    MaxIdleConns        int  // Default: 100
-    MaxIdleConnsPerHost int  // Default: 10
-    MaxConnsPerHost     int  // Default: 10
-    IdleConnTimeout     time.Duration // Default: 90s
-    // ... other fields
-}
-```
-
-### Q5: Retry Backoff Parameters
-✅ **Answer**: Yes, configurable with these defaults:
-```go
-type RetryConfig struct {
-    MaxAttempts  int           // Default: 3
-    BaseDelay    time.Duration // Default: 1s
-    MaxDelay     time.Duration // Default: 60s
-    Multiplier   float64       // Default: 2.0
-    JitterPercent float64      // Default: 0.1 (10% jitter)
-}
-```
-
-## APPROVED DESIGN
-
-✅ Your proposed package structure is EXCELLENT. Go with:
-```
-internal/http/
-├── doc.go           
-├── client.go        
-├── client_test.go   
-├── options.go       # Config and RetryConfig structs
-├── retry.go         
-├── retry_test.go    
-├── headers.go       
-├── headers_test.go  
-├── hooks.go         # Hook types
-```
-
-✅ Your test strategy (Phase 1→5) is PERFECT. TDD order makes sense.
-
-✅ Use `httptest.Server` for unit tests, httpbin.org for integration tests.
-
-✅ Context timeout behavior you described is correct.
-
-## YOUR MISSION (START NOW)
-
-You have all the answers. Begin implementation using TDD:
-
-1. **Phase 1**: Write `headers_test.go` with all test cases → implement `headers.go`
-2. **Phase 2**: Write `retry_test.go` with all test cases → implement `retry.go`  
-3. **Phase 3**: Write `options.go` (structs only, no tests needed for data structures)
-4. **Phase 4**: Write `hooks.go` (simple types, no complex logic)
-5. **Phase 5**: Write `client_test.go` with all test cases → implement `client.go`
-6. **Phase 6**: Integration tests using httpbin.org
-7. **Phase 7**: Verify 95%+ coverage, race detector clean, go vet clean
-
-## CRITICAL REQUIREMENTS
-- ✅ Zero external dependencies (stdlib ONLY)
-- ✅ 95%+ test coverage
-- ✅ Thread-safe (verify with -race)
-- ✅ Exponential backoff with jitter
-- ✅ Retry on 429, 500, 502, 503, 504 ONLY
-- ✅ Do NOT retry 400, 401, 403, 404
-- ✅ Context cancellation support everywhere
-- ✅ go vet clean, gofmt clean
-
-## VALIDATION COMMANDS
-Run these before marking complete:
+**You CANNOT mark complete unless validation passes:**
 ```bash
-go build ./internal/http
-go test -v -coverprofile=coverage.out ./internal/http
-go tool cover -func=coverage.out | grep total  # Must be 95%+
-go test -race -v ./internal/http
-go vet ./internal/http
-gofmt -l ./internal/http  # Must return empty
+bash /home/agent/modelscan/scripts/validate-provider.sh elevenlabs 90
 ```
 
-## GIT WORKFLOW
-Branch: `tier2/core-providers`
-Commit after each phase with descriptive messages.
+**If ANY gate fails:**
+- ❌ DO NOT mark complete
+- ✅ FIX the issue
+- ✅ Re-run validation
+- ✅ Repeat until ALL gates pass
 
-## WHEN BLOCKED
-1. Read Go stdlib docs (net/http, time, context)
-2. Web search for solutions
-3. If stuck >30min → send message with details
+## 7 Validation Gates
+1. Build: `go build ./providers/elevenlabs.go` succeeds
+2. Tests: All unit tests pass
+3. Coverage: EXACTLY 90.0%+ (not 89.9%)
+4. Race: `go test -race` clean
+5. Vet: `go vet` clean
+6. Fmt: `gofmt` clean
+7. Interface: All Provider methods implemented
 
-## FINAL COMMIT MESSAGE TEMPLATE
-```
-feat(http): Complete HTTP foundation layer
-
-✓ Connection pooling (100 idle, 10 per host)
-✓ Retry with exponential backoff + jitter
-✓ Rate limit header parsing (OpenAI/Anthropic/Google)
-✓ Context propagation and cancellation
-✓ API key sanitization in logs
-✓ Hooks system for request/response interception
-✓ 95%+ test coverage (actual: XX.X%)
-✓ Thread-safe (race detector clean)
-✓ Zero external dependencies
-
-Tests:
-- Unit: XX passing
-- Integration: XX passing
-- go vet: clean
-- gofmt: clean
-
-Lessons learned:
-[Document any challenges, solutions, gotchas]
+## Mark Complete (ONLY via validation)
+```bash
+bash /home/agent/modelscan/scripts/swarm-mark-complete.sh feature-1 elevenlabs
 ```
 
-**Start coding now. You have complete clarity. Report progress every hour or when blocked.**
+**No manual override. No exceptions.**
+
+## Implementation Spec
+
+### Files to Create
+1. `providers/elevenlabs.go` - Provider implementation
+2. `providers/elevenlabs_test.go` - Unit tests (90%+ coverage)
+
+### Provider Interface
+```go
+type Provider interface {
+    ValidateEndpoints(ctx context.Context, verbose bool) error
+    ListModels(ctx context.Context, verbose bool) ([]Model, error)
+    GetCapabilities() ProviderCapabilities
+    GetEndpoints() []Endpoint
+    TestModel(ctx context.Context, modelID string, verbose bool) error
+}
+```
+
+### Use Internal HTTP Client
+```go
+import "github.com/jeffersonwarrior/modelscan/internal/http"
+
+client := http.NewClient(http.Config{
+    BaseURL: "https://api.elevenlabs.io/v1",
+    APIKey:  apiKey,
+    Timeout: 30 * time.Second,
+    Retry: http.RetryConfig{
+        MaxAttempts: 3,
+        BaseDelay:   1 * time.Second,
+    },
+})
+```
+
+### ElevenLabs API Details
+- Base URL: https://api.elevenlabs.io/v1
+- Auth: `xi-api-key` header
+- Endpoints:
+  - GET /voices - List voices (models)
+  - POST /text-to-speech/{voice_id} - Generate audio
+  - GET /models - List TTS models
+  - GET /user/subscription - Get quota info
+
+### Test Requirements (Minimum 15 tests)
+- NewElevenLabsProvider (valid key, empty key)
+- ListModels (success, error, timeout, cancellation)
+- ValidateEndpoints (all working, some failed, network error)
+- TestModel (success, invalid model, rate limit, auth failure)
+- GetCapabilities (correct values)
+- Rate limiting tests
+- Cost tracking tests
+- TextToSpeech helper method tests
+
+## API Documentation
+- Official: https://elevenlabs.io/docs/api-reference/text-to-speech
+- Models: https://elevenlabs.io/docs/voices/overview
+- Pricing: Character-based billing ($180 per 1M chars Creator tier)
+
+## Git Workflow
+```bash
+# Work on main branch (sequential execution)
+git add providers/elevenlabs.go providers/elevenlabs_test.go
+git commit -m "feat(elevenlabs): TTS provider with 90%+ coverage
+
+✅ All validation gates passing
+✅ Coverage: XX.X%
+✅ Tests: XX passing
+✅ Interface fully implemented
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
+```
+
+## Philosophy
+> "90% means 90%. Not 89.9%. Exact compliance."
+
+The validation script is the source of truth. No human judgment, no negotiation.
+
+**Ready? Implement, test, validate, complete.**
 
 Begin implementing the feature now.
