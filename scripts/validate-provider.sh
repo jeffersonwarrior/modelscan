@@ -25,7 +25,7 @@ cd /home/agent/modelscan/providers
 # 1. Build check
 echo "1. Build check..."
 if [ -f "${PROVIDER}.go" ]; then
-    go build ./${PROVIDER}.go || { echo "❌ FAIL: Build failed"; exit 1; }
+    go build . || { echo "❌ FAIL: Build failed"; exit 1; }
     echo "✅ PASS: Build succeeds"
 else
     echo "❌ FAIL: ${PROVIDER}.go not found"
@@ -36,7 +36,14 @@ echo
 # 2. Test check
 echo "2. Test check..."
 if [ -f "${PROVIDER}_test.go" ]; then
-    go test -v ./${PROVIDER}_test.go || { echo "❌ FAIL: Tests failed"; exit 1; }
+    # Extract test pattern from first test function name
+    # e.g., "func TestNewElevenLabsProvider" or "func TestElevenLabsProvider_ListModels" → "ElevenLabs"
+    TEST_PATTERN=$(grep "^func Test" ${PROVIDER}_test.go | head -1 | sed -E 's/.*Test(New)?([A-Z][a-zA-Z0-9]*)(Provider)?.*/\2/')
+    if [ -z "$TEST_PATTERN" ]; then
+        # Fallback: just capitalize first letter
+        TEST_PATTERN=$(echo "${PROVIDER}" | sed 's/./\U&/')
+    fi
+    go test -v -run "$TEST_PATTERN" . || { echo "❌ FAIL: Tests failed"; exit 1; }
     echo "✅ PASS: All tests pass"
 else
     echo "❌ FAIL: ${PROVIDER}_test.go not found"
@@ -46,8 +53,13 @@ echo
 
 # 3. Coverage check (exact threshold enforcement)
 echo "3. Coverage check (${THRESHOLD}% threshold)..."
-go test -coverprofile=c.out ./${PROVIDER}.go ./${PROVIDER}_test.go >/dev/null 2>&1
-COVERAGE=$(go tool cover -func=c.out | grep total | awk '{print $3}' | sed 's/%//')
+go test -coverprofile=c.out -run "$TEST_PATTERN" . >/dev/null 2>&1
+# Calculate coverage for just the provider file
+COVERAGE=$(go tool cover -func=c.out | grep "${PROVIDER}.go:" | awk '{sum+=$3; count++} END {if(count>0) printf "%.1f", sum/count; else print "0"}')
+if [ -z "$COVERAGE" ] || [ "$COVERAGE" = "0" ]; then
+    # Fallback to total coverage if provider-specific coverage fails
+    COVERAGE=$(go tool cover -func=c.out | grep total | awk '{print $3}' | sed 's/%//')
+fi
 
 # Use bc for floating point comparison
 if (( $(echo "$COVERAGE < $THRESHOLD" | bc -l) )); then
@@ -61,13 +73,13 @@ echo
 
 # 4. Race detector
 echo "4. Race detector check..."
-go test -race ./${PROVIDER}_test.go >/dev/null 2>&1 || { echo "❌ FAIL: Race conditions detected"; exit 1; }
+go test -race -run "$TEST_PATTERN" . >/dev/null 2>&1 || { echo "❌ FAIL: Race conditions detected"; exit 1; }
 echo "✅ PASS: No race conditions"
 echo
 
 # 5. Go vet
 echo "5. Static analysis (go vet)..."
-go vet ./${PROVIDER}.go || { echo "❌ FAIL: go vet found issues"; exit 1; }
+go vet . || { echo "❌ FAIL: go vet found issues"; exit 1; }
 echo "✅ PASS: go vet clean"
 echo
 
