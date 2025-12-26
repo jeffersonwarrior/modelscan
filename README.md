@@ -538,7 +538,7 @@ go mod tidy
 ```bash
 # Use correct import path
 import "github.com/jeffersonwarrior/modelscan/sdk/openai"
-# NOT: import "github.com/nexora/modelscan/sdk/openai"
+# NOT: import "github.com/jeffersonwarrior/modelscan/sdk/openai"
 ```
 
 ---

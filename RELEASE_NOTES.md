@@ -61,7 +61,7 @@
 
 ## 🎯 **QUICKSTART** (1 minute)
 ```bash
-go get github.com/nexora/modelscan/sdk/ai
+go get github.com/jeffersonwarrior/modelscan/sdk/ai
 # Cerebras
 client := ai.NewCerebras("your-key")
 resp, _ := client.Chat(ctx, messages, ai.ChatOptions{Model: "llama3.1-8b"})

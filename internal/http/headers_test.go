@@ -332,3 +332,69 @@ func TestRateLimitInfoStringWithRetryAfter(t *testing.T) {
 		t.Errorf("String() = %q, should contain retry_after", str)
 	}
 }
+
+// TestParseRateLimitHeadersRetryAfterSeconds tests Retry-After in seconds format
+func TestParseRateLimitHeadersRetryAfterSeconds(t *testing.T) {
+	headers := http.Header{}
+	headers.Set("Retry-After", "30")
+
+	info := ParseRateLimitHeaders(headers)
+
+	if info == nil {
+		t.Fatal("ParseRateLimitHeaders() returned nil, want non-nil")
+	}
+
+	if info.RetryAfter != 30*time.Second {
+		t.Errorf("RetryAfter = %v, want 30s", info.RetryAfter)
+	}
+}
+
+// TestParseRateLimitHeadersRetryAfterHTTPDate tests Retry-After in HTTP date format
+func TestParseRateLimitHeadersRetryAfterHTTPDate(t *testing.T) {
+	futureTime := time.Now().Add(60 * time.Second)
+	headers := http.Header{}
+	headers.Set("Retry-After", futureTime.UTC().Format(http.TimeFormat))
+
+	info := ParseRateLimitHeaders(headers)
+
+	if info == nil {
+		t.Fatal("ParseRateLimitHeaders() returned nil, want non-nil")
+	}
+
+	// Should be approximately 60 seconds (within 5 second tolerance)
+	if info.RetryAfter < 55*time.Second || info.RetryAfter > 65*time.Second {
+		t.Errorf("RetryAfter = %v, want ~60s", info.RetryAfter)
+	}
+}
+
+// TestParseRateLimitHeadersInvalidRetryAfter tests malformed Retry-After header
+func TestParseRateLimitHeadersInvalidRetryAfter(t *testing.T) {
+	headers := http.Header{}
+	headers.Set("Retry-After", "invalid-value")
+
+	info := ParseRateLimitHeaders(headers)
+
+	// Should return nil when only invalid headers are present
+	if info != nil {
+		t.Errorf("ParseRateLimitHeaders() with invalid Retry-After = %v, want nil", info)
+	}
+}
+
+// TestParseRateLimitHeadersMixedProviders tests headers from multiple providers
+func TestParseRateLimitHeadersMixedProviders(t *testing.T) {
+	headers := http.Header{}
+	// Mix of OpenAI and Google headers (OpenAI takes priority)
+	headers.Set("X-Ratelimit-Limit-Requests", "100")
+	headers.Set("X-Goog-Ratelimit-Limit-Requests", "200")
+
+	info := ParseRateLimitHeaders(headers)
+
+	if info == nil {
+		t.Fatal("ParseRateLimitHeaders() returned nil")
+	}
+
+	// Should use OpenAI value (priority 1)
+	if info.LimitRequests != 100 {
+		t.Errorf("LimitRequests = %d, want 100 (OpenAI priority)", info.LimitRequests)
+	}
+}

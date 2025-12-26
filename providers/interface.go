@@ -19,7 +19,7 @@ type Model struct {
 	CanReason      bool              `json:"can_reason"`
 	CanStream      bool              `json:"can_stream"`
 	CreatedAt      string            `json:"created_at,omitempty"`
-	deprecated     bool              `json:"deprecated,omitempty"`
+	Deprecated     bool              `json:"deprecated,omitempty"`
 	DeprecatedAt   *time.Time        `json:"deprecated_at,omitempty"`
 	Categories     []string          `json:"categories,omitempty"`   // e.g., ["coding", "chat", "embedding"]
 	Capabilities   map[string]string `json:"capabilities,omitempty"` // e.g., {"function_calling": "full", "vision": "high"}

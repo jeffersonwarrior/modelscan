@@ -436,7 +436,7 @@ return fmt.Errorf("workflow %s: step %s: %w", wf.ID, step.ID, err)
 ### Creating an Agent
 
 ```go
-import "github.com/nexora/modelscan/sdk/agent"
+import "github.com/jeffersonwarrior/modelscan/sdk/agent"
 
 // Create basic LLM agent
 llmAgent := agent.New("research-assistant", agent.ModeLLM)

@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/nexora/modelscan/scraper"
-	"github.com/nexora/modelscan/storage"
+	"github.com/jeffersonwarrior/modelscan/scraper"
+	"github.com/jeffersonwarrior/modelscan/storage"
 )
 
 func setupTestDB(t *testing.T) string {

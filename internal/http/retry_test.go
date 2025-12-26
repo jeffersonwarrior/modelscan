@@ -305,3 +305,59 @@ func TestCalculateBackoffZeroValues(t *testing.T) {
 		t.Errorf("calculateBackoff with zero config = %v, want 0", got)
 	}
 }
+
+// TestCalculateBackoffJitterNegative tests the edge case where jitter
+// could produce a negative delay (though statistically rare).
+// This covers line 109-110 in retry.go
+func TestCalculateBackoffJitterNegative(t *testing.T) {
+	// Create a config with very small base delay and large jitter
+	// to increase chance of negative result
+	cfg := &RetryConfig{
+		BaseDelay:     1 * time.Nanosecond,
+		MaxDelay:      1 * time.Second,
+		Multiplier:    1.0,
+		JitterPercent: 0.99, // ±99% jitter
+	}
+
+	// Run multiple times to hit the edge case
+	for i := 0; i < 100; i++ {
+		delay := calculateBackoff(cfg, 0)
+
+		// Should never be negative
+		if delay < 0 {
+			t.Errorf("calculateBackoff() produced negative delay: %v", delay)
+		}
+
+		// Should be >= 0 (clamped)
+		if delay < 0 || delay > cfg.MaxDelay {
+			t.Errorf("calculateBackoff() = %v, want [0, %v]", delay, cfg.MaxDelay)
+		}
+	}
+}
+
+// TestCalculateBackoffJitterExceedsMax tests the edge case where jitter
+// pushes delay above MaxDelay. This covers line 112-114 in retry.go
+func TestCalculateBackoffJitterExceedsMax(t *testing.T) {
+	cfg := &RetryConfig{
+		BaseDelay:     500 * time.Millisecond,
+		MaxDelay:      600 * time.Millisecond,
+		Multiplier:    2.0,
+		JitterPercent: 0.5, // ±50% jitter
+	}
+
+	// With multiplier 2.0, attempt 3 gives: 500ms * 2^3 = 4000ms
+	// This is already > MaxDelay (600ms), but jitter could push it higher
+	for i := 0; i < 50; i++ {
+		delay := calculateBackoff(cfg, 3)
+
+		// Should never exceed MaxDelay even with jitter
+		if delay > cfg.MaxDelay {
+			t.Errorf("calculateBackoff() = %v, want <= %v (clamped to MaxDelay)", delay, cfg.MaxDelay)
+		}
+
+		// Should be positive
+		if delay < 0 {
+			t.Errorf("calculateBackoff() = %v, want >= 0", delay)
+		}
+	}
+}

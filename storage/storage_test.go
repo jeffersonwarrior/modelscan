@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/nexora/modelscan/providers"
+	"github.com/jeffersonwarrior/modelscan/providers"
 )
 
 func TestInitDB(t *testing.T) {

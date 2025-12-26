@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/nexora/modelscan/storage"
+	"github.com/jeffersonwarrior/modelscan/storage"
 )
 
 // TokenBucket implements the token bucket rate limiting algorithm

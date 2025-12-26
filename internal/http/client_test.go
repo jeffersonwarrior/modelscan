@@ -721,3 +721,366 @@ func TestClientDoOnRetryHookError(t *testing.T) {
 		t.Errorf("attempts = %d, want 1 (retry was aborted)", attempts)
 	}
 }
+
+// TestClientDoAllRetriesExhaustedWithResponse tests the path where all retries
+// return retryable status codes (no network error), and we return the last response.
+// This covers lines 180-191 in client.go
+func TestClientDoAllRetriesExhaustedWithResponse(t *testing.T) {
+	attempts := 0
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		attempts++
+		// Always return 500 (retryable) with response body
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(`{"error":"server error"}`))
+	}))
+	defer server.Close()
+
+	client := NewClient(Config{
+		BaseURL: server.URL,
+		APIKey:  "sk-test-key",
+		Retry: RetryConfig{
+			MaxAttempts:   3,
+			BaseDelay:     1 * time.Millisecond,
+			JitterPercent: 0.0,
+		},
+	})
+
+	req, _ := http.NewRequest("GET", server.URL+"/test", nil)
+	resp, err := client.Do(req)
+
+	// Should succeed (no error) but return the error status code
+	if err != nil {
+		t.Fatalf("Do() error = %v, expected no error (returns response)", err)
+	}
+	defer resp.Body.Close()
+
+	// Should have made MaxAttempts
+	if attempts != 3 {
+		t.Errorf("attempts = %d, want 3", attempts)
+	}
+
+	// Should return the last response with 500 status
+	if resp.StatusCode != http.StatusInternalServerError {
+		t.Errorf("StatusCode = %d, want %d", resp.StatusCode, http.StatusInternalServerError)
+	}
+
+	// Should have attempt count
+	if resp.Attempt != 2 { // 0-indexed, so 2 = third attempt
+		t.Errorf("Attempt = %d, want 2", resp.Attempt)
+	}
+
+	// Verify response body is intact
+	body, _ := io.ReadAll(resp.Body)
+	if !strings.Contains(string(body), "server error") {
+		t.Errorf("Body = %q, want to contain 'server error'", string(body))
+	}
+}
+
+// TestClientDoAfterResponseHookOnSuccess tests AfterResponse hook on successful response.
+// This covers line 140-143 in client.go
+func TestClientDoAfterResponseHookOnSuccess(t *testing.T) {
+	hookCalled := false
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"status":"ok"}`))
+	}))
+	defer server.Close()
+
+	client := NewClient(Config{
+		BaseURL: server.URL,
+		APIKey:  "sk-test-key",
+		AfterResponse: func(req *http.Request, resp *http.Response) error {
+			hookCalled = true
+			if resp.StatusCode != http.StatusOK {
+				t.Errorf("AfterResponse hook: StatusCode = %d, want %d", resp.StatusCode, http.StatusOK)
+			}
+			return nil
+		},
+	})
+
+	req, _ := http.NewRequest("GET", server.URL+"/test", nil)
+	_, err := client.Do(req)
+
+	if err != nil {
+		t.Fatalf("Do() error = %v", err)
+	}
+
+	if !hookCalled {
+		t.Error("AfterResponse hook was not called")
+	}
+}
+
+// TestClientDoRetryDiscardsResponseBody tests that response body is discarded
+// before retrying. This covers lines 152-154 in client.go
+func TestClientDoRetryDiscardsResponseBody(t *testing.T) {
+	attempts := 0
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		attempts++
+		if attempts < 2 {
+			// First attempt: return large body with 503
+			w.WriteHeader(http.StatusServiceUnavailable)
+			// Write large body to ensure it gets discarded
+			w.Write(bytes.Repeat([]byte("x"), 10000))
+			return
+		}
+		// Second attempt: success
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"success":true}`))
+	}))
+	defer server.Close()
+
+	client := NewClient(Config{
+		BaseURL: server.URL,
+		APIKey:  "sk-test-key",
+		Retry: RetryConfig{
+			MaxAttempts:   2,
+			BaseDelay:     1 * time.Millisecond,
+			JitterPercent: 0.0,
+		},
+	})
+
+	req, _ := http.NewRequest("GET", server.URL+"/test", nil)
+	resp, err := client.Do(req)
+
+	if err != nil {
+		t.Fatalf("Do() error = %v", err)
+	}
+	defer resp.Body.Close()
+
+	// Should succeed on second attempt
+	if attempts != 2 {
+		t.Errorf("attempts = %d, want 2", attempts)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		t.Errorf("StatusCode = %d, want %d", resp.StatusCode, http.StatusOK)
+	}
+}
+
+// TestClientDoRequestBodyReadError tests the error path when reading request body fails.
+// This covers line 71-74 in client.go
+func TestClientDoRequestBodyReadError(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer server.Close()
+
+	client := NewClient(Config{
+		BaseURL: server.URL,
+		APIKey:  "sk-test-key",
+	})
+
+	// Create a body that will error on Read
+	errorBody := &errorReader{}
+	req, _ := http.NewRequest("POST", server.URL+"/test", errorBody)
+
+	_, err := client.Do(req)
+
+	if err == nil {
+		t.Fatal("Do() should return error when body read fails")
+	}
+
+	if !strings.Contains(err.Error(), "failed to read request body") {
+		t.Errorf("error = %v, want 'failed to read request body'", err)
+	}
+}
+
+// errorReader always returns an error on Read
+type errorReader struct{}
+
+func (e *errorReader) Read(p []byte) (n int, err error) {
+	return 0, errors.New("simulated read error")
+}
+
+func (e *errorReader) Close() error {
+	return nil
+}
+
+// TestClientDoAuthorizationHeaderPreserved tests that existing Authorization header is preserved.
+// This covers line 86-88 in client.go (the branch where header already exists)
+func TestClientDoAuthorizationHeaderPreserved(t *testing.T) {
+	customAuth := "Bearer custom-token"
+	receivedAuth := ""
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		receivedAuth = r.Header.Get("Authorization")
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer server.Close()
+
+	client := NewClient(Config{
+		BaseURL: server.URL,
+		APIKey:  "sk-test-key", // Client has API key
+	})
+
+	req, _ := http.NewRequest("GET", server.URL+"/test", nil)
+	req.Header.Set("Authorization", customAuth) // But request already has auth
+
+	_, err := client.Do(req)
+
+	if err != nil {
+		t.Fatalf("Do() error = %v", err)
+	}
+
+	// Should preserve the request's auth, not use client's API key
+	if receivedAuth != customAuth {
+		t.Errorf("Authorization = %q, want %q (should preserve existing)", receivedAuth, customAuth)
+	}
+}
+
+// TestClientDoWithoutAPIKey tests client behavior when no API key is configured.
+// This covers the branch where c.apiKey == "" at line 86
+func TestClientDoWithoutAPIKey(t *testing.T) {
+	receivedAuth := ""
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		receivedAuth = r.Header.Get("Authorization")
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer server.Close()
+
+	client := NewClient(Config{
+		BaseURL: server.URL,
+		// No APIKey set
+	})
+
+	req, _ := http.NewRequest("GET", server.URL+"/test", nil)
+	_, err := client.Do(req)
+
+	if err != nil {
+		t.Fatalf("Do() error = %v", err)
+	}
+
+	// Should not add Authorization header
+	if receivedAuth != "" {
+		t.Errorf("Authorization = %q, want empty (no API key)", receivedAuth)
+	}
+}
+
+// TestClientDoAfterResponseHookError tests that AfterResponse hook errors are handled.
+// Note: Current implementation ignores the error, but we test the hook is called.
+func TestClientDoAfterResponseHookError(t *testing.T) {
+	hookCalled := false
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer server.Close()
+
+	client := NewClient(Config{
+		BaseURL: server.URL,
+		AfterResponse: func(req *http.Request, resp *http.Response) error {
+			hookCalled = true
+			return errors.New("hook error")
+		},
+	})
+
+	req, _ := http.NewRequest("GET", server.URL+"/test", nil)
+	resp, err := client.Do(req)
+
+	// Should succeed despite hook error (current implementation ignores it)
+	if err != nil {
+		t.Fatalf("Do() error = %v, want nil", err)
+	}
+
+	if resp == nil {
+		t.Fatal("Do() resp = nil, want non-nil")
+	}
+
+	if !hookCalled {
+		t.Error("AfterResponse hook was not called")
+	}
+}
+
+// TestClientDoNetworkErrorExhaustsRetries tests the path where all retries fail with network errors.
+// This covers the "all retries exhausted" error return path (lines 180-183 in client.go)
+func TestClientDoNetworkErrorExhaustsRetries(t *testing.T) {
+	// Server that closes connection immediately
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Force connection close before response
+		hj, ok := w.(http.Hijacker)
+		if !ok {
+			t.Fatal("webserver doesn't support hijacking")
+		}
+		conn, _, err := hj.Hijack()
+		if err != nil {
+			t.Fatal(err)
+		}
+		conn.Close() // Close connection to simulate network error
+	}))
+	defer server.Close()
+
+	client := NewClient(Config{
+		BaseURL: server.URL,
+		Retry: RetryConfig{
+			MaxAttempts:   2,
+			BaseDelay:     1 * time.Millisecond,
+			JitterPercent: 0.0,
+		},
+	})
+
+	req, _ := http.NewRequest("GET", server.URL+"/test", nil)
+	_, err := client.Do(req)
+
+	// Should return error after exhausting retries
+	if err == nil {
+		t.Fatal("Do() should return error after all retries fail")
+	}
+
+	// Should be a network error
+	if !strings.Contains(err.Error(), "EOF") && !strings.Contains(err.Error(), "connection") {
+		t.Logf("Got error: %v (expected network error)", err)
+	}
+}
+
+// TestClientDoLoggerWithRetryAndFailure tests logger being called during retries that fail.
+func TestClientDoLoggerWithRetryAndFailure(t *testing.T) {
+	attempts := 0
+	var logBuf bytes.Buffer
+	logger := log.New(&logBuf, "", 0)
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		attempts++
+		w.WriteHeader(http.StatusServiceUnavailable) // Always fail
+	}))
+	defer server.Close()
+
+	client := NewClient(Config{
+		BaseURL: server.URL,
+		APIKey:  "sk-test12345",
+		Retry: RetryConfig{
+			MaxAttempts:   2,
+			BaseDelay:     1 * time.Millisecond,
+			JitterPercent: 0.0,
+		},
+		Logger: logger,
+	})
+
+	req, _ := http.NewRequest("GET", server.URL+"/test", nil)
+	resp, err := client.Do(req)
+
+	if err != nil {
+		t.Fatalf("Do() error = %v", err)
+	}
+	defer resp.Body.Close()
+
+	// Should have logged both attempts
+	logOutput := logBuf.String()
+	if !strings.Contains(logOutput, "attempt 1") {
+		t.Errorf("Log should contain 'attempt 1', got: %s", logOutput)
+	}
+	if !strings.Contains(logOutput, "attempt 2") {
+		t.Errorf("Log should contain 'attempt 2', got: %s", logOutput)
+	}
+
+	// Should have sanitized API key in logs
+	if strings.Contains(logOutput, "sk-test12345") {
+		t.Error("Log contains full API key, should be sanitized")
+	}
+	if !strings.Contains(logOutput, "sk-***st12345") {
+		t.Errorf("Log should contain sanitized API key (sk-***st12345), got: %s", logOutput)
+	}
+}

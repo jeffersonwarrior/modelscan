@@ -5,7 +5,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/nexora/modelscan/storage"
+	"github.com/jeffersonwarrior/modelscan/storage"
 )
 
 // SeedInitialRateLimits populates the database with known rate limits for core providers

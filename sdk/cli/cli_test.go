@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
-	"github.com/nexora/modelscan/sdk/storage"
+	"github.com/jeffersonwarrior/modelscan/sdk/storage"
 	"time"
 )
 

@@ -6,8 +6,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/nexora/modelscan/sdk/ratelimit"
-	"github.com/nexora/modelscan/storage"
+	"github.com/jeffersonwarrior/modelscan/sdk/ratelimit"
+	"github.com/jeffersonwarrior/modelscan/storage"
 )
 
 // RoutingStrategy determines how to select a provider

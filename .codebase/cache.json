@@ -1,0 +1,621 @@
+{
+  "file_hashes": {
+    "/work/COVERAGE_VISUAL.md": {
+      "hash": "4435c195fe8e65e897a456ff3b8528df087f32e3",
+      "size": 5476,
+      "mtime": 1766769131
+    },
+    "/work/SDK_COMPLETION_REPORT.md": {
+      "hash": "e1c9ca529f9875dc4de02ffc00c29010b51bac57",
+      "size": 8229,
+      "mtime": 1766769131
+    },
+    "/work/SESSION_SUMMARY.md": {
+      "hash": "36f0711ba109c3d358825ddc1bde5071ace6bc65",
+      "size": 5551,
+      "mtime": 1766769131
+    },
+    "/work/export.sh": {
+      "hash": "ae00026fd4caf571bf22b2b67c9a206b7b9a1920",
+      "size": 528,
+      "mtime": 1766769131
+    },
+    "/work/COMPARISON.md": {
+      "hash": "908ac4ff360d0b59a8badf30d89d24c7f5182667",
+      "size": 7807,
+      "mtime": 1766769131
+    },
+    "/work/SESSION_COMPLETE.md": {
+      "hash": "a94ee7c113a6d2f1e8618b35fb57c865270bba0d",
+      "size": 4165,
+      "mtime": 1766769131
+    },
+    "/work/NEXORA.AI.GOSDK.md": {
+      "hash": "ef0c846426ab4e653c351505d5c516f706a65706",
+      "size": 8037,
+      "mtime": 1766769131
+    },
+    "/work/COVERAGE_REPORT.md": {
+      "hash": "9996b942effa2b6242ce331f8d5f1b7f3726f598",
+      "size": 5128,
+      "mtime": 1766769131
+    },
+    "/work/Makefile": {
+      "hash": "ae0331cdfbeb42297d89b8f1bcca47e54bbbfa18",
+      "size": 2418,
+      "mtime": 1766769131
+    },
+    "/work/VICTORY_REPORT.md": {
+      "hash": "675176ad5f9148a271740a221be9a4fe29cdca04",
+      "size": 8478,
+      "mtime": 1766769131
+    },
+    "/work/test-all-sdks.sh": {
+      "hash": "6a2a711fdfccc16c1bd6e3f9c1bb2728d75f683e",
+      "size": 3139,
+      "mtime": 1766769131
+    },
+    "/work/TEST_COVERAGE_SUCCESS.md": {
+      "hash": "b38cf5435750b518b49a52c04d781efb2a580bea",
+      "size": 6238,
+      "mtime": 1766769131
+    },
+    "/work/CONTINUATION_SESSION_REPORT.md": {
+      "hash": "b53badd68c2e5789af1dd12239b6e9331a5ecfe6",
+      "size": 11984,
+      "mtime": 1766769131
+    },
+    "/work/REBUILD.md": {
+      "hash": "034e31e4ed48c5db592d4ffe9c545d9501e94663",
+      "size": 8243,
+      "mtime": 1766769131
+    },
+    "/work/FINAL_COVERAGE_REPORT.md": {
+      "hash": "72f3fc76f8ae306e223a0c217a4548a0286ab926",
+      "size": 5299,
+      "mtime": 1766769131
+    },
+    "/work/FINAL_SESSION_REPORT.md": {
+      "hash": "a6bad262b804b428d4e54398a83e631b2e8c0eaf",
+      "size": 8715,
+      "mtime": 1766769131
+    },
+    "/work/RELEASE_NOTES.md": {
+      "hash": "55e7e435f8b04baf13efe65118c8d9c7f41ce279",
+      "size": 2810,
+      "mtime": 1766769131
+    },
+    "/work/SDK_STATUS.md": {
+      "hash": "0d161255b3579f0df7e538ffc56f93dde320f392",
+      "size": 7866,
+      "mtime": 1766769131
+    },
+    "/work/coverage_summary.md": {
+      "hash": "ffcb38cdcd10606e1411286c1903375d6de881c9",
+      "size": 1175,
+      "mtime": 1766769131
+    },
+    "/work/TODO.md": {
+      "hash": "1e20d60a42741b35e6b0a0b026b326279dbbb253",
+      "size": 59855,
+      "mtime": 1766769131
+    },
+    "/work/TASK_COMPLETE.md": {
+      "hash": "7ad9648327252a382e007e25c39285c7e7fa4c4e",
+      "size": 11114,
+      "mtime": 1766769131
+    },
+    "/work/RELEASE.md": {
+      "hash": "22043b25441d108e367e6ae0f52c0fd13cda1876",
+      "size": 7693,
+      "mtime": 1766769131
+    },
+    "/work/COVERAGE_PROGRESS_SESSION2.md": {
+      "hash": "99fae9fa8d41e1ca09611816e0a215160f087d7c",
+      "size": 5752,
+      "mtime": 1766769131
+    },
+    "/work/.gitignore": {
+      "hash": "e0ffe5eab14cc770a93318e16a55175694ead7fa",
+      "size": 1210,
+      "mtime": 1766769131
+    },
+    "/work/CODE_QUALITY_FINAL.md": {
+      "hash": "a542544e374efa726b1199f5550f97652cb447f6",
+      "size": 7342,
+      "mtime": 1766769131
+    },
+    "/work/PROVIDERS.md": {
+      "hash": "10b960f8749da4431606c5314e4271cbb98187ec",
+      "size": 5715,
+      "mtime": 1766769131
+    },
+    "/work/main.go": {
+      "hash": "2855cdd3996e34d0def6278f528b0c3fbf52d7b0",
+      "size": 3854,
+      "mtime": 1766769131
+    },
+    "/work/SECURITY.md": {
+      "hash": "913549c238e280c1b2e7ec932c4304d2fd5397cd",
+      "size": 6643,
+      "mtime": 1766769131
+    },
+    "/work/SDK_USAGE_GUIDE.md": {
+      "hash": "3a5b1bac83f35dccade107aed4e1e90b6b508a50",
+      "size": 9972,
+      "mtime": 1766769131
+    },
+    "/work/lint-all-sdks.sh": {
+      "hash": "b8b92db07bf49f6086314905d7162075a7b1ebe1",
+      "size": 3320,
+      "mtime": 1766769131
+    },
+    "/work/CHANGELOG.md": {
+      "hash": "764946fe342cc8286f006ca167d185fc90096c36",
+      "size": 7130,
+      "mtime": 1766769131
+    },
+    "/work/update-module-paths.sh": {
+      "hash": "cf4bbe56b82a8b240cc650fa6141c3222fdd2e30",
+      "size": 2450,
+      "mtime": 1766769131
+    },
+    "/work/COVERAGE_FINAL_REPORT.md": {
+      "hash": "f43fc6fc5f73b0cdcabb6a3b2fdf1c887e11fba2",
+      "size": 6262,
+      "mtime": 1766769131
+    },
+    "/work/AGENTS.md": {
+      "hash": "59817840cb4dd49ce4fb7ae9059745fd9b1d335d",
+      "size": 27068,
+      "mtime": 1766769131
+    },
+    "/work/PROGRESS_UPDATE.md": {
+      "hash": "d6a3e176c603086d8b676391976b878005f2e318",
+      "size": 5681,
+      "mtime": 1766769131
+    },
+    "/work/CODEAUDIT-12-18-2025.md": {
+      "hash": "156667b291c64b7bfcbaa7b5da21828ce77dc243",
+      "size": 4337,
+      "mtime": 1766769131
+    },
+    "/work/fix-all-sdks.sh": {
+      "hash": "bf916139d165e5ccba8ccdbefdaba2ca54ca94be",
+      "size": 1034,
+      "mtime": 1766769131
+    },
+    "/work/CLAUDE.md": {
+      "hash": "2a4150195c6caba14221b72f3d6ee4446c2dfce2",
+      "size": 6075,
+      "mtime": 1766770463
+    },
+    "/work/quickstart.sh": {
+      "hash": "1fb3a6ea7f9a6afafd7d34659d02584b5fc32cfa",
+      "size": 3326,
+      "mtime": 1766769131
+    },
+    "/work/.golangci.yml": {
+      "hash": "bdfccdda8accece754dca204573b70c65fb98471",
+      "size": 149,
+      "mtime": 1766769131
+    },
+    "/work/TESTING_GUIDE.md": {
+      "hash": "0e691866bbffd0b994f6c3cf828c52736a60073b",
+      "size": 7569,
+      "mtime": 1766769131
+    },
+    "/work/modelscan.0.2.0.12.26.md": {
+      "hash": "88767c6e862994743416502abf57476906b95e3b",
+      "size": 11652,
+      "mtime": 1766770993
+    },
+    "/work/ROADMAP.md": {
+      "hash": "851eeaca8e4e7d6765c1de485631d1c29c87a5e4",
+      "size": 7677,
+      "mtime": 1766769131
+    },
+    "/work/README.md": {
+      "hash": "21ab5e392678da9f47fc4837aec8be40c8e1ca7f",
+      "size": 17684,
+      "mtime": 1766769131
+    },
+    "/work/.github/workflows/ci.yml": {
+      "hash": "7accc926a9045b37db99351960a39147a895707a",
+      "size": 588,
+      "mtime": 1766769131
+    },
+    "/work/.github/workflows/sdk-quality.yml": {
+      "hash": "2316283afd4ac6a66c2f9416d10c6c618ce90fc1",
+      "size": 3057,
+      "mtime": 1766769131
+    },
+    "/work/config/config_test.go": {
+      "hash": "63df2a1b7c99675e34a5c48201ee0861954aecea",
+      "size": 5829,
+      "mtime": 1766769131
+    },
+    "/work/config/config.go": {
+      "hash": "4d84e5c6e92bf1b210367c9a87a009ee95ff9b49",
+      "size": 7158,
+      "mtime": 1766769131
+    },
+    "/work/config/agent_env.go": {
+      "hash": "020c18c66b2b170ccb9ece6b5054c0422094095f",
+      "size": 9358,
+      "mtime": 1766769131
+    },
+    "/work/providers/mistral.go": {
+      "hash": "870e8ca769d2b4ba7cc30090af331189204ee5ca",
+      "size": 11058,
+      "mtime": 1766769131
+    },
+    "/work/providers/openai_test.go": {
+      "hash": "54f612e66d3d1eacd318b3e874c618633ba26b58",
+      "size": 6716,
+      "mtime": 1766769131
+    },
+    "/work/providers/mistral_test.go": {
+      "hash": "8f2587edc16387895675eacf55a1e5ad90bf304a",
+      "size": 18198,
+      "mtime": 1766769131
+    },
+    "/work/providers/providers_test.go": {
+      "hash": "67a1465cc35eaa5e08a6d3f14bd99bfd275812f9",
+      "size": 16664,
+      "mtime": 1766769131
+    },
+    "/work/providers/utils_test.go": {
+      "hash": "31a71a20be0e76049ac02281d4a3b076ea057ed3",
+      "size": 2055,
+      "mtime": 1766769131
+    },
+    "/work/providers/google_test.go": {
+      "hash": "d49c9c4846c3418d20d7e00b6c321b68b9b66fc5",
+      "size": 15596,
+      "mtime": 1766769131
+    },
+    "/work/providers/google.go": {
+      "hash": "4118ac80c9dbab8d626fadaf4ab2985fbea25c1f",
+      "size": 12520,
+      "mtime": 1766769131
+    },
+    "/work/providers/utils.go": {
+      "hash": "cee37d00da499c38b5dd822cc26558c440f72988",
+      "size": 652,
+      "mtime": 1766769131
+    },
+    "/work/providers/anthropic_test.go": {
+      "hash": "9d2fb285a44af11b01950097edc19b41de7a477d",
+      "size": 9582,
+      "mtime": 1766769131
+    },
+    "/work/providers/anthropic.go": {
+      "hash": "5482b57a2a3cb96b44bff113b11f8183f0d6c7d6",
+      "size": 9427,
+      "mtime": 1766769131
+    },
+    "/work/providers/openai.go": {
+      "hash": "2db6d6c3f290b5b9c1627f670ab966c48406070e",
+      "size": 10258,
+      "mtime": 1766769131
+    },
+    "/work/providers/interface.go": {
+      "hash": "e536fd2a0a029d1f1d4349d628b5c474afa63e35",
+      "size": 4246,
+      "mtime": 1766769131
+    },
+    "/work/.claude/optimizations/targeted-reads.md": {
+      "hash": "83a72aa9df1fc30eb1edc6f325b580e2510cedb2",
+      "size": 1015,
+      "mtime": 1766770417
+    },
+    "/work/.claude/optimizations/batched-edits.md": {
+      "hash": "53f4721ae9f5fd3879bbffd373274e4b8d05153f",
+      "size": 1155,
+      "mtime": 1766770417
+    },
+    "/work/.claude/optimizations/haiku-explore.md": {
+      "hash": "4ca83e4265ac0f97a72ca2bf3c702f79d71d9b6f",
+      "size": 1098,
+      "mtime": 1766770417
+    },
+    "/work/.claude/skills/verification-before-completion/SKILL.md": {
+      "hash": "93eb5b7456d726a3c5ed6cedb7ef0c34aab93312",
+      "size": 1149,
+      "mtime": 1766770417
+    },
+    "/work/.claude/skills/systematic-debugging/SKILL.md": {
+      "hash": "d03b85ff6d4aeb3ba39a1d758790e78d85f5b0a6",
+      "size": 1475,
+      "mtime": 1766770417
+    },
+    "/work/.claude/memory/REFLECTIONS.md": {
+      "hash": "b6cbdf717608475c9b9f738b236fb45419195d11",
+      "size": 1267,
+      "mtime": 1766770417
+    },
+    "/work/scraper/seed_data.go": {
+      "hash": "bc67b6121be072ea29ec440c9d5e9e61dc21d057",
+      "size": 17204,
+      "mtime": 1766769131
+    },
+    "/work/storage/storage_test.go": {
+      "hash": "d1585a5c2eed7e409916a513afaa3ff488ea0b03",
+      "size": 17422,
+      "mtime": 1766769131
+    },
+    "/work/storage/rate_limits_test.go": {
+      "hash": "4e57a08beab0ab2202834b727490121ce24b60a1",
+      "size": 13975,
+      "mtime": 1766769131
+    },
+    "/work/storage/markdown.go": {
+      "hash": "4d4730832290b91b2208aab37cc23402dc9e071b",
+      "size": 4255,
+      "mtime": 1766769131
+    },
+    "/work/storage/sqlite.go": {
+      "hash": "8a71e107679644be14db063e068f9add4964b276",
+      "size": 7588,
+      "mtime": 1766769131
+    },
+    "/work/storage/rate_limits.go": {
+      "hash": "a6ff5d2a108dfdc1d5f40313201d5115d1fd9b80",
+      "size": 11765,
+      "mtime": 1766769131
+    },
+    "/work/cmd/seed-db/main.go": {
+      "hash": "c706da01ee94a408c9ef268b5d908ebc76e8f217",
+      "size": 1234,
+      "mtime": 1766769131
+    },
+    "/work/cmd/demo/main.go": {
+      "hash": "7cea5d3feac845970537bab0b9376e06d9cf57f5",
+      "size": 6343,
+      "mtime": 1766769131
+    },
+    "/work/sdk/stream/stream.go": {
+      "hash": "d40bd7b9fd7354b663520ab6be2c68a699965b45",
+      "size": 8911,
+      "mtime": 1766769131
+    },
+    "/work/sdk/stream/stream_test.go": {
+      "hash": "83d095a3b23b7eec4e392895c76a9a4295b1096f",
+      "size": 9587,
+      "mtime": 1766769131
+    },
+    "/work/sdk/agent/workflow_test.go": {
+      "hash": "6cb9877a714e51f93cd9f3d925b7fd9e2bc80598",
+      "size": 6735,
+      "mtime": 1766769131
+    },
+    "/work/sdk/agent/coordinator.go": {
+      "hash": "1ca3c7b63f088946671373f060229fcea74377f1",
+      "size": 18535,
+      "mtime": 1766769131
+    },
+    "/work/sdk/agent/agent_test.go": {
+      "hash": "7330b476bd37c84101dfcdb1d7209d10a0092792",
+      "size": 6391,
+      "mtime": 1766769131
+    },
+    "/work/sdk/agent/messagebus_test.go": {
+      "hash": "f309f55cac4df75c9b1f8cb63472c877b738894b",
+      "size": 11630,
+      "mtime": 1766769131
+    },
+    "/work/sdk/agent/team.go": {
+      "hash": "c47adac670968edfb3d51490a09e5b757f910486",
+      "size": 6551,
+      "mtime": 1766769131
+    },
+    "/work/sdk/agent/react_planner.go": {
+      "hash": "40185847b8fa85bdc7b61787947fceb85763a99f",
+      "size": 7011,
+      "mtime": 1766769131
+    },
+    "/work/sdk/agent/react_planner_test.go": {
+      "hash": "0ced6d4e3aeb5b7f79ea12cec97427bfbc596436",
+      "size": 7250,
+      "mtime": 1766769131
+    },
+    "/work/sdk/agent/errors.go": {
+      "hash": "d31a327e6cd6f977a9814c1d7e082575a884f2e1",
+      "size": 334,
+      "mtime": 1766769131
+    },
+    "/work/sdk/agent/coordinator_test.go": {
+      "hash": "e5e20e69313ad3a8dd2748a1dd8f2fa4291937f0",
+      "size": 14226,
+      "mtime": 1766769131
+    },
+    "/work/sdk/agent/workflow.go": {
+      "hash": "554fb1a6b0e6663fe0400ac41fd2e6dccf5b1dac",
+      "size": 7616,
+      "mtime": 1766769131
+    },
+    "/work/sdk/agent/team_test.go": {
+      "hash": "25ada166a52191fd75bb5095f25a062a5db3f716",
+      "size": 7647,
+      "mtime": 1766769131
+    },
+    "/work/sdk/agent/messagebus.go": {
+      "hash": "3d90f02f77ba10ae984cb78a4b05cf75b842dd78",
+      "size": 8442,
+      "mtime": 1766769131
+    },
+    "/work/sdk/agent/memory_test.go": {
+      "hash": "d9f177d3d1a78737dd40670089811b8a25d1d509",
+      "size": 7916,
+      "mtime": 1766769131
+    },
+    "/work/sdk/agent/integration_test.go": {
+      "hash": "bf6a2c5e6aca9fb2200faf86415ae86e6d2b4173",
+      "size": 3707,
+      "mtime": 1766769131
+    },
+    "/work/sdk/agent/tools_test.go": {
+      "hash": "1771d69974188bfc50215ce672e3afda6720be66",
+      "size": 8737,
+      "mtime": 1766769131
+    },
+    "/work/sdk/agent/memory.go": {
+      "hash": "6468169be4401edf990eb293528fe112ed7ab420",
+      "size": 8070,
+      "mtime": 1766769131
+    },
+    "/work/sdk/agent/agent.go": {
+      "hash": "0316fe758a8f38a12d2dc8bc8a67c1ff85e11bf6",
+      "size": 13148,
+      "mtime": 1766769131
+    },
+    "/work/sdk/agent/tools.go": {
+      "hash": "e628b7a346b1967395cdec853f6f1b220bd4681a",
+      "size": 5887,
+      "mtime": 1766769131
+    },
+    "/work/sdk/agent/coverage_test.go": {
+      "hash": "47495061edb64312f3c5b59ecaaf22ee25b31ba4",
+      "size": 6752,
+      "mtime": 1766769131
+    },
+    "/work/sdk/storage/tool_execution.go": {
+      "hash": "15d88b83596b4b64cbc45daa3903fb8baa856404",
+      "size": 11229,
+      "mtime": 1766769131
+    },
+    "/work/sdk/storage/message.go": {
+      "hash": "7168056b6e0028719643283dd8f262fec0a3b7a5",
+      "size": 7513,
+      "mtime": 1766769131
+    },
+    "/work/sdk/storage/team.go": {
+      "hash": "8617f8eba24119f12cfb7ba6e071e889ee5d8004",
+      "size": 8144,
+      "mtime": 1766769131
+    },
+    "/work/sdk/storage/storage.go": {
+      "hash": "d3e2605a43214120b29144cff9b4e8701b21b1d7",
+      "size": 7378,
+      "mtime": 1766769131
+    },
+    "/work/sdk/storage/storage_test.go": {
+      "hash": "bc49380694f8d62eb4e1394b3f70d47285989885",
+      "size": 82408,
+      "mtime": 1766769131
+    },
+    "/work/sdk/storage/agent.go": {
+      "hash": "6db6ec90489624a83d84b88112397a55ea60aabc",
+      "size": 7723,
+      "mtime": 1766769131
+    },
+    "/work/sdk/storage/database.go": {
+      "hash": "ee9962d51becaaab174914fd6c963e82ec55f26f",
+      "size": 12008,
+      "mtime": 1766769131
+    },
+    "/work/sdk/storage/task.go": {
+      "hash": "43325a70745969301c91084b295244f501847ffb",
+      "size": 8136,
+      "mtime": 1766769131
+    },
+    "/work/sdk/cli/commands.go": {
+      "hash": "fcf347a96e2c1a06d8a10fb7370f1b16fa88516c",
+      "size": 12559,
+      "mtime": 1766769131
+    },
+    "/work/sdk/cli/orchestrator.go": {
+      "hash": "3be7ea46aff6c8ebc4c96a589c0e68f6d524d6ad",
+      "size": 10591,
+      "mtime": 1766769131
+    },
+    "/work/sdk/cli/cli_test.go": {
+      "hash": "49c8639e1d745d0d70e12fce26bafba282d11a8c",
+      "size": 24953,
+      "mtime": 1766769131
+    },
+    "/work/sdk/cli/cli.go": {
+      "hash": "67d8db1341358c346b4bdd4b5206c7e3acc23161",
+      "size": 5611,
+      "mtime": 1766769131
+    },
+    "/work/sdk/ratelimit/bucket.go": {
+      "hash": "6889ec2f865048b892fa502b18e10494a4474e2c",
+      "size": 6192,
+      "mtime": 1766769131
+    },
+    "/work/sdk/ratelimit/bucket_test.go": {
+      "hash": "b307b5212ebe893c19c5a71802ab20c5614306f8",
+      "size": 8296,
+      "mtime": 1766769131
+    },
+    "/work/sdk/router/router_test.go": {
+      "hash": "3a5c4bac39b9fb7a3188d7df8edf5287ba5be458",
+      "size": 10819,
+      "mtime": 1766769131
+    },
+    "/work/sdk/router/router.go": {
+      "hash": "170e494942a49da4c758f3703f1c8729e46cda6b",
+      "size": 11862,
+      "mtime": 1766769131
+    },
+    "/work/codedocs/router.md": {
+      "hash": "274a35386b43b943186521b10be37905a447d485",
+      "size": 1113,
+      "mtime": 1766769131
+    },
+    "/work/codedocs/cmd.md": {
+      "hash": "c26ec1b783724129ede59b7dc8cfee186a2edd70",
+      "size": 565,
+      "mtime": 1766769131
+    },
+    "/work/codedocs/providers.md": {
+      "hash": "da394ded36ab30efe6b99ca7ece9872eeb44c71e",
+      "size": 1718,
+      "mtime": 1766769131
+    },
+    "/work/codedocs/stream.md": {
+      "hash": "a8eb85aeb7ee68e58822c431c093eb2666efc643",
+      "size": 673,
+      "mtime": 1766769131
+    },
+    "/work/codedocs/cli.md": {
+      "hash": "faba9efe1de8520b6cb395bd87cd7578cbe91a09",
+      "size": 7918,
+      "mtime": 1766769131
+    },
+    "/work/codedocs/storage.md": {
+      "hash": "63d3f734201cf54b3c7be4279bf21be97703d917",
+      "size": 15540,
+      "mtime": 1766769131
+    },
+    "/work/codedocs/README.md": {
+      "hash": "01833c3bc3a83b37cb6429e7359b1641a93e5661",
+      "size": 760,
+      "mtime": 1766769131
+    },
+    "/work/codedocs/agent.md": {
+      "hash": "001c66b22f895af3c6fe647bf9c3980c9a091f7c",
+      "size": 16269,
+      "mtime": 1766769131
+    },
+    "/work/codedocs/config.md": {
+      "hash": "600fdf91309139338a2d74f0f20b06723a54dfda",
+      "size": 1617,
+      "mtime": 1766769131
+    },
+    "/work/docs/code/.gitignore": {
+      "hash": "a8f051dc57ae4be291acb117736d98e8f6b66819",
+      "size": 105,
+      "mtime": 1766769131
+    },
+    "/work/docs/code/README.md": {
+      "hash": "27ba90588b12d3952308ccfe81f7ac8368aa6707",
+      "size": 2915,
+      "mtime": 1766769131
+    }
+  },
+  "created_at": "2025-12-26T18:54:32.210298",
+  "updated_at": "2025-12-26T18:55:24.231783"
+}

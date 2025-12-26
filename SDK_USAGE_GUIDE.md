@@ -14,15 +14,15 @@ The ModelScan project contains 21 production-ready Go SDKs for LLM providers. Yo
 
 ### Setup
 
-The SDKs are already set up as Go modules under `github.com/nexora/modelscan/sdk/*`.
+The SDKs are already set up as Go modules under `github.com/jeffersonwarrior/modelscan/sdk/*`.
 
 ### In Your Project
 
 ```go
 import (
-    "github.com/nexora/modelscan/sdk/openai"
-    "github.com/nexora/modelscan/sdk/anthropic"
-    "github.com/nexora/modelscan/sdk/together"
+    "github.com/jeffersonwarrior/modelscan/sdk/openai"
+    "github.com/jeffersonwarrior/modelscan/sdk/anthropic"
+    "github.com/jeffersonwarrior/modelscan/sdk/together"
     // ... any other SDK
 )
 ```
@@ -31,9 +31,9 @@ import (
 
 ```bash
 # In your project directory
-go get github.com/nexora/modelscan/sdk/openai
-go get github.com/nexora/modelscan/sdk/anthropic
-go get github.com/nexora/modelscan/sdk/together
+go get github.com/jeffersonwarrior/modelscan/sdk/openai
+go get github.com/jeffersonwarrior/modelscan/sdk/anthropic
+go get github.com/jeffersonwarrior/modelscan/sdk/together
 ```
 
 ### Usage Example
@@ -46,8 +46,8 @@ import (
     "fmt"
     "log"
     
-    "github.com/nexora/modelscan/sdk/openai"
-    "github.com/nexora/modelscan/sdk/together"
+    "github.com/jeffersonwarrior/modelscan/sdk/openai"
+    "github.com/jeffersonwarrior/modelscan/sdk/together"
 )
 
 func main() {
@@ -136,8 +136,8 @@ use (
 package main
 
 import (
-    "github.com/nexora/modelscan/sdk/openai"
-    "github.com/nexora/modelscan/sdk/groq"
+    "github.com/jeffersonwarrior/modelscan/sdk/openai"
+    "github.com/jeffersonwarrior/modelscan/sdk/groq"
 )
 
 func main() {
@@ -161,7 +161,7 @@ Include the entire modelscan repo as a submodule.
 
 ```bash
 # In your project root
-git submodule add https://github.com/nexora/modelscan.git vendor/modelscan
+git submodule add https://github.com/jeffersonwarrior/modelscan.git vendor/modelscan
 
 # Initialize and update
 git submodule init
@@ -172,7 +172,7 @@ git submodule update
 
 ```bash
 # In your go.mod, use replace directive
-go mod edit -replace github.com/nexora/modelscan=./vendor/modelscan
+go mod edit -replace github.com/jeffersonwarrior/modelscan=./vendor/modelscan
 ```
 
 ### Your go.mod
@@ -183,11 +183,11 @@ module github.com/yourname/yourproject
 go 1.23
 
 require (
-    github.com/nexora/modelscan/sdk/openai v0.0.0
-    github.com/nexora/modelscan/sdk/anthropic v0.0.0
+    github.com/jeffersonwarrior/modelscan/sdk/openai v0.0.0
+    github.com/jeffersonwarrior/modelscan/sdk/anthropic v0.0.0
 )
 
-replace github.com/nexora/modelscan => ./vendor/modelscan
+replace github.com/jeffersonwarrior/modelscan => ./vendor/modelscan
 ```
 
 ### Clone Project with Submodules
@@ -216,9 +216,9 @@ I can create a unified package that exports all SDKs:
 package sdk
 
 import (
-    "github.com/nexora/modelscan/sdk/openai"
-    "github.com/nexora/modelscan/sdk/anthropic"
-    "github.com/nexora/modelscan/sdk/google"
+    "github.com/jeffersonwarrior/modelscan/sdk/openai"
+    "github.com/jeffersonwarrior/modelscan/sdk/anthropic"
+    "github.com/jeffersonwarrior/modelscan/sdk/google"
     // ... all 21 SDKs
 )
 
@@ -242,7 +242,7 @@ var (
 ### Usage
 
 ```go
-import "github.com/nexora/modelscan/sdk"
+import "github.com/jeffersonwarrior/modelscan/sdk"
 
 func main() {
     openaiClient := sdk.NewOpenAI("key")
@@ -306,7 +306,7 @@ git push origin sdk/openai/v1.0.0
 ### 3. Users Install
 
 ```bash
-go get github.com/nexora/modelscan/sdk/openai@v1.0.0
+go get github.com/jeffersonwarrior/modelscan/sdk/openai@v1.0.0
 ```
 
 ---
@@ -363,9 +363,9 @@ module github.com/yourname/myproject
 go 1.23
 
 require (
-    github.com/nexora/modelscan/sdk/openai v0.0.0
-    github.com/nexora/modelscan/sdk/together v0.0.0
-    github.com/nexora/modelscan/sdk/groq v0.0.0
+    github.com/jeffersonwarrior/modelscan/sdk/openai v0.0.0
+    github.com/jeffersonwarrior/modelscan/sdk/together v0.0.0
+    github.com/jeffersonwarrior/modelscan/sdk/groq v0.0.0
 )
 ```
 
@@ -381,9 +381,9 @@ import (
     "os"
     "time"
     
-    "github.com/nexora/modelscan/sdk/openai"
-    "github.com/nexora/modelscan/sdk/together"
-    "github.com/nexora/modelscan/sdk/groq"
+    "github.com/jeffersonwarrior/modelscan/sdk/openai"
+    "github.com/jeffersonwarrior/modelscan/sdk/together"
+    "github.com/jeffersonwarrior/modelscan/sdk/groq"
 )
 
 func main() {
@@ -456,8 +456,8 @@ go run main.go
 
 ```bash
 # Verify SDKs are accessible
-go list -m github.com/nexora/modelscan/sdk/openai
-go list -m github.com/nexora/modelscan/sdk/together
+go list -m github.com/jeffersonwarrior/modelscan/sdk/openai
+go list -m github.com/jeffersonwarrior/modelscan/sdk/together
 
 # Build your project
 go build
@@ -478,15 +478,15 @@ cd /home/nexora/.local/tools/modelscan
 git remote -v
 
 # Or use replace directive in go.mod
-replace github.com/nexora/modelscan => /home/nexora/.local/tools/modelscan
+replace github.com/jeffersonwarrior/modelscan => /home/nexora/.local/tools/modelscan
 ```
 
 ### "version not found"
 
 ```bash
 # Use @latest or specific commit
-go get github.com/nexora/modelscan/sdk/openai@latest
-go get github.com/nexora/modelscan/sdk/openai@commit-hash
+go get github.com/jeffersonwarrior/modelscan/sdk/openai@latest
+go get github.com/jeffersonwarrior/modelscan/sdk/openai@commit-hash
 ```
 
 ### Import cycle errors
@@ -495,7 +495,7 @@ Each SDK is independent - import only what you need:
 
 ```go
 // Good
-import "github.com/nexora/modelscan/sdk/openai"
+import "github.com/jeffersonwarrior/modelscan/sdk/openai"
 
 // Avoid importing the whole sdk/ directory
 ```

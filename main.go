@@ -8,9 +8,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/nexora/modelscan/config"
-	"github.com/nexora/modelscan/providers"
-	"github.com/nexora/modelscan/storage"
+	"github.com/jeffersonwarrior/modelscan/config"
+	"github.com/jeffersonwarrior/modelscan/providers"
+	"github.com/jeffersonwarrior/modelscan/storage"
 )
 
 var (

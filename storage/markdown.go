@@ -7,7 +7,7 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/nexora/modelscan/providers"
+	"github.com/jeffersonwarrior/modelscan/providers"
 )
 
 // ExportToMarkdown creates a Markdown report of all providers and their models

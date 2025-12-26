@@ -7,7 +7,7 @@ import (
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
-	"github.com/nexora/modelscan/providers"
+	"github.com/jeffersonwarrior/modelscan/providers"
 )
 
 var db *sql.DB

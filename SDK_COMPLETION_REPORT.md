@@ -183,9 +183,9 @@ import (
     "fmt"
     "log"
     
-    "github.com/nexora/modelscan/sdk/together"
-    "github.com/nexora/modelscan/sdk/groq"
-    "github.com/nexora/modelscan/sdk/deepseek"
+    "github.com/jeffersonwarrior/modelscan/sdk/together"
+    "github.com/jeffersonwarrior/modelscan/sdk/groq"
+    "github.com/jeffersonwarrior/modelscan/sdk/deepseek"
 )
 
 func main() {

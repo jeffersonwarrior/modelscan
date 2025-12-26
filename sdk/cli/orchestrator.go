@@ -12,7 +12,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/nexora/modelscan/sdk/storage"
+	"github.com/jeffersonwarrior/modelscan/sdk/storage"
 	_ "github.com/mattn/go-sqlite3"
 )
 

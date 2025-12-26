@@ -642,7 +642,7 @@ func (p *ExampleProvider) TestModel(ctx context.Context, modelID string, verbose
 
 ### 10. Module Path
 
-**Important**: The module path is `github.com/nexora/modelscan`, but this project may not actually be published at that GitHub location. When working with the code, imports still use this path.
+**Important**: The module path is `github.com/jeffersonwarrior/modelscan`, but this project may not actually be published at that GitHub location. When working with the code, imports still use this path.
 
 ## Common Development Tasks
 

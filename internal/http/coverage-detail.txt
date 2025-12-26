@@ -1,0 +1,13 @@
+github.com/jeffersonwarrior/modelscan/internal/http/client.go:22:	NewClient		100.0%
+github.com/jeffersonwarrior/modelscan/internal/http/client.go:64:	Do			77.8%
+github.com/jeffersonwarrior/modelscan/internal/http/client.go:195:	logRequest		100.0%
+github.com/jeffersonwarrior/modelscan/internal/http/client.go:206:	logResponse		100.0%
+github.com/jeffersonwarrior/modelscan/internal/http/headers.go:23:	String			100.0%
+github.com/jeffersonwarrior/modelscan/internal/http/headers.go:63:	ParseRateLimitHeaders	98.5%
+github.com/jeffersonwarrior/modelscan/internal/http/headers.go:194:	sanitizeAPIKey		100.0%
+github.com/jeffersonwarrior/modelscan/internal/http/headers.go:215:	max			100.0%
+github.com/jeffersonwarrior/modelscan/internal/http/options.go:41:	setDefaults		100.0%
+github.com/jeffersonwarrior/modelscan/internal/http/retry.go:22:	setDefaults		100.0%
+github.com/jeffersonwarrior/modelscan/internal/http/retry.go:55:	shouldRetry		100.0%
+github.com/jeffersonwarrior/modelscan/internal/http/retry.go:86:	calculateBackoff	92.3%
+total:									(statements)		93.0%

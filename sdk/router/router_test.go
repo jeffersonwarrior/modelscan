@@ -5,8 +5,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/nexora/modelscan/scraper"
-	"github.com/nexora/modelscan/storage"
+	"github.com/jeffersonwarrior/modelscan/scraper"
+	"github.com/jeffersonwarrior/modelscan/storage"
 )
 
 func setupRouterTest(t *testing.T) string {

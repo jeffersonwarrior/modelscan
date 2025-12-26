@@ -6,10 +6,10 @@ import (
 	"log"
 	"strings"
 
-	"github.com/nexora/modelscan/sdk/ratelimit"
-	"github.com/nexora/modelscan/sdk/router"
-	"github.com/nexora/modelscan/sdk/stream"
-	"github.com/nexora/modelscan/storage"
+	"github.com/jeffersonwarrior/modelscan/sdk/ratelimit"
+	"github.com/jeffersonwarrior/modelscan/sdk/router"
+	"github.com/jeffersonwarrior/modelscan/sdk/stream"
+	"github.com/jeffersonwarrior/modelscan/storage"
 )
 
 func main() {

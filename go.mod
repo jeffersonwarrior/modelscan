@@ -1,4 +1,4 @@
-module github.com/nexora/modelscan
+module github.com/jeffersonwarrior/modelscan
 
 go 1.25.5
 
