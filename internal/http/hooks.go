@@ -2,6 +2,7 @@ package http
 
 import (
 	"net/http"
+	"time"
 )
 
 // BeforeRequestHook is called before each HTTP request attempt.
