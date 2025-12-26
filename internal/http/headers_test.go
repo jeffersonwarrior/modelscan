@@ -8,10 +8,10 @@ import (
 
 func TestParseRateLimitHeaders(t *testing.T) {
 	tests := []struct {
-		name     string
-		headers  http.Header
-		want     *RateLimitInfo
-		wantNil  bool
+		name    string
+		headers http.Header
+		want    *RateLimitInfo
+		wantNil bool
 	}{
 		{
 			name: "OpenAI headers - all fields present",
@@ -99,9 +99,9 @@ func TestParseRateLimitHeaders(t *testing.T) {
 		{
 			name: "Mixed provider headers - OpenAI takes precedence",
 			headers: http.Header{
-				"X-Ratelimit-Limit-Requests":             []string{"10000"},
-				"Anthropic-Ratelimit-Requests-Limit":     []string{"1000"},
-				"X-Goog-Ratelimit-Limit":                 []string{"60"},
+				"X-Ratelimit-Limit-Requests":         []string{"10000"},
+				"Anthropic-Ratelimit-Requests-Limit": []string{"1000"},
+				"X-Goog-Ratelimit-Limit":             []string{"60"},
 			},
 			want: &RateLimitInfo{
 				LimitRequests: 10000,
@@ -294,4 +294,41 @@ func findSubstring(s, substr string) bool {
 		}
 	}
 	return false
+}
+
+func TestRateLimitInfoStringEmpty(t *testing.T) {
+	info := &RateLimitInfo{}
+	str := info.String()
+	if str != "RateLimit{}" {
+		t.Errorf("String() = %q, want %q", str, "RateLimit{}")
+	}
+}
+
+func TestMaxHelper(t *testing.T) {
+	tests := []struct {
+		a, b, want int
+	}{
+		{5, 3, 5},
+		{3, 5, 5},
+		{5, 5, 5},
+		{0, 0, 0},
+		{-1, -2, -1},
+	}
+
+	for _, tt := range tests {
+		got := max(tt.a, tt.b)
+		if got != tt.want {
+			t.Errorf("max(%d, %d) = %d, want %d", tt.a, tt.b, got, tt.want)
+		}
+	}
+}
+
+func TestRateLimitInfoStringWithRetryAfter(t *testing.T) {
+	info := &RateLimitInfo{
+		RetryAfter: 30 * time.Second,
+	}
+	str := info.String()
+	if !contains(str, "retry_after=30s") {
+		t.Errorf("String() = %q, should contain retry_after", str)
+	}
 }

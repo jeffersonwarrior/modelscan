@@ -72,20 +72,20 @@ func TestCalculateBackoff(t *testing.T) {
 		{
 			name:    "Second retry (attempt 1)",
 			attempt: 1,
-			wantMin: 1800 * time.Millisecond,  // 2s - 10% jitter
-			wantMax: 2200 * time.Millisecond,  // 2s + 10% jitter
+			wantMin: 1800 * time.Millisecond, // 2s - 10% jitter
+			wantMax: 2200 * time.Millisecond, // 2s + 10% jitter
 		},
 		{
 			name:    "Third retry (attempt 2)",
 			attempt: 2,
-			wantMin: 3600 * time.Millisecond,  // 4s - 10% jitter
-			wantMax: 4400 * time.Millisecond,  // 4s + 10% jitter
+			wantMin: 3600 * time.Millisecond, // 4s - 10% jitter
+			wantMax: 4400 * time.Millisecond, // 4s + 10% jitter
 		},
 		{
 			name:    "Large attempt - should cap at MaxDelay",
 			attempt: 10,
-			wantMin: 54 * time.Second,  // 60s - 10% jitter
-			wantMax: 60 * time.Second,  // capped at MaxDelay
+			wantMin: 54 * time.Second, // 60s - 10% jitter
+			wantMax: 60 * time.Second, // capped at MaxDelay
 		},
 	}
 
@@ -122,7 +122,7 @@ func TestCalculateBackoffNoJitter(t *testing.T) {
 		{attempt: 3, want: 8 * time.Second},
 		{attempt: 4, want: 16 * time.Second},
 		{attempt: 5, want: 32 * time.Second},
-		{attempt: 6, want: 60 * time.Second}, // Capped at MaxDelay
+		{attempt: 6, want: 60 * time.Second},  // Capped at MaxDelay
 		{attempt: 10, want: 60 * time.Second}, // Still capped
 	}
 

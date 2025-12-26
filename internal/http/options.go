@@ -26,10 +26,10 @@ type Config struct {
 	Retry RetryConfig
 
 	// Hooks for request/response interception
-	BeforeRequest  BeforeRequestHook  // Called before each request attempt
-	AfterResponse  AfterResponseHook  // Called after each successful response
-	OnError        OnErrorHook        // Called when an error occurs
-	OnRetry        OnRetryHook        // Called before each retry attempt
+	BeforeRequest BeforeRequestHook // Called before each request attempt
+	AfterResponse AfterResponseHook // Called after each successful response
+	OnError       OnErrorHook       // Called when an error occurs
+	OnRetry       OnRetryHook       // Called before each retry attempt
 
 	// Logger for debug output (optional)
 	// If set, the client will log request/response details

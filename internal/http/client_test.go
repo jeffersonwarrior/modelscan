@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"io"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -543,5 +544,180 @@ func TestClientDoBodyPreservedOnRetry(t *testing.T) {
 	// Both attempts should receive the same body
 	if bodies[0] != bodyContent || bodies[1] != bodyContent {
 		t.Errorf("bodies = %v, want both to be %q", bodies, bodyContent)
+	}
+}
+
+func TestClientDoWithLogger(t *testing.T) {
+	var logBuf bytes.Buffer
+	logger := log.New(&logBuf, "", 0)
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("X-Ratelimit-Limit-Requests", "1000")
+		w.Header().Set("X-Ratelimit-Remaining-Requests", "999")
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer server.Close()
+
+	client := NewClient(Config{
+		BaseURL: server.URL,
+		APIKey:  "sk-test-key-12345",
+		Logger:  logger,
+	})
+
+	req, _ := http.NewRequest("GET", server.URL+"/test", nil)
+	resp, err := client.Do(req)
+
+	if err != nil {
+		t.Fatalf("Do() error = %v", err)
+	}
+	defer resp.Body.Close()
+
+	logOutput := logBuf.String()
+
+	// Check request log
+	if !strings.Contains(logOutput, "[HTTP] Request") {
+		t.Error("Log should contain request log")
+	}
+
+	// Check that API key is sanitized (last 7 chars: y-12345)
+	if !strings.Contains(logOutput, "sk-***y-12345") {
+		t.Errorf("Log should contain sanitized API key, got: %s", logOutput)
+	}
+
+	// Check full key is NOT in log
+	if strings.Contains(logOutput, "sk-test-key-12345") {
+		t.Error("Log should NOT contain full API key")
+	}
+
+	// Check response log
+	if !strings.Contains(logOutput, "[HTTP] Response") {
+		t.Error("Log should contain response log")
+	}
+
+	// Check rate limit info in log
+	if !strings.Contains(logOutput, "requests=999/1000") {
+		t.Error("Log should contain rate limit info")
+	}
+}
+
+func TestClientDoLoggerWithRetry(t *testing.T) {
+	var logBuf bytes.Buffer
+	logger := log.New(&logBuf, "", 0)
+
+	attempts := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		attempts++
+		if attempts < 2 {
+			w.WriteHeader(http.StatusServiceUnavailable)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer server.Close()
+
+	client := NewClient(Config{
+		BaseURL: server.URL,
+		APIKey:  "sk-test",
+		Logger:  logger,
+		Retry: RetryConfig{
+			MaxAttempts:   2,
+			BaseDelay:     1 * time.Millisecond,
+			JitterPercent: 0.0,
+		},
+	})
+
+	req, _ := http.NewRequest("GET", server.URL+"/test", nil)
+	_, err := client.Do(req)
+
+	if err != nil {
+		t.Fatalf("Do() error = %v", err)
+	}
+
+	logOutput := logBuf.String()
+
+	// Should log both attempts
+	if !strings.Contains(logOutput, "attempt 1") {
+		t.Error("Log should contain first attempt")
+	}
+
+	if !strings.Contains(logOutput, "attempt 2") {
+		t.Error("Log should contain second attempt")
+	}
+}
+
+func TestClientDoOnErrorHook(t *testing.T) {
+	errorCalled := false
+	var capturedErr error
+
+	// Create a server that closes immediately to trigger a network error
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Don't write anything, force connection close
+	}))
+	server.Close() // Close immediately to cause connection error
+
+	client := NewClient(Config{
+		BaseURL: server.URL,
+		APIKey:  "sk-test",
+		Retry: RetryConfig{
+			MaxAttempts: 1, // No retries
+		},
+		OnError: func(req *http.Request, err error) error {
+			errorCalled = true
+			capturedErr = err
+			return nil
+		},
+	})
+
+	req, _ := http.NewRequest("GET", server.URL+"/test", nil)
+	_, err := client.Do(req)
+
+	if err == nil {
+		t.Fatal("Do() should return error for closed server")
+	}
+
+	if !errorCalled {
+		t.Error("OnError hook was not called")
+	}
+
+	if capturedErr == nil {
+		t.Error("OnError hook should have received an error")
+	}
+}
+
+func TestClientDoOnRetryHookError(t *testing.T) {
+	attempts := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		attempts++
+		w.WriteHeader(http.StatusServiceUnavailable)
+	}))
+	defer server.Close()
+
+	client := NewClient(Config{
+		BaseURL: server.URL,
+		APIKey:  "sk-test",
+		Retry: RetryConfig{
+			MaxAttempts: 3,
+			BaseDelay:   1 * time.Millisecond,
+		},
+		OnRetry: func(req *http.Request, attempt int, delay time.Duration) error {
+			// Abort retry after first attempt
+			return errors.New("retry aborted")
+		},
+	})
+
+	req, _ := http.NewRequest("GET", server.URL+"/test", nil)
+	_, err := client.Do(req)
+
+	if err == nil {
+		t.Fatal("Do() should return error when OnRetry hook returns error")
+	}
+
+	if err.Error() != "retry aborted" {
+		t.Errorf("error = %v, want 'retry aborted'", err)
+	}
+
+	// Should only make 1 attempt (no retry due to hook error)
+	if attempts != 1 {
+		t.Errorf("attempts = %d, want 1 (retry was aborted)", attempts)
 	}
 }
