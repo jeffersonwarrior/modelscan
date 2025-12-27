@@ -54,6 +54,7 @@ go.work.sum
 .env.development
 .env.production
 .env.test
+.env.tier2
 # But allow .env.example as a template
 !.env.example
 *.key
