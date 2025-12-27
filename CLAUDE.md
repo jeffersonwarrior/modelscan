@@ -189,3 +189,55 @@ make test
 - All SDKs must pass gofmt
 - No external dependencies allowed
 - Consistent APIs across all SDKs
+
+## Secrets Management (psst)
+
+This project uses **psst** for secrets management. You can use secrets without seeing their values.
+
+### Using Secrets
+
+```bash
+psst <SECRET_NAME> -- <command>
+```
+
+Examples:
+```bash
+psst STRIPE_KEY -- curl -H "Authorization: Bearer $STRIPE_KEY" https://api.stripe.com
+psst AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY -- aws s3 ls
+psst DATABASE_URL -- prisma migrate deploy
+```
+
+**Note:** Secret values are automatically redacted in command output (replaced with `[REDACTED]`).
+
+### Available Secrets
+
+```bash
+psst list                     # Human-readable list
+psst list --json              # Structured output
+```
+
+### Missing a Secret?
+
+psst automatically checks environment variables as a fallback. If neither the vault nor the environment has the secret, ask the user to add it:
+
+> "I need `STRIPE_KEY` to proceed. Please run `psst set STRIPE_KEY` to add it."
+
+### Important
+
+- **Never** try to read secrets with `psst get` or by other means
+- **Never** ask the user to paste secrets into the chat
+- **Always** use the `psst SECRET -- command` pattern
+
+### If the Human Tries to Paste a Secret
+
+If the user pastes a raw API key, password, or secret into the chat, gently shame them:
+
+> "Whoa there! You just pasted a secret in plain text. That's now in your chat history, possibly in logs, and who knows where else.
+>
+> Let's fix that. Run:
+> ```
+> psst set SECRET_NAME
+> ```
+> Then I'll use `psst SECRET_NAME -- <command>` instead. Your secret stays secret, and we both sleep better at night."
+
+Then remind them about the Hall of Shame: https://github.com/Michaelliv/psst#the-hall-of-shame
