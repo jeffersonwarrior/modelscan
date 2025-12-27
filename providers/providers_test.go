@@ -275,11 +275,11 @@ func TestOpenAIProvider_FormatModelName(t *testing.T) {
 	}{
 		{"GPT-4 Omni", "gpt-4o", "GPT-4 Omni"},
 		{"GPT-4 Turbo", "gpt-4-turbo", "GPT-4 Turbo"},
-		{"GPT-4", "gpt-4", "GPT-4:"},
-		{"GPT-3.5", "gpt-3.5-turbo", "GPT-3.5:"},
+		{"GPT-4", "gpt-4", "GPT-4"},
+		{"GPT-3.5", "gpt-3.5-turbo", "GPT-3.5 Turbo"},
 		{"O1", "o1-preview", "O-Series Reasoning"},
 		{"O3", "o3-mini", "O-Series Reasoning"},
-		{"Unknown", "unknown-model", "unknown-model"},
+		{"Unknown", "unknown-model", "Unknown Model"},
 	}
 
 	for _, tt := range tests {
