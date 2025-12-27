@@ -1,7 +1,7 @@
 {
   "projectDir": "/home/agent/modelscan",
   "taskDescription": "Implement 18 AI provider SDKs with zero dependencies, 90%+ test coverage, and programmatic validation enforcement.\n\n## Providers to Implement (Tier 2)\n1. ElevenLabs TTS - text-to-speech with voice cloning\n2. Deepgram STT - live streaming transcription\n3. OpenAI Whisper - audio transcription extension\n4. OpenAI TTS - text-to-speech extension\n5. PlayHT - ultra-realistic TTS\n6. Luma AI Video - Dream Machine video generation\n7. Runway ML - Gen-2 video generation\n8. OpenAI Extended - refactor to use internal HTTP client\n9. Anthropic Extended Thinking - extended thinking mode\n10. Google Gemini Thinking - thinking modes\n11. DeepSeek Extended - refactor to use internal HTTP client\n12. Cerebras Extended - refactor to use internal HTTP client\n13. FAL Extended - refactor to use internal HTTP client\n14. Midjourney - V6 text-to-image\n15. OpenAI Embeddings - embeddings extension\n16. Cohere Embeddings - embed-english-v3.0\n17. Voyage AI - embeddings provider\n18. OpenAI Realtime API - real-time voice conversation\n\n## Requirements\n- Zero external dependencies (pure Go stdlib)\n- 90%+ test coverage (enforced by validation script)\n- Use internal/http client (no external SDKs)\n- Pass all 7 validation gates (build, test, coverage, race, vet, fmt, interface)\n- Workers MUST use bash scripts/swarm-mark-complete.sh to mark complete",
-  "lastUpdated": "2025-12-27T00:47:28.215Z",
+  "lastUpdated": "2025-12-27T00:58:08.038Z",
   "features": [
     {
       "id": "feature-1",
@@ -48,8 +48,8 @@
     {
       "id": "feature-8",
       "description": "Provider 8: OpenAI Extended - Refactor existing OpenAI provider to use internal HTTP client",
-      "status": "pending",
-      "passes": false
+      "status": "completed",
+      "passes": true
     },
     {
       "id": "feature-9",
