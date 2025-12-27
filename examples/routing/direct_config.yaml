@@ -1,0 +1,14 @@
+# Direct Mode Configuration
+# Routes requests directly to SDK clients without any proxy
+
+routing:
+  mode: direct
+  fallback: false
+
+  direct:
+    default_provider: openai
+
+# Example usage:
+# - Fastest routing (no proxy overhead)
+# - Full control over SDK configuration
+# - Best for single-provider applications

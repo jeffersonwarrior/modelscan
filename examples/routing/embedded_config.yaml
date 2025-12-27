@@ -1,0 +1,26 @@
+# Plano Embedded Mode Configuration
+# Manages a Plano Docker container automatically
+
+routing:
+  mode: plano_embedded
+  fallback: true
+
+  embedded:
+    config_path: ./plano_config.yaml
+    image: katanemo/plano:0.4.0
+    ports:
+      ingress: 10000
+      egress: 12000
+    env:
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      GROQ_API_KEY: ${GROQ_API_KEY}
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY}
+
+# Example usage:
+# - Development and testing
+# - Self-contained deployments
+# - Automatic lifecycle management
+# - Best for single-application use cases
+
+# Note: Requires Docker to be installed and running

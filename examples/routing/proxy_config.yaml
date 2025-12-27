@@ -1,0 +1,50 @@
+# Plano Proxy Mode Configuration
+# Routes requests through an external Plano instance
+
+routing:
+  mode: plano_proxy
+  fallback: true
+
+  proxy:
+    base_url: http://localhost:12000
+    timeout: 30
+    # api_key: your-api-key-here (optional)
+
+# Plano Configuration (plano_config.yaml)
+# This should be deployed separately and managed by your infrastructure team
+
+# Example plano_config.yaml:
+# ---
+# version: v0.1.0
+#
+# listeners:
+#   - type: model
+#     name: model_gateway
+#     address: 0.0.0.0
+#     port: 12000
+#
+# model_providers:
+#   - access_key: $OPENAI_API_KEY
+#     model: openai/gpt-4o
+#     routing_preferences:
+#       - name: general_tasks
+#         description: general purpose queries and conversations
+#
+#   - access_key: $ANTHROPIC_API_KEY
+#     model: anthropic/claude-sonnet-4-5
+#     routing_preferences:
+#       - name: code_tasks
+#         description: code generation, debugging, and technical analysis
+
+# To start Plano:
+# docker run -d \
+#   -p 12000:12000 \
+#   -v $(pwd)/plano_config.yaml:/app/plano_config.yaml:ro \
+#   -e OPENAI_API_KEY=${OPENAI_API_KEY} \
+#   -e ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY} \
+#   katanemo/plano:0.4.0
+
+# Example usage:
+# - Shared Plano instance across multiple applications
+# - Centralized policy management
+# - Best for Kubernetes/production deployments
