@@ -74,6 +74,25 @@ func (p *MistralProvider) ValidateEndpoints(ctx context.Context, verbose bool) e
 	}
 	wg.Wait()
 
+	// Check if all endpoints failed (indicates invalid API key or network issue)
+	allFailed := true
+	for _, endpoint := range endpoints {
+		if endpoint.Status == StatusWorking {
+			allFailed = false
+			break
+		}
+	}
+
+	if allFailed && len(endpoints) > 0 {
+		// Return error from first failed endpoint
+		for _, endpoint := range endpoints {
+			if endpoint.Error != "" {
+				return fmt.Errorf("all endpoints failed: %s", endpoint.Error)
+			}
+		}
+		return fmt.Errorf("all endpoints failed")
+	}
+
 	return nil
 }
 
@@ -145,6 +164,11 @@ func (p *MistralProvider) ListModels(ctx context.Context, verbose bool) ([]Model
 			} else {
 				model.Capabilities[key] = fmt.Sprintf("%v", value)
 			}
+		}
+
+		// Enhance model info in verbose mode
+		if verbose {
+			p.enhanceModelInfo(&model)
 		}
 
 		models = append(models, model)
@@ -310,7 +334,19 @@ func (p *MistralProvider) testGetEndpoint(ctx context.Context, endpoint *Endpoin
 
 	// 2xx status codes are considered success
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("unexpected status code: %d: %s", resp.StatusCode, string(body))
+	}
+
+	// Validate that response body is valid JSON
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Errorf("failed to read response: %w", err)
+	}
+
+	var jsonData interface{}
+	if err := json.Unmarshal(body, &jsonData); err != nil {
+		return fmt.Errorf("invalid JSON response: %w", err)
 	}
 
 	return nil
@@ -349,16 +385,54 @@ func (p *MistralProvider) testPostEndpoint(ctx context.Context, endpoint *Endpoi
 	}
 	defer resp.Body.Close()
 
-	// For POST, we consider 2xx or 400 (bad request) as success
-	// 400 might mean the endpoint exists but needs different params
-	if resp.StatusCode >= 200 && resp.StatusCode < 500 {
+	// Read response body
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Errorf("failed to read response: %w", err)
+	}
+
+	// Check for empty response
+	if len(body) == 0 {
+		return fmt.Errorf("empty response body")
+	}
+
+	// Success codes - validate JSON
+	if resp.StatusCode >= 200 && resp.StatusCode < 300 {
+		var jsonData interface{}
+		if err := json.Unmarshal(body, &jsonData); err != nil {
+			return fmt.Errorf("invalid JSON response: %w", err)
+		}
 		return nil
 	}
 
-	return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+	// 400 might mean endpoint exists but needs different params - acceptable
+	if resp.StatusCode == http.StatusBadRequest {
+		return nil
+	}
+
+	// All other error codes are failures
+	return fmt.Errorf("endpoint returned status %d: %s", resp.StatusCode, string(body))
 }
 
 func (p *MistralProvider) enhanceModelInfo(model *Model) {
+	// Add descriptions for known models if not already set
+	if model.Description == "" {
+		switch {
+		case containsAny(model.ID, []string{"mistral-large"}):
+			model.Description = "Top-tier reasoning model for complex, high-value tasks"
+		case containsAny(model.ID, []string{"mistral-medium"}):
+			model.Description = "Ideal for intermediate tasks requiring moderate reasoning"
+		case containsAny(model.ID, []string{"mistral-small"}):
+			model.Description = "Cost-efficient model for simple tasks"
+		case containsAny(model.ID, []string{"codestral"}):
+			model.Description = "Specialized model for code generation and completion"
+		case containsAny(model.ID, []string{"embed"}):
+			model.Description = "Model for generating text embeddings"
+		default:
+			model.Description = "Mistral AI language model"
+		}
+	}
+
 	// Add categories based on model ID patterns
 	switch {
 	case containsAny(model.ID, []string{"devstral", "codestral", "magistral"}):

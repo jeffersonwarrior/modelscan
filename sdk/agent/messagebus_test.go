@@ -67,37 +67,50 @@ func TestInMemoryMessageBus_SubscribeValidation(t *testing.T) {
 
 func TestInMemoryMessageBus_Send_Success(t *testing.T) {
 	bus := NewInMemoryMessageBus()
-	
-	// Setup receiver
+
+	// Setup receiver with proper synchronization
 	var receivedMsg TeamMessage
+	var mu sync.Mutex
+	done := make(chan struct{})
 	var receivedOnce sync.Once
+
 	handler := func(msg TeamMessage) error {
 		receivedOnce.Do(func() {
+			mu.Lock()
 			receivedMsg = msg
+			mu.Unlock()
+			close(done)
 		})
 		return nil
 	}
-	
+
 	err := bus.Subscribe("receiver", handler)
 	require.NoError(t, err)
-	
+
 	// Send message
 	ctx := context.Background()
 	msg := NewTeamMessage(MessageTypeText, "sender", "receiver", "Hello!")
-	
+
 	err = bus.Send(ctx, msg)
 	require.NoError(t, err)
-	
-	// Wait for async delivery
-	time.Sleep(10 * time.Millisecond)
-	
-	// Verify message was received
+
+	// Wait for async delivery with timeout
+	select {
+	case <-done:
+		// Message received
+	case <-time.After(100 * time.Millisecond):
+		t.Fatal("Timeout waiting for message delivery")
+	}
+
+	// Verify message was received (protected by mutex)
+	mu.Lock()
 	assert.Equal(t, msg.ID, receivedMsg.ID)
 	assert.Equal(t, msg.From, receivedMsg.From)
 	assert.Equal(t, msg.To, receivedMsg.To)
 	assert.Equal(t, msg.Content, receivedMsg.Content)
 	assert.Equal(t, msg.Type, receivedMsg.Type)
-	
+	mu.Unlock()
+
 	// Verify stats
 	stats := bus.GetStats()
 	assert.Equal(t, 1, stats.MessagesSent)

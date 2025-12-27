@@ -75,6 +75,26 @@ func (p *OpenAIProvider) ValidateEndpoints(ctx context.Context, verbose bool) er
 	wg.Wait()
 
 	p.endpoints = endpoints
+
+	// Check if all endpoints failed (indicates invalid API key or network issue)
+	allFailed := true
+	for _, endpoint := range endpoints {
+		if endpoint.Status == StatusWorking {
+			allFailed = false
+			break
+		}
+	}
+
+	if allFailed && len(endpoints) > 0 {
+		// Return error from first failed endpoint
+		for _, endpoint := range endpoints {
+			if endpoint.Error != "" {
+				return fmt.Errorf("all endpoints failed: %s", endpoint.Error)
+			}
+		}
+		return fmt.Errorf("all endpoints failed")
+	}
+
 	return nil
 }
 
@@ -145,23 +165,37 @@ func (p *OpenAIProvider) isUsableModel(modelID string) bool {
 func (p *OpenAIProvider) formatModelName(modelID string) string {
 	// GPT-4 models
 	if strings.HasPrefix(modelID, "gpt-4o") {
-		return "GPT-4 Omni: " + modelID
+		return "GPT-4 Omni"
 	}
 	if strings.HasPrefix(modelID, "gpt-4-turbo") {
-		return "GPT-4 Turbo: " + modelID
+		return "GPT-4 Turbo"
 	}
 	if strings.HasPrefix(modelID, "gpt-4") {
-		return "GPT-4: " + modelID
+		return "GPT-4"
 	}
 
 	// GPT-3.5 models
+	if modelID == "gpt-3.5-turbo" || strings.HasPrefix(modelID, "gpt-3.5-turbo-") {
+		return "GPT-3.5 Turbo"
+	}
 	if strings.HasPrefix(modelID, "gpt-3.5") {
-		return "GPT-3.5: " + modelID
+		return "GPT-3.5"
 	}
 
 	// O-series models
 	if strings.HasPrefix(modelID, "o1") || strings.HasPrefix(modelID, "o3") {
-		return "O-Series Reasoning: " + modelID
+		return "O-Series Reasoning"
+	}
+
+	// Legacy models - convert kebab-case to Title Case
+	if strings.Contains(modelID, "-") {
+		parts := strings.Split(modelID, "-")
+		for i, part := range parts {
+			if len(part) > 0 {
+				parts[i] = strings.ToUpper(part[:1]) + part[1:]
+			}
+		}
+		return strings.Join(parts, " ")
 	}
 
 	return modelID

@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 )
@@ -273,9 +274,9 @@ func TestOpenAIExtendedProvider_TestModel_Failure(t *testing.T) {
 }
 
 func TestOpenAIExtendedProvider_ValidateEndpoints(t *testing.T) {
-	requestCount := 0
+	var requestCount int32
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		requestCount++
+		atomic.AddInt32(&requestCount, 1)
 
 		if r.URL.Path == "/models" {
 			resp := openaiModelsResponse{
@@ -314,7 +315,7 @@ func TestOpenAIExtendedProvider_ValidateEndpoints(t *testing.T) {
 		t.Fatalf("ValidateEndpoints failed: %v", err)
 	}
 
-	if requestCount == 0 {
+	if atomic.LoadInt32(&requestCount) == 0 {
 		t.Error("Expected at least one request to be made")
 	}
 
