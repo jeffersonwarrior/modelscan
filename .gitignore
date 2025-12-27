@@ -132,3 +132,6 @@ examples.basic.backup/
 
 # Archive
 archive/
+
+# psst secrets manager (if using project-local vaults)
+.psst/
