@@ -82,9 +82,9 @@ func TestRouter_SelectsFastestProvider(t *testing.T) {
 	router := NewRouter(StrategyFastest)
 
 	// Simulate latency data
-	router.RecordSuccess("groq", 50)         // Very fast (LPU hardware)
-	router.RecordSuccess("openai", 200)      // Standard
-	router.RecordSuccess("deepseek", 400)    // Slower (China-hosted)
+	router.RecordSuccess("groq", 50)      // Very fast (LPU hardware)
+	router.RecordSuccess("openai", 200)   // Standard
+	router.RecordSuccess("deepseek", 400) // Slower (China-hosted)
 
 	ctx := context.Background()
 	req := RouteRequest{
@@ -405,4 +405,3 @@ func TestRouter_MatchesModel(t *testing.T) {
 		})
 	}
 }
-

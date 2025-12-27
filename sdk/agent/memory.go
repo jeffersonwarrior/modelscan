@@ -40,15 +40,15 @@ type InMemoryMemory struct {
 // NewInMemoryMemory creates a new in-memory storage
 func NewInMemoryMemory(opts ...MemoryOption) *InMemoryMemory {
 	memory := &InMemoryMemory{
-		capacity:   0,        // Unlimited by default
-		expiration: 0,        // No expiration by default
+		capacity:   0, // Unlimited by default
+		expiration: 0, // No expiration by default
 		messages:   make([]MemoryMessage, 0),
 	}
-	
+
 	for _, opt := range opts {
 		opt(memory)
 	}
-	
+
 	return memory
 }
 
@@ -59,35 +59,35 @@ func (m *InMemoryMemory) Store(ctx context.Context, message MemoryMessage) error
 		return ctx.Err()
 	default:
 	}
-	
+
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	// Assign ID if not provided
 	if message.ID == "" {
 		message.ID = uuid.New().String()
 	}
-	
+
 	// Set timestamp if not provided
 	if message.Timestamp == 0 {
 		message.Timestamp = time.Now().UnixNano()
 	}
-	
+
 	// Initialize metadata if nil
 	if message.Metadata == nil {
 		message.Metadata = make(map[string]interface{})
 	}
-	
+
 	// Append message
 	m.messages = append(m.messages, message)
-	
+
 	// Enforce capacity limit
 	if m.capacity > 0 && len(m.messages) > m.capacity {
 		// Remove oldest messages to maintain capacity
 		overflow := len(m.messages) - m.capacity
 		m.messages = m.messages[overflow:]
 	}
-	
+
 	return nil
 }
 
@@ -98,38 +98,38 @@ func (m *InMemoryMemory) Retrieve(ctx context.Context, query string, limit int) 
 		return nil, ctx.Err()
 	default:
 	}
-	
+
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	
+
 	// Filter expires messages
 	now := time.Now().UnixNano()
 	validMessages := make([]MemoryMessage, 0, len(m.messages))
-	
+
 	for _, msg := range m.messages {
 		// Skip expired messages
 		if m.expiration > 0 && now-msg.Timestamp > m.expiration.Nanoseconds() {
 			continue
 		}
-		
+
 		// Filter by query if provided
 		if query != "" && !strings.Contains(strings.ToLower(msg.Content), strings.ToLower(query)) {
 			continue
 		}
-		
+
 		validMessages = append(validMessages, msg)
 	}
-	
+
 	// Sort messages in reverse chronological order (newest first)
 	sort.Slice(validMessages, func(i, j int) bool {
 		return validMessages[i].Timestamp > validMessages[j].Timestamp
 	})
-	
+
 	// Apply limit
 	if limit > 0 && len(validMessages) > limit {
 		validMessages = validMessages[:limit]
 	}
-	
+
 	return validMessages, nil
 }
 
@@ -140,26 +140,26 @@ func (m *InMemoryMemory) Search(ctx context.Context, pattern string) ([]MemoryMe
 		return nil, ctx.Err()
 	default:
 	}
-	
+
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	
+
 	// Filter expires messages
 	now := time.Now().UnixNano()
 	var results []MemoryMessage
-	
+
 	patternLower := strings.ToLower(pattern)
-	
+
 	for _, msg := range m.messages {
 		// Skip expired messages
 		if m.expiration > 0 && now-msg.Timestamp > m.expiration.Nanoseconds() {
 			continue
 		}
-		
+
 		// Check if pattern matches content or metadata
 		contentMatches := strings.Contains(strings.ToLower(msg.Content), patternLower)
 		roleMatches := strings.Contains(strings.ToLower(msg.Role), patternLower)
-		
+
 		// Check metadata string values
 		var metadataMatches bool
 		for _, v := range msg.Metadata {
@@ -168,17 +168,17 @@ func (m *InMemoryMemory) Search(ctx context.Context, pattern string) ([]MemoryMe
 				break
 			}
 		}
-		
+
 		if contentMatches || roleMatches || metadataMatches {
 			results = append(results, msg)
 		}
 	}
-	
+
 	// Sort results by timestamp (newest first)
 	sort.Slice(results, func(i, j int) bool {
 		return results[i].Timestamp > results[j].Timestamp
 	})
-	
+
 	return results, nil
 }
 
@@ -189,10 +189,10 @@ func (m *InMemoryMemory) Clear(ctx context.Context) error {
 		return ctx.Err()
 	default:
 	}
-	
+
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	m.messages = make([]MemoryMessage, 0)
 	return nil
 }
@@ -204,23 +204,23 @@ func (m *InMemoryMemory) Cleanup(ctx context.Context) error {
 		return ctx.Err()
 	default:
 	}
-	
+
 	if m.expiration == 0 {
 		return nil // No expiration, nothing to clean up
 	}
-	
+
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	now := time.Now().UnixNano()
 	validMessages := make([]MemoryMessage, 0, len(m.messages))
-	
+
 	for _, msg := range m.messages {
 		if now-msg.Timestamp <= m.expiration.Nanoseconds() {
 			validMessages = append(validMessages, msg)
 		}
 	}
-	
+
 	m.messages = validMessages
 	return nil
 }
@@ -232,14 +232,14 @@ func (m *InMemoryMemory) Len(ctx context.Context) (int, error) {
 		return 0, ctx.Err()
 	default:
 	}
-	
+
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	
+
 	if m.expiration == 0 {
 		return len(m.messages), nil
 	}
-	
+
 	now := time.Now().UnixNano()
 	count := 0
 	for _, msg := range m.messages {
@@ -247,7 +247,7 @@ func (m *InMemoryMemory) Len(ctx context.Context) (int, error) {
 			count++
 		}
 	}
-	
+
 	return count, nil
 }
 
@@ -267,26 +267,26 @@ func (m *InMemoryMemory) Stats(ctx context.Context) (MemoryStats, error) {
 		return MemoryStats{}, ctx.Err()
 	default:
 	}
-	
+
 	count, err := m.Len(ctx)
 	if err != nil {
 		return MemoryStats{}, err
 	}
-	
+
 	stats := MemoryStats{
 		TotalMessages: count,
 		Capacity:      m.capacity,
 		HasExpiration: m.expiration > 0,
 	}
-	
+
 	if m.expiration > 0 {
 		stats.Expiration = m.expiration.String()
 	}
-	
+
 	if m.capacity > 0 {
 		stats.UsagePercent = float64(count) / float64(m.capacity)
 	}
-	
+
 	return stats, nil
 }
 
@@ -307,15 +307,15 @@ func NewMockMemory() *MockMemory {
 func (m *MockMemory) Store(ctx context.Context, message MemoryMessage) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	if message.ID == "" {
 		message.ID = fmt.Sprintf("mock-%d", rand.Intn(10000))
 	}
-	
+
 	if message.Timestamp == 0 {
 		message.Timestamp = time.Now().UnixNano()
 	}
-	
+
 	m.messages = append(m.messages, message)
 	return nil
 }
@@ -324,19 +324,19 @@ func (m *MockMemory) Store(ctx context.Context, message MemoryMessage) error {
 func (m *MockMemory) Retrieve(ctx context.Context, query string, limit int) ([]MemoryMessage, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	
+
 	var results []MemoryMessage
-	
+
 	for _, msg := range m.messages {
 		if query == "" || strings.Contains(strings.ToLower(msg.Content), strings.ToLower(query)) {
 			results = append(results, msg)
 		}
 	}
-	
+
 	if limit > 0 && len(results) > limit {
 		results = results[:limit]
 	}
-	
+
 	return results, nil
 }
 
@@ -349,7 +349,7 @@ func (m *MockMemory) Search(ctx context.Context, pattern string) ([]MemoryMessag
 func (m *MockMemory) Clear(ctx context.Context) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	m.messages = make([]MemoryMessage, 0)
 	return nil
 }

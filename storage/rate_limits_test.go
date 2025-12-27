@@ -49,15 +49,15 @@ func TestInsertRateLimit_UpdatesOnConflict(t *testing.T) {
 	defer CloseRateLimitDB()
 
 	rateLimit := RateLimit{
-		ProviderName:        "openai",
-		PlanType:            "tier-1",
-		LimitType:           "rpm",
-		LimitValue:          500,
-		BurstAllowance:      50,
-		ResetWindowSeconds:  60,
-		AppliesTo:           "account",
-		SourceURL:           "https://platform.openai.com/docs/guides/rate-limits",
-		LastVerified:        time.Now(),
+		ProviderName:       "openai",
+		PlanType:           "tier-1",
+		LimitType:          "rpm",
+		LimitValue:         500,
+		BurstAllowance:     50,
+		ResetWindowSeconds: 60,
+		AppliesTo:          "account",
+		SourceURL:          "https://platform.openai.com/docs/guides/rate-limits",
+		LastVerified:       time.Now(),
 	}
 
 	// Act - First insert
@@ -96,13 +96,13 @@ func TestQueryRateLimit_HandlesConcurrentReads(t *testing.T) {
 
 	// Insert test data
 	InsertRateLimit(RateLimit{
-		ProviderName:        "anthropic",
-		PlanType:            "free",
-		LimitType:           "rpm",
-		LimitValue:          50,
-		ResetWindowSeconds:  60,
-		AppliesTo:           "account",
-		LastVerified:        time.Now(),
+		ProviderName:       "anthropic",
+		PlanType:           "free",
+		LimitType:          "rpm",
+		LimitValue:         50,
+		ResetWindowSeconds: 60,
+		AppliesTo:          "account",
+		LastVerified:       time.Now(),
 	})
 
 	// Act - 10 concurrent reads
@@ -132,23 +132,23 @@ func TestQueryRateLimit_FiltersByModelAndEndpoint(t *testing.T) {
 
 	// Insert rate limits with different scopes
 	InsertRateLimit(RateLimit{
-		ProviderName:        "openai",
-		PlanType:            "tier-2",
-		LimitType:           "rpm",
-		LimitValue:          3500,
-		ResetWindowSeconds:  60,
-		AppliesTo:           "account",
-		LastVerified:        time.Now(),
+		ProviderName:       "openai",
+		PlanType:           "tier-2",
+		LimitType:          "rpm",
+		LimitValue:         3500,
+		ResetWindowSeconds: 60,
+		AppliesTo:          "account",
+		LastVerified:       time.Now(),
 	})
 	InsertRateLimit(RateLimit{
-		ProviderName:        "openai",
-		PlanType:            "tier-2",
-		LimitType:           "tpm",
-		LimitValue:          80000,
-		ResetWindowSeconds:  60,
-		AppliesTo:           "model",
-		ModelID:             sql.NullString{String: "gpt-4o", Valid: true},
-		LastVerified:        time.Now(),
+		ProviderName:       "openai",
+		PlanType:           "tier-2",
+		LimitType:          "tpm",
+		LimitValue:         80000,
+		ResetWindowSeconds: 60,
+		AppliesTo:          "model",
+		ModelID:            sql.NullString{String: "gpt-4o", Valid: true},
+		LastVerified:       time.Now(),
 	})
 
 	// Act - Query for specific model
@@ -212,23 +212,23 @@ func TestInsertProviderPricing_HandlesMultiplePlans(t *testing.T) {
 
 	// Insert pricing for free and paid plans
 	freePricing := ProviderPricing{
-		ProviderName:   "cerebras",
-		ModelID:        "llama3.1-8b",
-		PlanType:       "free",
-		InputCost:      0.0,
-		OutputCost:     0.0,
-		UnitType:       "1M tokens",
-		Currency:       "USD",
-		IncludedUnits:  sql.NullInt64{Int64: 1000000, Valid: true},
+		ProviderName:  "cerebras",
+		ModelID:       "llama3.1-8b",
+		PlanType:      "free",
+		InputCost:     0.0,
+		OutputCost:    0.0,
+		UnitType:      "1M tokens",
+		Currency:      "USD",
+		IncludedUnits: sql.NullInt64{Int64: 1000000, Valid: true},
 	}
 	paidPricing := ProviderPricing{
-		ProviderName:   "cerebras",
-		ModelID:        "llama3.1-70b",
-		PlanType:       "pay_per_go",
-		InputCost:      0.60,
-		OutputCost:     0.60,
-		UnitType:       "1M tokens",
-		Currency:       "USD",
+		ProviderName: "cerebras",
+		ModelID:      "llama3.1-70b",
+		PlanType:     "pay_per_go",
+		InputCost:    0.60,
+		OutputCost:   0.60,
+		UnitType:     "1M tokens",
+		Currency:     "USD",
 	}
 
 	// Act
@@ -322,7 +322,7 @@ func TestGetProviderPricing(t *testing.T) {
 	}
 	defer CloseRateLimitDB()
 	defer os.Remove("/tmp/test_rate_limits_" + t.Name() + ".db")
-	
+
 	// Insert test pricing
 	pricing := ProviderPricing{
 		ProviderName: "test-provider",
@@ -333,30 +333,30 @@ func TestGetProviderPricing(t *testing.T) {
 		UnitType:     "token",
 		Currency:     "USD",
 	}
-	
+
 	err = InsertProviderPricing(pricing)
 	if err != nil {
 		t.Fatalf("Failed to insert pricing: %v", err)
 	}
-	
+
 	// Test retrieval
 	result, err := GetProviderPricing("test-provider", "test-model", "pro")
 	if err != nil {
 		t.Fatalf("GetProviderPricing failed: %v", err)
 	}
-	
+
 	if result == nil {
 		t.Fatal("Expected pricing, got nil")
 	}
-	
+
 	if result.InputCost != 0.001 {
 		t.Errorf("Expected InputCost 0.001, got %v", result.InputCost)
 	}
-	
+
 	if result.OutputCost != 0.002 {
 		t.Errorf("Expected OutputCost 0.002, got %v", result.OutputCost)
 	}
-	
+
 	// Test non-existent pricing
 	result, err = GetProviderPricing("nonexistent", "model", "plan")
 	if err != nil {
@@ -375,7 +375,7 @@ func TestGetAllRateLimitsForProvider(t *testing.T) {
 	}
 	defer CloseRateLimitDB()
 	defer os.Remove("/tmp/test_rate_limits_" + t.Name() + ".db")
-	
+
 	// Insert test rate limits
 	limits := []RateLimit{
 		{
@@ -397,23 +397,23 @@ func TestGetAllRateLimitsForProvider(t *testing.T) {
 			LimitValue:   100,
 		},
 	}
-	
+
 	for _, limit := range limits {
 		if err := InsertRateLimit(limit); err != nil {
 			t.Fatalf("Failed to insert rate limit: %v", err)
 		}
 	}
-	
+
 	// Test retrieval
 	results, err := GetAllRateLimitsForProvider("test-provider", "free")
 	if err != nil {
 		t.Fatalf("GetAllRateLimitsForProvider failed: %v", err)
 	}
-	
+
 	if len(results) != 2 {
 		t.Errorf("Expected 2 rate limits, got %d", len(results))
 	}
-	
+
 	// Verify we got the right limits
 	hasRPM := false
 	hasTPM := false
@@ -425,14 +425,14 @@ func TestGetAllRateLimitsForProvider(t *testing.T) {
 			hasTPM = true
 		}
 	}
-	
+
 	if !hasRPM {
 		t.Error("Missing RPM limit")
 	}
 	if !hasTPM {
 		t.Error("Missing TPM limit")
 	}
-	
+
 	// Test non-existent provider
 	results, err = GetAllRateLimitsForProvider("nonexistent", "free")
 	if err != nil {
@@ -449,13 +449,13 @@ func TestCloseDB(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to initialize DB: %v", err)
 	}
-	
+
 	// Test closing
 	err = CloseDB()
 	if err != nil {
 		t.Fatalf("CloseDB failed: %v", err)
 	}
-	
+
 	// Verify DB is closed by trying to query (should fail)
 	_, err = QueryRateLimit("test", "test", "", "", "")
 }
@@ -466,31 +466,31 @@ func TestInitRateLimitDB_EdgeCases(t *testing.T) {
 	if err == nil {
 		t.Error("Expected error with invalid path")
 	}
-	
+
 	// Clean up in case it was created
 	CloseRateLimitDB()
-	
+
 	// Test successful initialization
 	tmpDir := t.TempDir()
 	dbPath := filepath.Join(tmpDir, "test_ratelimit.db")
-	
+
 	err = InitRateLimitDB(dbPath)
 	if err != nil {
 		t.Fatalf("InitRateLimitDB failed: %v", err)
 	}
 	defer CloseRateLimitDB()
-	
+
 	// Verify database was created
 	if _, err := os.Stat(dbPath); os.IsNotExist(err) {
 		t.Error("Database file was not created")
 	}
-	
+
 	// Verify we can query the database
 	db := GetRateLimitDB()
 	if db == nil {
 		t.Fatal("GetRateLimitDB returned nil")
 	}
-	
+
 	// Test that tables were created
 	var count int
 	err = db.QueryRow("SELECT COUNT(*) FROM sqlite_master WHERE type='table'").Scan(&count)
@@ -505,18 +505,18 @@ func TestInitRateLimitDB_EdgeCases(t *testing.T) {
 func TestCloseRateLimitDB_Multiple(t *testing.T) {
 	tmpDir := t.TempDir()
 	dbPath := filepath.Join(tmpDir, "test_close_ratelimit.db")
-	
+
 	err := InitRateLimitDB(dbPath)
 	if err != nil {
 		t.Fatalf("InitRateLimitDB failed: %v", err)
 	}
-	
+
 	// First close
 	err = CloseRateLimitDB()
 	if err != nil {
 		t.Errorf("First CloseRateLimitDB failed: %v", err)
 	}
-	
+
 	// Second close should handle nil gracefully
 	err = CloseRateLimitDB()
 	if err != nil {
@@ -527,7 +527,7 @@ func TestCloseRateLimitDB_Multiple(t *testing.T) {
 func TestCloseRateLimitDB_WhenNil(t *testing.T) {
 	// Ensure database is closed/nil
 	CloseRateLimitDB()
-	
+
 	// Test closing when already nil
 	err := CloseRateLimitDB()
 	if err != nil {
@@ -538,18 +538,18 @@ func TestCloseRateLimitDB_WhenNil(t *testing.T) {
 func TestGetRateLimitDB_AfterInit(t *testing.T) {
 	tmpDir := t.TempDir()
 	dbPath := filepath.Join(tmpDir, "test_get_ratelimit.db")
-	
+
 	err := InitRateLimitDB(dbPath)
 	if err != nil {
 		t.Fatalf("InitRateLimitDB failed: %v", err)
 	}
 	defer CloseRateLimitDB()
-	
+
 	db := GetRateLimitDB()
 	if db == nil {
 		t.Fatal("GetRateLimitDB returned nil after successful init")
 	}
-	
+
 	// Verify we can ping the database
 	err = db.Ping()
 	if err != nil {

@@ -20,9 +20,9 @@ type Command interface {
 // ListAgentsCommand lists all agents
 type ListAgentsCommand struct{}
 
-func (c *ListAgentsCommand) Name() string { return "list-agents" }
+func (c *ListAgentsCommand) Name() string        { return "list-agents" }
 func (c *ListAgentsCommand) Description() string { return "List all registered agents" }
-func (c *ListAgentsCommand) Usage() string { return "list-agents" }
+func (c *ListAgentsCommand) Usage() string       { return "list-agents" }
 
 func (c *ListAgentsCommand) Execute(ctx context.Context, orchestrator *Orchestrator, args []string) error {
 	if len(args) > 0 {
@@ -46,8 +46,8 @@ func (c *ListAgentsCommand) Execute(ctx context.Context, orchestrator *Orchestra
 		if len(capabilities) > 28 {
 			capabilities = capabilities[:28] + ".."
 		}
-		
-		fmt.Printf("%-36s %-20s %-15s %-30s %-15s\n", 
+
+		fmt.Printf("%-36s %-20s %-15s %-30s %-15s\n",
 			agent.ID, agent.Name, agent.Type, capabilities, agent.Status)
 	}
 
@@ -57,9 +57,9 @@ func (c *ListAgentsCommand) Execute(ctx context.Context, orchestrator *Orchestra
 // CreateAgentCommand creates a new agent
 type CreateAgentCommand struct{}
 
-func (c *CreateAgentCommand) Name() string { return "create-agent" }
+func (c *CreateAgentCommand) Name() string        { return "create-agent" }
 func (c *CreateAgentCommand) Description() string { return "Create a new agent" }
-func (c *CreateAgentCommand) Usage() string { return "create-agent <name> <type> [capabilities...]" }
+func (c *CreateAgentCommand) Usage() string       { return "create-agent <name> <type> [capabilities...]" }
 
 func (c *CreateAgentCommand) Execute(ctx context.Context, orchestrator *Orchestrator, args []string) error {
 	if len(args) < 2 {
@@ -107,9 +107,9 @@ func (c *CreateAgentCommand) Execute(ctx context.Context, orchestrator *Orchestr
 // ListTeamsCommand lists all teams
 type ListTeamsCommand struct{}
 
-func (c *ListTeamsCommand) Name() string { return "list-teams" }
+func (c *ListTeamsCommand) Name() string        { return "list-teams" }
 func (c *ListTeamsCommand) Description() string { return "List all teams" }
-func (c *ListTeamsCommand) Usage() string { return "list-teams" }
+func (c *ListTeamsCommand) Usage() string       { return "list-teams" }
 
 func (c *ListTeamsCommand) Execute(ctx context.Context, orchestrator *Orchestrator, args []string) error {
 	if len(args) > 0 {
@@ -133,8 +133,8 @@ func (c *ListTeamsCommand) Execute(ctx context.Context, orchestrator *Orchestrat
 		if len(team.Description) > 28 {
 			team.Description = team.Description[:28] + ".."
 		}
-		
-		fmt.Printf("%-36s %-20s %-15s %-30s\n", 
+
+		fmt.Printf("%-36s %-20s %-15s %-30s\n",
 			team.ID, team.Name, team.Description, agentsCount)
 	}
 
@@ -144,9 +144,9 @@ func (c *ListTeamsCommand) Execute(ctx context.Context, orchestrator *Orchestrat
 // CreateTeamCommand creates a new team
 type CreateTeamCommand struct{}
 
-func (c *CreateTeamCommand) Name() string { return "create-team" }
+func (c *CreateTeamCommand) Name() string        { return "create-team" }
 func (c *CreateTeamCommand) Description() string { return "Create a new team" }
-func (c *CreateTeamCommand) Usage() string { return "create-team <name> [description]" }
+func (c *CreateTeamCommand) Usage() string       { return "create-team <name> [description]" }
 
 func (c *CreateTeamCommand) Execute(ctx context.Context, orchestrator *Orchestrator, args []string) error {
 	if len(args) < 1 {
@@ -192,9 +192,9 @@ func (c *CreateTeamCommand) Execute(ctx context.Context, orchestrator *Orchestra
 // AddToTeamCommand adds agents to teams
 type AddToTeamCommand struct{}
 
-func (c *AddToTeamCommand) Name() string { return "add-to-team" }
+func (c *AddToTeamCommand) Name() string        { return "add-to-team" }
 func (c *AddToTeamCommand) Description() string { return "Add agents to a team" }
-func (c *AddToTeamCommand) Usage() string { return "add-to-team <team-id> <agent-id> [role]" }
+func (c *AddToTeamCommand) Usage() string       { return "add-to-team <team-id> <agent-id> [role]" }
 
 func (c *AddToTeamCommand) Execute(ctx context.Context, orchestrator *Orchestrator, args []string) error {
 	if len(args) < 2 {
@@ -241,9 +241,9 @@ func (c *AddToTeamCommand) Execute(ctx context.Context, orchestrator *Orchestrat
 // ListTasksCommand lists all tasks
 type ListTasksCommand struct{}
 
-func (c *ListTasksCommand) Name() string { return "list-tasks" }
+func (c *ListTasksCommand) Name() string        { return "list-tasks" }
 func (c *ListTasksCommand) Description() string { return "List all tasks" }
-func (c *ListTasksCommand) Usage() string { return "list-tasks [status]" }
+func (c *ListTasksCommand) Usage() string       { return "list-tasks [status]" }
 
 func (c *ListTasksCommand) Execute(ctx context.Context, orchestrator *Orchestrator, args []string) error {
 	statusFilter := ""
@@ -275,7 +275,7 @@ func (c *ListTasksCommand) Execute(ctx context.Context, orchestrator *Orchestrat
 	} else {
 		fmt.Printf("All Tasks (%d):\n", len(filteredTasks))
 	}
-	
+
 	fmt.Printf("%-36s %-15s %-15s %-20s %-15s\n", "ID", "Type", "Status", "Agent", "Created")
 	fmt.Println(strings.Repeat("-", 105))
 
@@ -284,10 +284,10 @@ func (c *ListTasksCommand) Execute(ctx context.Context, orchestrator *Orchestrat
 		if agent, exists := orchestrator.agents[task.AgentID]; exists {
 			agentName = agent.Name
 		}
-		
+
 		createdTime := task.CreatedAt.Format("2006-01-02 15:04")
-		
-		fmt.Printf("%-36s %-15s %-15s %-20s %-15s\n", 
+
+		fmt.Printf("%-36s %-15s %-15s %-20s %-15s\n",
 			task.ID, task.Type, task.Status, agentName, createdTime)
 	}
 
@@ -297,9 +297,9 @@ func (c *ListTasksCommand) Execute(ctx context.Context, orchestrator *Orchestrat
 // StatusCommand shows system status
 type StatusCommand struct{}
 
-func (c *StatusCommand) Name() string { return "status" }
+func (c *StatusCommand) Name() string        { return "status" }
 func (c *StatusCommand) Description() string { return "Show system status" }
-func (c *StatusCommand) Usage() string { return "status" }
+func (c *StatusCommand) Usage() string       { return "status" }
 
 func (c *StatusCommand) Execute(ctx context.Context, orchestrator *Orchestrator, args []string) error {
 	if len(args) > 0 {
@@ -323,7 +323,7 @@ func (c *StatusCommand) Execute(ctx context.Context, orchestrator *Orchestrator,
 			idleAgents++
 		}
 	}
-	
+
 	pendingTasks := 0
 	runningTasks := 0
 	for _, task := range orchestrator.tasks {
@@ -369,9 +369,9 @@ func (c *StatusCommand) Execute(ctx context.Context, orchestrator *Orchestrator,
 // CleanupCommand performs cleanup
 type CleanupCommand struct{}
 
-func (c *CleanupCommand) Name() string { return "cleanup" }
+func (c *CleanupCommand) Name() string        { return "cleanup" }
 func (c *CleanupCommand) Description() string { return "Perform cleanup of old data" }
-func (c *CleanupCommand) Usage() string { return "cleanup" }
+func (c *CleanupCommand) Usage() string       { return "cleanup" }
 
 func (c *CleanupCommand) Execute(ctx context.Context, orchestrator *Orchestrator, args []string) error {
 	if len(args) > 0 {
@@ -379,7 +379,7 @@ func (c *CleanupCommand) Execute(ctx context.Context, orchestrator *Orchestrator
 	}
 
 	fmt.Println("Performing cleanup...")
-	
+
 	if err := orchestrator.storage.CleanupOldData(ctx); err != nil {
 		return fmt.Errorf("cleanup failed: %w", err)
 	}
@@ -393,9 +393,9 @@ type HelpCommand struct {
 	commands map[string]Command
 }
 
-func (c *HelpCommand) Name() string { return "help" }
+func (c *HelpCommand) Name() string        { return "help" }
 func (c *HelpCommand) Description() string { return "Show help" }
-func (c *HelpCommand) Usage() string { return "help [command]" }
+func (c *HelpCommand) Usage() string       { return "help [command]" }
 
 func (c *HelpCommand) Execute(ctx context.Context, orchestrator *Orchestrator, args []string) error {
 	if len(args) == 0 {
@@ -403,22 +403,22 @@ func (c *HelpCommand) Execute(ctx context.Context, orchestrator *Orchestrator, a
 		fmt.Println("ModelScan CLI Commands")
 		fmt.Println("=======================")
 		fmt.Println()
-		
+
 		// Get sorted command names
 		commandNames := make([]string, 0, len(c.commands))
 		for name := range c.commands {
 			commandNames = append(commandNames, name)
 		}
 		sort.Strings(commandNames)
-		
+
 		for _, name := range commandNames {
 			cmd := c.commands[name]
 			fmt.Printf("%-20s %s\n", cmd.Name(), cmd.Description())
 		}
-		
+
 		fmt.Println()
 		fmt.Println("Use 'help <command>' for detailed usage information")
-		
+
 		return nil
 	}
 
@@ -432,7 +432,7 @@ func (c *HelpCommand) Execute(ctx context.Context, orchestrator *Orchestrator, a
 	fmt.Printf("Command: %s\n", cmd.Name())
 	fmt.Printf("Description: %s\n", cmd.Description())
 	fmt.Printf("Usage: %s\n", cmd.Usage())
-	
+
 	return nil
 }
 

@@ -18,17 +18,17 @@ func ptr(s string) *string { return &s }
 
 func setupTestDB(t *testing.T) (*sql.DB, string) {
 	t.Helper()
-	
+
 	// Create temporary database
 	tempDir := t.TempDir()
 	dbPath := filepath.Join(tempDir, "test.db")
-	
+
 	// Open database
 	db, err := sql.Open("sqlite3", dbPath)
 	if err != nil {
 		t.Fatalf("Failed to open test database: %v", err)
 	}
-	
+
 	// Run migrations
 	_, err = db.Exec(`
 		CREATE TABLE IF NOT EXISTS schema_migrations (
@@ -122,28 +122,28 @@ func setupTestDB(t *testing.T) (*sql.DB, string) {
 	if err != nil {
 		t.Fatalf("Failed to setup test schema: %v", err)
 	}
-	
+
 	return db, dbPath
 }
 
 func TestStorageLifecycle(t *testing.T) {
 	db, _ := setupTestDB(t)
 	defer db.Close()
-	
+
 	ctx := context.Background()
 	storage := NewStorage(db, 1*time.Hour)
-	
+
 	// Test health check
 	if err := storage.PerformHealthCheck(ctx); err != nil {
 		t.Fatalf("Health check failed: %v", err)
 	}
-	
+
 	// Test storage stats
 	stats, err := storage.GetStorageStats(ctx)
 	if err != nil {
 		t.Fatalf("Failed to get storage stats: %v", err)
 	}
-	
+
 	// Verify initial stats
 	if stats["agents"] != 0 {
 		t.Errorf("Expected 0 agents, got %v", stats["agents"])
@@ -159,10 +159,10 @@ func TestStorageLifecycle(t *testing.T) {
 func TestAgentRepository(t *testing.T) {
 	db, _ := setupTestDB(t)
 	defer db.Close()
-	
+
 	ctx := context.Background()
 	repo := NewAgentRepository(db)
-	
+
 	// Test creating an agent
 	agent := &Agent{
 		ID:           "test-agent-1",
@@ -173,103 +173,103 @@ func TestAgentRepository(t *testing.T) {
 		CreatedAt:    time.Now(),
 		UpdatedAt:    time.Now(),
 	}
-	
+
 	err := repo.Create(ctx, agent)
 	if err != nil {
 		t.Fatalf("Failed to create agent: %v", err)
 	}
-	
+
 	// Test getting an agent
 	retrieved, err := repo.Get(ctx, "test-agent-1")
 	if err != nil {
 		t.Fatalf("Failed to get agent: %v", err)
 	}
-	
+
 	if retrieved.Name != agent.Name {
 		t.Errorf("Expected name %s, got %s", agent.Name, retrieved.Name)
 	}
-	
+
 	if len(retrieved.Capabilities) != len(agent.Capabilities) {
 		t.Errorf("Expected %d capabilities, got %d", len(agent.Capabilities), len(retrieved.Capabilities))
 	}
-	
+
 	// Test updating an agent
 	agent.Status = "active"
 	agent.Capabilities = append(agent.Capabilities, "summarization")
-	
+
 	err = repo.Update(ctx, agent)
 	if err != nil {
 		t.Fatalf("Failed to update agent: %v", err)
 	}
-	
+
 	// Verify update
 	updated, err := repo.Get(ctx, "test-agent-1")
 	if err != nil {
 		t.Fatalf("Failed to get updated agent: %v", err)
 	}
-	
+
 	if updated.Status != "active" {
 		t.Errorf("Expected status active, got %s", updated.Status)
 	}
-	
+
 	// Test listing agents
 	agents, err := repo.ListActive(ctx, 10, 0)
 	if err != nil {
 		t.Fatalf("Failed to list agents: %v", err)
 	}
-	
+
 	if len(agents) != 1 {
 		t.Errorf("Expected 1 agent, got %d", len(agents))
 	}
-	
+
 	// Test List (all agents)
 	allAgents, err := repo.List(ctx)
 	if err != nil {
 		t.Fatalf("Failed to list all agents: %v", err)
 	}
-	
+
 	if len(allAgents) != 1 {
 		t.Errorf("Expected 1 agent in List, got %d", len(allAgents))
 	}
-	
+
 	// Test UpdateStatus
 	err = repo.UpdateStatus(ctx, "test-agent-1", "busy")
 	if err != nil {
 		t.Fatalf("Failed to update status: %v", err)
 	}
-	
+
 	// Verify status update
 	statusUpdated, err := repo.Get(ctx, "test-agent-1")
 	if err != nil {
 		t.Fatalf("Failed to get agent after status update: %v", err)
 	}
-	
+
 	if statusUpdated.Status != "busy" {
 		t.Errorf("Expected status busy, got %s", statusUpdated.Status)
 	}
-	
+
 	// Test ListByStatus
 	busyAgents, err := repo.ListByStatus(ctx, "busy")
 	if err != nil {
 		t.Fatalf("Failed to list agents by status: %v", err)
 	}
-	
+
 	if len(busyAgents) != 1 {
 		t.Errorf("Expected 1 busy agent, got %d", len(busyAgents))
 	}
-	
+
 	// Test Delete
 	err = repo.Delete(ctx, "test-agent-1")
 	if err != nil {
 		t.Fatalf("Failed to delete agent: %v", err)
 	}
-	
+
 	// Verify deletion
 	_, err = repo.Get(ctx, "test-agent-1")
 	if err == nil {
 		t.Error("Expected error when getting deleted agent")
 	}
-	
+
 	// Test delete non-existent agent
 	err = repo.Delete(ctx, "non-existent")
 	if err == nil {
@@ -280,10 +280,10 @@ func TestAgentRepository(t *testing.T) {
 func TestTaskRepository(t *testing.T) {
 	db, _ := setupTestDB(t)
 	defer db.Close()
-	
+
 	ctx := context.Background()
 	repo := NewTaskRepository(db)
-	
+
 	// Test creating a task
 	task := &Task{
 		ID:        "test-task-1",
@@ -296,48 +296,48 @@ func TestTaskRepository(t *testing.T) {
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
-	
+
 	err := repo.Create(ctx, task)
 	if err != nil {
 		t.Fatalf("Failed to create task: %v", err)
 	}
-	
+
 	// Test getting a task
 	retrieved, err := repo.Get(ctx, "test-task-1")
 	if err != nil {
 		t.Fatalf("Failed to get task: %v", err)
 	}
-	
+
 	if retrieved.Type != task.Type {
 		t.Errorf("Expected type %s, got %s", task.Type, retrieved.Type)
 	}
-	
+
 	if retrieved.Metadata["test"] != true {
 		t.Errorf("Expected metadata test=true, got %v", retrieved.Metadata["test"])
 	}
-	
+
 	// Test updating task status
 	err = repo.UpdateStatus(ctx, "test-task-1", "running")
 	if err != nil {
 		t.Fatalf("Failed to update task status: %v", err)
 	}
-	
+
 	// Verify status update
 	updated, err := repo.Get(ctx, "test-task-1")
 	if err != nil {
 		t.Fatalf("Failed to get updated task: %v", err)
 	}
-	
+
 	if updated.Status != "running" {
 		t.Errorf("Expected status running, got %s", updated.Status)
 	}
-	
+
 	// Test listing tasks by status
 	tasks, err := repo.ListByStatus(ctx, "running", 10, 0)
 	if err != nil {
 		t.Fatalf("Failed to list tasks by status: %v", err)
 	}
-	
+
 	if len(tasks) != 1 {
 		t.Errorf("Expected 1 task, got %d", len(tasks))
 	}
@@ -346,10 +346,10 @@ func TestTaskRepository(t *testing.T) {
 func TestTeamRepository(t *testing.T) {
 	db, _ := setupTestDB(t)
 	defer db.Close()
-	
+
 	ctx := context.Background()
 	repo := NewTeamRepository(db)
-	
+
 	// Create a team
 	team := &Team{
 		ID:          "test-team-1",
@@ -360,61 +360,61 @@ func TestTeamRepository(t *testing.T) {
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 	}
-	
+
 	err := repo.Create(ctx, team)
 	if err != nil {
 		t.Fatalf("Failed to create team: %v", err)
 	}
-	
+
 	// Test getting a team
 	retrieved, err := repo.Get(ctx, "test-team-1")
 	if err != nil {
 		t.Fatalf("Failed to get team: %v", err)
 	}
-	
+
 	if retrieved.Name != team.Name {
 		t.Errorf("Expected name %s, got %s", team.Name, retrieved.Name)
 	}
-	
+
 	// Test adding team members
 	err = repo.AddMember(ctx, "test-team-1", "agent-1", "lead")
 	if err != nil {
 		t.Fatalf("Failed to add team member: %v", err)
 	}
-	
+
 	err = repo.AddMember(ctx, "test-team-1", "agent-2", "member")
 	if err != nil {
 		t.Fatalf("Failed to add second team member: %v", err)
 	}
-	
+
 	// Test getting team members
 	members, err := repo.GetMembers(ctx, "test-team-1")
 	if err != nil {
 		t.Fatalf("Failed to get team members: %v", err)
 	}
-	
+
 	if len(members) != 2 {
 		t.Errorf("Expected 2 members, got %d", len(members))
 	}
-	
+
 	// Test updating member role
 	err = repo.UpdateMemberRole(ctx, "test-team-1", "agent-2", "lead")
 	if err != nil {
 		t.Fatalf("Failed to update member role: %v", err)
 	}
-	
+
 	// Test removing team member
 	err = repo.RemoveMember(ctx, "test-team-1", "agent-1")
 	if err != nil {
 		t.Fatalf("Failed to remove team member: %v", err)
 	}
-	
+
 	// Verify removal
 	members, err = repo.GetMembers(ctx, "test-team-1")
 	if err != nil {
 		t.Fatalf("Failed to get team members after removal: %v", err)
 	}
-	
+
 	if len(members) != 1 {
 		t.Errorf("Expected 1 member after removal, got %d", len(members))
 	}
@@ -423,10 +423,10 @@ func TestTeamRepository(t *testing.T) {
 func TestMessageRepository(t *testing.T) {
 	db, _ := setupTestDB(t)
 	defer db.Close()
-	
+
 	ctx := context.Background()
 	repo := NewMessageRepository(db)
-	
+
 	// Create a message
 	message := &Message{
 		ID:        "test-message-1",
@@ -437,38 +437,38 @@ func TestMessageRepository(t *testing.T) {
 		Metadata:  map[string]interface{}{"test": true},
 		CreatedAt: time.Now(),
 	}
-	
+
 	err := repo.Create(ctx, message)
 	if err != nil {
 		t.Fatalf("Failed to create message: %v", err)
 	}
-	
+
 	// Test getting a message
 	retrieved, err := repo.Get(ctx, "test-message-1")
 	if err != nil {
 		t.Fatalf("Failed to get message: %v", err)
 	}
-	
+
 	if retrieved.Content != message.Content {
 		t.Errorf("Expected content %s, got %s", message.Content, retrieved.Content)
 	}
-	
+
 	// Test listing messages by task
 	messages, err := repo.ListByTask(ctx, "test-task-1", 10, 0)
 	if err != nil {
 		t.Fatalf("Failed to list messages by task: %v", err)
 	}
-	
+
 	if len(messages) != 1 {
 		t.Errorf("Expected 1 message, got %d", len(messages))
 	}
-	
+
 	// Test conversation thread
 	thread, err := repo.GetConversationThread(ctx, "test-task-1")
 	if err != nil {
 		t.Fatalf("Failed to get conversation thread: %v", err)
 	}
-	
+
 	if len(thread) != 1 {
 		t.Errorf("Expected 1 message in thread, got %d", len(thread))
 	}
@@ -477,10 +477,10 @@ func TestMessageRepository(t *testing.T) {
 func TestToolExecutionRepository(t *testing.T) {
 	db, _ := setupTestDB(t)
 	defer db.Close()
-	
+
 	ctx := context.Background()
 	repo := NewToolExecutionRepository(db)
-	
+
 	// Create a tool execution
 	execution := &ToolExecution{
 		ID:        "test-exec-1",
@@ -494,48 +494,48 @@ func TestToolExecutionRepository(t *testing.T) {
 		Metadata:  map[string]interface{}{"test": true},
 		StartedAt: time.Now(),
 	}
-	
+
 	err := repo.Create(ctx, execution)
 	if err != nil {
 		t.Fatalf("Failed to create tool execution: %v", err)
 	}
-	
+
 	// Test getting a tool execution
 	retrieved, err := repo.Get(ctx, "test-exec-1")
 	if err != nil {
 		t.Fatalf("Failed to get tool execution: %v", err)
 	}
-	
+
 	if retrieved.ToolName != execution.ToolName {
 		t.Errorf("Expected tool name %s, got %s", execution.ToolName, retrieved.ToolName)
 	}
-	
+
 	// Test marking as completed
 	err = repo.MarkCompleted(ctx, "test-exec-1", "test output", "completed", 1000)
 	if err != nil {
 		t.Fatalf("Failed to mark tool execution completed: %v", err)
 	}
-	
+
 	// Verify completion
 	completed, err := repo.Get(ctx, "test-exec-1")
 	if err != nil {
 		t.Fatalf("Failed to get completed tool execution: %v", err)
 	}
-	
+
 	if completed.Status != "completed" {
 		t.Errorf("Expected status completed, got %s", completed.Status)
 	}
-	
+
 	if completed.Duration != 1000 {
 		t.Errorf("Expected duration 1000, got %d", completed.Duration)
 	}
-	
+
 	// Test listing tool executions by task
 	executions, err := repo.ListByTask(ctx, "test-task-1", 10, 0)
 	if err != nil {
 		t.Fatalf("Failed to list tool executions by task: %v", err)
 	}
-	
+
 	if len(executions) != 1 {
 		t.Errorf("Expected 1 execution, got %d", len(executions))
 	}
@@ -544,35 +544,35 @@ func TestToolExecutionRepository(t *testing.T) {
 func TestStorageIntegration(t *testing.T) {
 	db, _ := setupTestDB(t)
 	defer db.Close()
-	
+
 	ctx := context.Background()
 	storage := NewStorage(db, 1*time.Hour)
-	
+
 	// Test zero-state initialization
 	err := storage.InitializeZeroState(ctx)
 	if err != nil {
 		t.Fatalf("Failed to initialize zero state: %v", err)
 	}
-	
+
 	// Test creating with defaults
 	agent := storage.NewAgentWithDefaults("Test Agent", "llm", []string{"text-generation"})
 	err = storage.Agents.Create(ctx, agent)
 	if err != nil {
 		t.Fatalf("Failed to create agent: %v", err)
 	}
-	
+
 	// Test cleanup
 	err = storage.CleanupOldData(ctx)
 	if err != nil {
 		t.Fatalf("Failed to cleanup old data: %v", err)
 	}
-	
+
 	// Test stats
 	stats, err := storage.GetStorageStats(ctx)
 	if err != nil {
 		t.Fatalf("Failed to get stats: %v", err)
 	}
-	
+
 	if stats["agents"] != 1 {
 		t.Errorf("Expected 1 agent in stats, got %v", stats["agents"])
 	}
@@ -581,11 +581,11 @@ func TestStorageIntegration(t *testing.T) {
 func TestTaskRepository_CompleteCRUD(t *testing.T) {
 	db, _ := setupTestDB(t)
 	defer db.Close()
-	
+
 	ctx := context.Background()
 	taskRepo := NewTaskRepository(db)
 	agentRepo := NewAgentRepository(db)
-	
+
 	// Create an agent first
 	agent := &Agent{
 		ID:           "test-agent",
@@ -596,7 +596,7 @@ func TestTaskRepository_CompleteCRUD(t *testing.T) {
 		UpdatedAt:    time.Now(),
 	}
 	agentRepo.Create(ctx, agent)
-	
+
 	// Test Create
 	task := &Task{
 		ID:        "task-1",
@@ -608,12 +608,12 @@ func TestTaskRepository_CompleteCRUD(t *testing.T) {
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
-	
+
 	err := taskRepo.Create(ctx, task)
 	if err != nil {
 		t.Fatalf("Create failed: %v", err)
 	}
-	
+
 	// Test Update
 	task.Status = "running"
 	task.Output = "test output"
@@ -621,7 +621,7 @@ func TestTaskRepository_CompleteCRUD(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Update failed: %v", err)
 	}
-	
+
 	// Verify update
 	updated, err := taskRepo.Get(ctx, "task-1")
 	if err != nil {
@@ -630,7 +630,7 @@ func TestTaskRepository_CompleteCRUD(t *testing.T) {
 	if updated.Status != "running" {
 		t.Errorf("Expected status 'running', got '%s'", updated.Status)
 	}
-	
+
 	// Test ListByAgent
 	tasks, err := taskRepo.ListByAgent(ctx, "test-agent", 10, 0)
 	if err != nil {
@@ -639,13 +639,13 @@ func TestTaskRepository_CompleteCRUD(t *testing.T) {
 	if len(tasks) != 1 {
 		t.Errorf("Expected 1 task, got %d", len(tasks))
 	}
-	
+
 	// Test Delete
 	err = taskRepo.Delete(ctx, "task-1")
 	if err != nil {
 		t.Fatalf("Delete failed: %v", err)
 	}
-	
+
 	// Verify deletion
 	_, err = taskRepo.Get(ctx, "task-1")
 	if err == nil {
@@ -656,11 +656,11 @@ func TestTaskRepository_CompleteCRUD(t *testing.T) {
 func TestTeamRepository_CompleteCRUD(t *testing.T) {
 	db, _ := setupTestDB(t)
 	defer db.Close()
-	
+
 	ctx := context.Background()
 	teamRepo := NewTeamRepository(db)
 	agentRepo := NewAgentRepository(db)
-	
+
 	// Create agents
 	agent1 := &Agent{
 		ID:           "agent-1",
@@ -671,7 +671,7 @@ func TestTeamRepository_CompleteCRUD(t *testing.T) {
 		UpdatedAt:    time.Now(),
 	}
 	agentRepo.Create(ctx, agent1)
-	
+
 	// Test Create
 	team := &Team{
 		ID:          "team-1",
@@ -682,19 +682,19 @@ func TestTeamRepository_CompleteCRUD(t *testing.T) {
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 	}
-	
+
 	err := teamRepo.Create(ctx, team)
 	if err != nil {
 		t.Fatalf("Create failed: %v", err)
 	}
-	
+
 	// Test Update
 	team.Description = "Updated description"
 	err = teamRepo.Update(ctx, team)
 	if err != nil {
 		t.Fatalf("Update failed: %v", err)
 	}
-	
+
 	// Test List
 	teams, err := teamRepo.List(ctx, 10, 0)
 	if err != nil {
@@ -703,7 +703,7 @@ func TestTeamRepository_CompleteCRUD(t *testing.T) {
 	if len(teams) != 1 {
 		t.Errorf("Expected 1 team, got %d", len(teams))
 	}
-	
+
 	// Test GetAgentTeams
 	agentTeams, err := teamRepo.GetAgentTeams(ctx, "agent-1")
 	if err != nil {
@@ -712,7 +712,7 @@ func TestTeamRepository_CompleteCRUD(t *testing.T) {
 	if len(agentTeams) != 0 {
 		t.Errorf("Expected 0 teams for agent, got %d", len(agentTeams))
 	}
-	
+
 	// Test Delete
 	err = teamRepo.Delete(ctx, "team-1")
 	if err != nil {
@@ -723,12 +723,12 @@ func TestTeamRepository_CompleteCRUD(t *testing.T) {
 func TestMessageRepository_CompleteCRUD(t *testing.T) {
 	db, _ := setupTestDB(t)
 	defer db.Close()
-	
+
 	ctx := context.Background()
 	msgRepo := NewMessageRepository(db)
 	taskRepo := NewTaskRepository(db)
 	agentRepo := NewAgentRepository(db)
-	
+
 	// Create agent and task
 	agent := &Agent{
 		ID:           "agent-1",
@@ -739,7 +739,7 @@ func TestMessageRepository_CompleteCRUD(t *testing.T) {
 		UpdatedAt:    time.Now(),
 	}
 	agentRepo.Create(ctx, agent)
-	
+
 	task := &Task{
 		ID:        "task-1",
 		AgentID:   "agent-1",
@@ -749,7 +749,7 @@ func TestMessageRepository_CompleteCRUD(t *testing.T) {
 		UpdatedAt: time.Now(),
 	}
 	taskRepo.Create(ctx, task)
-	
+
 	// Test Create
 	msg := &Message{
 		ID:        "msg-1",
@@ -759,12 +759,12 @@ func TestMessageRepository_CompleteCRUD(t *testing.T) {
 		Content:   "Hello",
 		CreatedAt: time.Now(),
 	}
-	
+
 	err := msgRepo.Create(ctx, msg)
 	if err != nil {
 		t.Fatalf("Create failed: %v", err)
 	}
-	
+
 	// Test ListByAgent
 	messages, err := msgRepo.ListByAgent(ctx, "agent-1", 10, 0)
 	if err != nil {
@@ -773,13 +773,13 @@ func TestMessageRepository_CompleteCRUD(t *testing.T) {
 	if len(messages) != 1 {
 		t.Errorf("Expected 1 message, got %d", len(messages))
 	}
-	
+
 	// Test DeleteByTask
 	err = msgRepo.DeleteByTask(ctx, "task-1")
 	if err != nil {
 		t.Fatalf("DeleteByTask failed: %v", err)
 	}
-	
+
 	// Test Delete
 	msg2 := &Message{
 		ID:        "msg-2",
@@ -790,7 +790,7 @@ func TestMessageRepository_CompleteCRUD(t *testing.T) {
 		CreatedAt: time.Now(),
 	}
 	msgRepo.Create(ctx, msg2)
-	
+
 	err = msgRepo.Delete(ctx, "msg-2")
 	if err != nil {
 		t.Fatalf("Delete failed: %v", err)
@@ -800,12 +800,12 @@ func TestMessageRepository_CompleteCRUD(t *testing.T) {
 func TestToolExecutionRepository_CompleteCRUD(t *testing.T) {
 	db, _ := setupTestDB(t)
 	defer db.Close()
-	
+
 	ctx := context.Background()
 	toolRepo := NewToolExecutionRepository(db)
 	taskRepo := NewTaskRepository(db)
 	agentRepo := NewAgentRepository(db)
-	
+
 	// Create agent and task
 	agent := &Agent{
 		ID:           "agent-1",
@@ -816,7 +816,7 @@ func TestToolExecutionRepository_CompleteCRUD(t *testing.T) {
 		UpdatedAt:    time.Now(),
 	}
 	agentRepo.Create(ctx, agent)
-	
+
 	task := &Task{
 		ID:        "task-1",
 		AgentID:   "agent-1",
@@ -826,7 +826,7 @@ func TestToolExecutionRepository_CompleteCRUD(t *testing.T) {
 		UpdatedAt: time.Now(),
 	}
 	taskRepo.Create(ctx, task)
-	
+
 	// Test Create
 	tool := &ToolExecution{
 		ID:        "tool-1",
@@ -836,12 +836,12 @@ func TestToolExecutionRepository_CompleteCRUD(t *testing.T) {
 		Status:    "running",
 		StartedAt: time.Now(),
 	}
-	
+
 	err := toolRepo.Create(ctx, tool)
 	if err != nil {
 		t.Fatalf("Create failed: %v", err)
 	}
-	
+
 	// Test Update
 	tool.Status = "completed"
 	tool.Output = "success"
@@ -849,7 +849,7 @@ func TestToolExecutionRepository_CompleteCRUD(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Update failed: %v", err)
 	}
-	
+
 	// Test MarkFailed
 	tool2 := &ToolExecution{
 		ID:        "tool-2",
@@ -860,12 +860,12 @@ func TestToolExecutionRepository_CompleteCRUD(t *testing.T) {
 		StartedAt: time.Now(),
 	}
 	toolRepo.Create(ctx, tool2)
-	
+
 	err = toolRepo.MarkFailed(ctx, "tool-2", "Test error", 100)
 	if err != nil {
 		t.Fatalf("MarkFailed failed: %v", err)
 	}
-	
+
 	// Test ListByAgent
 	tools, err := toolRepo.ListByAgent(ctx, "agent-1", 10, 0)
 	if err != nil {
@@ -874,7 +874,7 @@ func TestToolExecutionRepository_CompleteCRUD(t *testing.T) {
 	if len(tools) != 2 {
 		t.Errorf("Expected 2 tools, got %d", len(tools))
 	}
-	
+
 	// Test ListByTool
 	toolsByName, err := toolRepo.ListByTool(ctx, "test_tool", 10, 0)
 	if err != nil {
@@ -883,7 +883,7 @@ func TestToolExecutionRepository_CompleteCRUD(t *testing.T) {
 	if len(toolsByName) != 1 {
 		t.Errorf("Expected 1 tool, got %d", len(toolsByName))
 	}
-	
+
 	// Test GetUsageStats
 	stats, err := toolRepo.GetUsageStats(ctx, time.Now().Add(-1*time.Hour))
 	if err != nil {
@@ -892,7 +892,7 @@ func TestToolExecutionRepository_CompleteCRUD(t *testing.T) {
 	if len(stats) < 1 {
 		t.Errorf("Expected at least 1 stat entry, got %d", len(stats))
 	}
-	
+
 	// Test DeleteByTask
 	err = toolRepo.DeleteByTask(ctx, "task-1")
 	if err != nil {
@@ -903,10 +903,10 @@ func TestToolExecutionRepository_CompleteCRUD(t *testing.T) {
 func TestStorage_HelperFunctions(t *testing.T) {
 	db, _ := setupTestDB(t)
 	defer db.Close()
-	
+
 	ctx := context.Background()
 	storage := NewStorage(db, 1*time.Hour)
-	
+
 	// Test NewTaskWithDefaults
 	task := storage.NewTaskWithDefaults("agent-1", "test", "test input", 1)
 	if task.ID == "" {
@@ -915,7 +915,7 @@ func TestStorage_HelperFunctions(t *testing.T) {
 	if task.AgentID != "agent-1" {
 		t.Errorf("Expected agent ID 'agent-1', got '%s'", task.AgentID)
 	}
-	
+
 	// Test NewMessageWithDefaults
 	msg := storage.NewMessageWithDefaults("task-1", "agent-1", "text", "Hello")
 	if msg.ID == "" {
@@ -924,7 +924,7 @@ func TestStorage_HelperFunctions(t *testing.T) {
 	if msg.Content != "Hello" {
 		t.Errorf("Expected content 'Hello', got '%s'", msg.Content)
 	}
-	
+
 	// Test NewTeamWithDefaults
 	team := storage.NewTeamWithDefaults("Test Team", "Description")
 	if team.ID == "" {
@@ -933,7 +933,7 @@ func TestStorage_HelperFunctions(t *testing.T) {
 	if team.Name != "Test Team" {
 		t.Errorf("Expected name 'Test Team', got '%s'", team.Name)
 	}
-	
+
 	// Test NewToolExecutionWithDefaults
 	tool := storage.NewToolExecutionWithDefaults("task-1", "agent-1", "test_tool", "function", "input")
 	if tool.ID == "" {
@@ -942,30 +942,30 @@ func TestStorage_HelperFunctions(t *testing.T) {
 	if tool.ToolName != "test_tool" {
 		t.Errorf("Expected tool name 'test_tool', got '%s'", tool.ToolName)
 	}
-	
+
 	// Test SetAllAgentsIdle
 	agent := storage.NewAgentWithDefaults("Test Agent", "llm", []string{"test"})
 	agent.Status = "busy"
 	storage.Agents.Create(ctx, agent)
-	
+
 	err := storage.SetAllAgentsIdle(ctx)
 	if err != nil {
 		t.Fatalf("SetAllAgentsIdle failed: %v", err)
 	}
-	
+
 	// Test CancelAllPendingTasks
 	err = storage.CancelAllPendingTasks(ctx)
 	if err != nil {
 		t.Fatalf("CancelAllPendingTasks failed: %v", err)
 	}
-	
+
 	// Test PerformHealthCheck
 	err = storage.PerformHealthCheck(ctx)
 	if err != nil {
 		t.Fatalf("PerformHealthCheck failed: %v", err)
 	}
 	// Health check passed
-	
+
 	// Test Close
 	err = storage.Close()
 	if err != nil {
@@ -976,19 +976,19 @@ func TestStorage_HelperFunctions(t *testing.T) {
 func TestDatabase_Lifecycle(t *testing.T) {
 	tempDir := t.TempDir()
 	dbPath := tempDir + "/test.db"
-	
+
 	// Test NewAgentDB
 	db, err := NewAgentDB(dbPath)
 	if err != nil {
 		t.Fatalf("NewAgentDB failed: %v", err)
 	}
-	
+
 	// Test GetDB
 	sqlDB := db.GetDB()
 	if sqlDB == nil {
 		t.Error("GetDB returned nil")
 	}
-	
+
 	// Test that tables were created
 	ctx := context.Background()
 	var count int
@@ -999,13 +999,13 @@ func TestDatabase_Lifecycle(t *testing.T) {
 	if count < 5 {
 		t.Errorf("Expected at least 5 tables, got %d", count)
 	}
-	
+
 	// Test CleanupOldData
 	err = db.CleanupOldData(ctx, 24*time.Hour)
 	if err != nil {
 		t.Fatalf("CleanupOldData failed: %v", err)
 	}
-	
+
 	// Test Close
 	err = db.Close()
 	if err != nil {
@@ -1016,10 +1016,10 @@ func TestDatabase_Lifecycle(t *testing.T) {
 func TestAgentRepository_SetActive(t *testing.T) {
 	db, _ := setupTestDB(t)
 	defer db.Close()
-	
+
 	ctx := context.Background()
 	repo := NewAgentRepository(db)
-	
+
 	// Create agents
 	agent1 := &Agent{
 		ID:           "agent-1",
@@ -1030,25 +1030,25 @@ func TestAgentRepository_SetActive(t *testing.T) {
 		UpdatedAt:    time.Now(),
 	}
 	repo.Create(ctx, agent1)
-	
+
 	// Test SetActive
 	err := repo.UpdateStatus(ctx, "agent-1", "active")
 	if err != nil {
 		t.Fatalf("SetActive failed: %v", err)
 	}
-	
+
 	// Verify status changed to active
 	updated, _ := repo.Get(ctx, "agent-1")
 	if updated.Status != "active" {
 		t.Errorf("Expected status 'active', got '%s'", updated.Status)
 	}
-	
+
 	// Test SetActive false
 	err = repo.UpdateStatus(ctx, "agent-1", "idle")
 	if err != nil {
 		t.Fatalf("SetActive false failed: %v", err)
 	}
-	
+
 	updated, _ = repo.Get(ctx, "agent-1")
 	if updated.Status != "idle" {
 		t.Errorf("Expected status 'idle', got '%s'", updated.Status)
@@ -1058,12 +1058,12 @@ func TestAgentRepository_SetActive(t *testing.T) {
 func TestTaskRepository_ListByTeam(t *testing.T) {
 	db, _ := setupTestDB(t)
 	defer db.Close()
-	
+
 	ctx := context.Background()
 	taskRepo := NewTaskRepository(db)
 	agentRepo := NewAgentRepository(db)
 	teamRepo := NewTeamRepository(db)
-	
+
 	// Create agent, team, and task
 	agent := &Agent{
 		ID:           "agent-1",
@@ -1074,7 +1074,7 @@ func TestTaskRepository_ListByTeam(t *testing.T) {
 		UpdatedAt:    time.Now(),
 	}
 	agentRepo.Create(ctx, agent)
-	
+
 	team := &Team{
 		ID:        "team-1",
 		Name:      "Team 1",
@@ -1083,7 +1083,7 @@ func TestTaskRepository_ListByTeam(t *testing.T) {
 		UpdatedAt: time.Now(),
 	}
 	teamRepo.Create(ctx, team)
-	
+
 	task := &Task{
 		ID:        "task-1",
 		AgentID:   "agent-1",
@@ -1094,7 +1094,7 @@ func TestTaskRepository_ListByTeam(t *testing.T) {
 		UpdatedAt: time.Now(),
 	}
 	taskRepo.Create(ctx, task)
-	
+
 	// Test ListByTeam
 	tasks, err := taskRepo.ListByTeam(ctx, "team-1", 10, 0)
 	if err != nil {
@@ -1108,13 +1108,13 @@ func TestTaskRepository_ListByTeam(t *testing.T) {
 func TestMessageRepository_ListByTeam(t *testing.T) {
 	db, _ := setupTestDB(t)
 	defer db.Close()
-	
+
 	ctx := context.Background()
 	msgRepo := NewMessageRepository(db)
 	taskRepo := NewTaskRepository(db)
 	agentRepo := NewAgentRepository(db)
 	teamRepo := NewTeamRepository(db)
-	
+
 	// Create dependencies
 	agent := &Agent{
 		ID:           "agent-1",
@@ -1125,7 +1125,7 @@ func TestMessageRepository_ListByTeam(t *testing.T) {
 		UpdatedAt:    time.Now(),
 	}
 	agentRepo.Create(ctx, agent)
-	
+
 	team := &Team{
 		ID:        "team-1",
 		Name:      "Team 1",
@@ -1134,7 +1134,7 @@ func TestMessageRepository_ListByTeam(t *testing.T) {
 		UpdatedAt: time.Now(),
 	}
 	teamRepo.Create(ctx, team)
-	
+
 	task := &Task{
 		ID:        "task-1",
 		AgentID:   "agent-1",
@@ -1145,7 +1145,7 @@ func TestMessageRepository_ListByTeam(t *testing.T) {
 		UpdatedAt: time.Now(),
 	}
 	taskRepo.Create(ctx, task)
-	
+
 	msg := &Message{
 		ID:        "msg-1",
 		TaskID:    "task-1",
@@ -1156,7 +1156,7 @@ func TestMessageRepository_ListByTeam(t *testing.T) {
 		CreatedAt: time.Now(),
 	}
 	msgRepo.Create(ctx, msg)
-	
+
 	// Test ListByTeam
 	messages, err := msgRepo.ListByTeam(ctx, "team-1", 10, 0)
 	if err != nil {
@@ -1170,10 +1170,10 @@ func TestMessageRepository_ListByTeam(t *testing.T) {
 func TestAgentRepository_SetActiveMultiple(t *testing.T) {
 	db, _ := setupTestDB(t)
 	defer db.Close()
-	
+
 	ctx := context.Background()
 	repo := NewAgentRepository(db)
-	
+
 	// Create multiple agents
 	agents := []*Agent{
 		{
@@ -1201,41 +1201,41 @@ func TestAgentRepository_SetActiveMultiple(t *testing.T) {
 			UpdatedAt:    time.Now(),
 		},
 	}
-	
+
 	for _, agent := range agents {
 		if err := repo.Create(ctx, agent); err != nil {
 			t.Fatalf("Failed to create agent: %v", err)
 		}
 	}
-	
+
 	// Test SetActive with specific agents
 	err := repo.SetActive(ctx, []string{"agent-1", "agent-3"})
 	if err != nil {
 		t.Fatalf("SetActive failed: %v", err)
 	}
-	
+
 	// Verify correct agents are active
 	agent1, _ := repo.Get(ctx, "agent-1")
 	if agent1.Status != "active" {
 		t.Errorf("Expected agent-1 to be active, got %s", agent1.Status)
 	}
-	
+
 	agent2, _ := repo.Get(ctx, "agent-2")
 	if agent2.Status != "inactive" {
 		t.Errorf("Expected agent-2 to be inactive, got %s", agent2.Status)
 	}
-	
+
 	agent3, _ := repo.Get(ctx, "agent-3")
 	if agent3.Status != "active" {
 		t.Errorf("Expected agent-3 to be active, got %s", agent3.Status)
 	}
-	
+
 	// Test SetActive with empty list (all should be inactive)
 	err = repo.SetActive(ctx, []string{})
 	if err != nil {
 		t.Fatalf("SetActive with empty list failed: %v", err)
 	}
-	
+
 	// Verify all are inactive
 	for _, agentID := range []string{"agent-1", "agent-2", "agent-3"} {
 		agent, _ := repo.Get(ctx, agentID)
@@ -1248,39 +1248,39 @@ func TestAgentRepository_SetActiveMultiple(t *testing.T) {
 func TestAgentDB_CleanupScheduler(t *testing.T) {
 	tempDir := t.TempDir()
 	dbPath := filepath.Join(tempDir, "test.db")
-	
+
 	adb, err := NewAgentDB(dbPath)
 	if err != nil {
 		t.Fatalf("Failed to create AgentDB: %v", err)
 	}
 	defer adb.Close()
-	
+
 	ctx, cancel := context.WithCancel(context.Background())
-	
+
 	// Start cleanup scheduler with short interval
 	adb.StartCleanupScheduler(ctx, 100*time.Millisecond, 24*time.Hour)
-	
+
 	// Let it run for a bit
 	time.Sleep(250 * time.Millisecond)
-	
+
 	// Cancel context to stop scheduler
 	cancel()
-	
+
 	// Give it time to stop
 	time.Sleep(100 * time.Millisecond)
-	
+
 	// If we got here without hanging, the test passes
 }
 
 func TestMessageRepository_Get(t *testing.T) {
 	db, _ := setupTestDB(t)
 	defer db.Close()
-	
+
 	ctx := context.Background()
 	msgRepo := NewMessageRepository(db)
 	agentRepo := NewAgentRepository(db)
 	taskRepo := NewTaskRepository(db)
-	
+
 	// Create agent and task first
 	agent := &Agent{
 		ID:           "agent-1",
@@ -1291,7 +1291,7 @@ func TestMessageRepository_Get(t *testing.T) {
 		UpdatedAt:    time.Now(),
 	}
 	agentRepo.Create(ctx, agent)
-	
+
 	task := &Task{
 		ID:        "task-1",
 		AgentID:   "agent-1",
@@ -1301,7 +1301,7 @@ func TestMessageRepository_Get(t *testing.T) {
 		UpdatedAt: time.Now(),
 	}
 	taskRepo.Create(ctx, task)
-	
+
 	// Create message
 	msg := &Message{
 		ID:        "msg-1",
@@ -1311,25 +1311,25 @@ func TestMessageRepository_Get(t *testing.T) {
 		Content:   "test message",
 		CreatedAt: time.Now(),
 	}
-	
+
 	err := msgRepo.Create(ctx, msg)
 	if err != nil {
 		t.Fatalf("Failed to create message: %v", err)
 	}
-	
+
 	// Test Get
 	retrieved, err := msgRepo.Get(ctx, "msg-1")
 	if err != nil {
 		t.Fatalf("Get failed: %v", err)
 	}
-	
+
 	if retrieved.ID != "msg-1" {
 		t.Errorf("Expected ID msg-1, got %s", retrieved.ID)
 	}
 	if retrieved.Content != "test message" {
 		t.Errorf("Expected content 'test message', got %s", retrieved.Content)
 	}
-	
+
 	// Test Get with non-existent ID
 	_, err = msgRepo.Get(ctx, "non-existent")
 	if err == nil {
@@ -1340,10 +1340,10 @@ func TestMessageRepository_Get(t *testing.T) {
 func TestStorage_InitializeZeroState(t *testing.T) {
 	db, _ := setupTestDB(t)
 	defer db.Close()
-	
+
 	ctx := context.Background()
 	storage := NewStorage(db, 1*time.Hour)
-	
+
 	// Create some agents and tasks
 	agent := &Agent{
 		ID:           "agent-1",
@@ -1354,7 +1354,7 @@ func TestStorage_InitializeZeroState(t *testing.T) {
 		UpdatedAt:    time.Now(),
 	}
 	storage.Agents.Create(ctx, agent)
-	
+
 	task := &Task{
 		ID:        "task-1",
 		AgentID:   "agent-1",
@@ -1364,19 +1364,19 @@ func TestStorage_InitializeZeroState(t *testing.T) {
 		UpdatedAt: time.Now(),
 	}
 	storage.Tasks.Create(ctx, task)
-	
+
 	// Initialize zero state
 	err := storage.InitializeZeroState(ctx)
 	if err != nil {
 		t.Fatalf("InitializeZeroState failed: %v", err)
 	}
-	
+
 	// Verify agent is inactive
 	updatedAgent, _ := storage.Agents.Get(ctx, "agent-1")
 	if updatedAgent.Status != "idle" {
 		t.Errorf("Expected agent to be idle, got %s", updatedAgent.Status)
 	}
-	
+
 	// Verify task is cancelled
 	updatedTask, _ := storage.Tasks.Get(ctx, "task-1")
 	if updatedTask.Status != "cancelled" {
@@ -1386,15 +1386,15 @@ func TestStorage_InitializeZeroState(t *testing.T) {
 
 func TestStorage_CloseIdempotent(t *testing.T) {
 	db, _ := setupTestDB(t)
-	
+
 	storage := NewStorage(db, 1*time.Hour)
-	
+
 	// First close
 	err := storage.Close()
 	if err != nil {
 		t.Errorf("First Close failed: %v", err)
 	}
-	
+
 	// Second close should not error (idempotent)
 	err = storage.Close()
 	if err != nil {
@@ -1405,18 +1405,18 @@ func TestStorage_CloseIdempotent(t *testing.T) {
 func TestAgentDB_CloseIdempotent(t *testing.T) {
 	tempDir := t.TempDir()
 	dbPath := filepath.Join(tempDir, "test.db")
-	
+
 	adb, err := NewAgentDB(dbPath)
 	if err != nil {
 		t.Fatalf("Failed to create AgentDB: %v", err)
 	}
-	
+
 	// First close
 	err = adb.Close()
 	if err != nil {
 		t.Errorf("First Close failed: %v", err)
 	}
-	
+
 	// Second close should not error
 	err = adb.Close()
 	if err != nil {
@@ -1427,40 +1427,40 @@ func TestAgentDB_CloseIdempotent(t *testing.T) {
 func TestAgentDB_Migration(t *testing.T) {
 	tempDir := t.TempDir()
 	dbPath := filepath.Join(tempDir, "test_migration.db")
-	
+
 	// Create database with version 1 schema only
 	adb, err := NewAgentDB(dbPath)
 	if err != nil {
 		t.Fatalf("Failed to create AgentDB: %v", err)
 	}
-	
+
 	// Verify migrations were applied
 	var version int
 	err = adb.GetDB().QueryRow("SELECT MAX(version) FROM schema_migrations").Scan(&version)
 	if err != nil {
 		t.Fatalf("Failed to check migration version: %v", err)
 	}
-	
+
 	if version < 1 {
 		t.Errorf("Expected at least migration version 1, got %d", version)
 	}
-	
+
 	adb.Close()
-	
+
 	// Reopen database - migrations should not run again
 	adb2, err := NewAgentDB(dbPath)
 	if err != nil {
 		t.Fatalf("Failed to reopen AgentDB: %v", err)
 	}
 	defer adb2.Close()
-	
+
 	// Verify version is still the same or higher
 	var version2 int
 	err = adb2.GetDB().QueryRow("SELECT MAX(version) FROM schema_migrations").Scan(&version2)
 	if err != nil {
 		t.Fatalf("Failed to check migration version after reopen: %v", err)
 	}
-	
+
 	if version2 < version {
 		t.Errorf("Migration version decreased from %d to %d", version, version2)
 	}
@@ -1469,13 +1469,13 @@ func TestAgentDB_Migration(t *testing.T) {
 func TestAgentDB_TablesCreated(t *testing.T) {
 	tempDir := t.TempDir()
 	dbPath := filepath.Join(tempDir, "test_tables.db")
-	
+
 	adb, err := NewAgentDB(dbPath)
 	if err != nil {
 		t.Fatalf("Failed to create AgentDB: %v", err)
 	}
 	defer adb.Close()
-	
+
 	// Check that all expected tables exist
 	expectedTables := []string{
 		"schema_migrations",
@@ -1485,7 +1485,7 @@ func TestAgentDB_TablesCreated(t *testing.T) {
 		"messages",
 		"tool_executions",
 	}
-	
+
 	for _, table := range expectedTables {
 		var count int
 		query := "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name=?"
@@ -1502,10 +1502,10 @@ func TestAgentDB_TablesCreated(t *testing.T) {
 func TestStorage_PerformHealthCheck_WithData(t *testing.T) {
 	db, _ := setupTestDB(t)
 	defer db.Close()
-	
+
 	ctx := context.Background()
 	storage := NewStorage(db, 1*time.Hour)
-	
+
 	// Add some data
 	agent := &Agent{
 		ID:           "agent-health",
@@ -1516,7 +1516,7 @@ func TestStorage_PerformHealthCheck_WithData(t *testing.T) {
 		UpdatedAt:    time.Now(),
 	}
 	storage.Agents.Create(ctx, agent)
-	
+
 	// Perform health check
 	err := storage.PerformHealthCheck(ctx)
 	if err != nil {
@@ -1527,10 +1527,10 @@ func TestStorage_PerformHealthCheck_WithData(t *testing.T) {
 func TestStorage_SetAllAgentsIdle(t *testing.T) {
 	db, _ := setupTestDB(t)
 	defer db.Close()
-	
+
 	ctx := context.Background()
 	storage := NewStorage(db, 1*time.Hour)
-	
+
 	// Create agents with different statuses
 	agents := []*Agent{
 		{
@@ -1550,17 +1550,17 @@ func TestStorage_SetAllAgentsIdle(t *testing.T) {
 			UpdatedAt:    time.Now(),
 		},
 	}
-	
+
 	for _, agent := range agents {
 		storage.Agents.Create(ctx, agent)
 	}
-	
+
 	// Set all to idle
 	err := storage.SetAllAgentsIdle(ctx)
 	if err != nil {
 		t.Fatalf("SetAllAgentsIdle failed: %v", err)
 	}
-	
+
 	// Verify all are idle
 	for _, agent := range agents {
 		updated, _ := storage.Agents.Get(ctx, agent.ID)
@@ -1573,10 +1573,10 @@ func TestStorage_SetAllAgentsIdle(t *testing.T) {
 func TestStorage_CancelAllPendingTasks(t *testing.T) {
 	db, _ := setupTestDB(t)
 	defer db.Close()
-	
+
 	ctx := context.Background()
 	storage := NewStorage(db, 1*time.Hour)
-	
+
 	// Create an agent first
 	agent := &Agent{
 		ID:           "agent-tasks",
@@ -1587,7 +1587,7 @@ func TestStorage_CancelAllPendingTasks(t *testing.T) {
 		UpdatedAt:    time.Now(),
 	}
 	storage.Agents.Create(ctx, agent)
-	
+
 	// Create tasks with different statuses
 	tasks := []*Task{
 		{
@@ -1615,28 +1615,28 @@ func TestStorage_CancelAllPendingTasks(t *testing.T) {
 			UpdatedAt: time.Now(),
 		},
 	}
-	
+
 	for _, task := range tasks {
 		storage.Tasks.Create(ctx, task)
 	}
-	
+
 	// Cancel all pending
 	err := storage.CancelAllPendingTasks(ctx)
 	if err != nil {
 		t.Fatalf("CancelAllPendingTasks failed: %v", err)
 	}
-	
+
 	// Verify pending and running are cancelled, completed is unchanged
 	pendingTask, _ := storage.Tasks.Get(ctx, "task-pending")
 	if pendingTask.Status != "cancelled" {
 		t.Errorf("Expected pending task to be cancelled, got %s", pendingTask.Status)
 	}
-	
+
 	runningTask, _ := storage.Tasks.Get(ctx, "task-running")
 	if runningTask.Status != "cancelled" {
 		t.Errorf("Expected running task to be cancelled, got %s", runningTask.Status)
 	}
-	
+
 	completedTask, _ := storage.Tasks.Get(ctx, "task-completed")
 	if completedTask.Status != "completed" {
 		t.Errorf("Expected completed task to remain completed, got %s", completedTask.Status)
@@ -1646,10 +1646,10 @@ func TestStorage_CancelAllPendingTasks(t *testing.T) {
 func TestAgentRepository_Update_AllFields(t *testing.T) {
 	db, _ := setupTestDB(t)
 	defer db.Close()
-	
+
 	ctx := context.Background()
 	repo := NewAgentRepository(db)
-	
+
 	// Create initial agent
 	agent := &Agent{
 		ID:           "agent-update-test",
@@ -1661,24 +1661,24 @@ func TestAgentRepository_Update_AllFields(t *testing.T) {
 		UpdatedAt:    time.Now(),
 	}
 	repo.Create(ctx, agent)
-	
+
 	// Update all fields
 	agent.Name = "Updated Name"
 	agent.Capabilities = []string{"new", "updated"}
 	agent.Config = `{"key":"new","extra":"data"}`
 	agent.Status = "active"
-	
+
 	err := repo.Update(ctx, agent)
 	if err != nil {
 		t.Fatalf("Update failed: %v", err)
 	}
-	
+
 	// Verify updates
 	updated, err := repo.Get(ctx, "agent-update-test")
 	if err != nil {
 		t.Fatalf("Get failed: %v", err)
 	}
-	
+
 	if updated.Name != "Updated Name" {
 		t.Errorf("Name not updated: got %s", updated.Name)
 	}
@@ -1693,10 +1693,10 @@ func TestAgentRepository_Update_AllFields(t *testing.T) {
 func TestAgentRepository_UpdateStatus_AllStatuses(t *testing.T) {
 	db, _ := setupTestDB(t)
 	defer db.Close()
-	
+
 	ctx := context.Background()
 	repo := NewAgentRepository(db)
-	
+
 	// Create agent
 	agent := &Agent{
 		ID:           "agent-status-test",
@@ -1707,16 +1707,16 @@ func TestAgentRepository_UpdateStatus_AllStatuses(t *testing.T) {
 		UpdatedAt:    time.Now(),
 	}
 	repo.Create(ctx, agent)
-	
+
 	// Test different status transitions
 	statuses := []string{"active", "running", "idle", "error", "inactive"}
-	
+
 	for _, status := range statuses {
 		err := repo.UpdateStatus(ctx, "agent-status-test", status)
 		if err != nil {
 			t.Fatalf("UpdateStatus to %s failed: %v", status, err)
 		}
-		
+
 		updated, _ := repo.Get(ctx, "agent-status-test")
 		if updated.Status != status {
 			t.Errorf("Expected status %s, got %s", status, updated.Status)
@@ -1727,12 +1727,12 @@ func TestAgentRepository_UpdateStatus_AllStatuses(t *testing.T) {
 func TestMessageRepository_Delete_Success(t *testing.T) {
 	db, _ := setupTestDB(t)
 	defer db.Close()
-	
+
 	ctx := context.Background()
 	msgRepo := NewMessageRepository(db)
 	agentRepo := NewAgentRepository(db)
 	taskRepo := NewTaskRepository(db)
-	
+
 	// Create dependencies
 	agent := &Agent{
 		ID:           "agent-delete-msg",
@@ -1743,7 +1743,7 @@ func TestMessageRepository_Delete_Success(t *testing.T) {
 		UpdatedAt:    time.Now(),
 	}
 	agentRepo.Create(ctx, agent)
-	
+
 	task := &Task{
 		ID:        "task-delete-msg",
 		AgentID:   "agent-delete-msg",
@@ -1753,7 +1753,7 @@ func TestMessageRepository_Delete_Success(t *testing.T) {
 		UpdatedAt: time.Now(),
 	}
 	taskRepo.Create(ctx, task)
-	
+
 	// Create message
 	msg := &Message{
 		ID:        "msg-to-delete",
@@ -1764,13 +1764,13 @@ func TestMessageRepository_Delete_Success(t *testing.T) {
 		CreatedAt: time.Now(),
 	}
 	msgRepo.Create(ctx, msg)
-	
+
 	// Delete message
 	err := msgRepo.Delete(ctx, "msg-to-delete")
 	if err != nil {
 		t.Fatalf("Delete failed: %v", err)
 	}
-	
+
 	// Verify deletion
 	_, err = msgRepo.Get(ctx, "msg-to-delete")
 	if err == nil {
@@ -1779,7 +1779,7 @@ func TestMessageRepository_Delete_Success(t *testing.T) {
 }
 
 func TestNewAgentDB_ErrorHandling(t *testing.T) {
-		_, err := NewAgentDB("/invalid/path/that/cannot/exist/test.db")
+	_, err := NewAgentDB("/invalid/path/that/cannot/exist/test.db")
 	if err == nil {
 		t.Error("Expected error with invalid path")
 	}
@@ -1788,10 +1788,10 @@ func TestNewAgentDB_ErrorHandling(t *testing.T) {
 func TestStorage_PerformHealthCheck_Empty(t *testing.T) {
 	db, _ := setupTestDB(t)
 	defer db.Close()
-	
+
 	ctx := context.Background()
 	storage := NewStorage(db, 1*time.Hour)
-	
+
 	// Health check on empty database should succeed
 	err := storage.PerformHealthCheck(ctx)
 	if err != nil {
@@ -1802,10 +1802,10 @@ func TestStorage_PerformHealthCheck_Empty(t *testing.T) {
 func TestAgentRepository_UpdateStatus_NonExistent(t *testing.T) {
 	db, _ := setupTestDB(t)
 	defer db.Close()
-	
+
 	ctx := context.Background()
 	repo := NewAgentRepository(db)
-	
+
 	// Try to update status of non-existent agent
 	err := repo.UpdateStatus(ctx, "nonexistent", "active")
 	// Should not error (UPDATE with no matches is not an error in SQL)
@@ -1817,12 +1817,12 @@ func TestAgentRepository_UpdateStatus_NonExistent(t *testing.T) {
 func TestMessageRepository_DeleteByTask_Multiple(t *testing.T) {
 	db, _ := setupTestDB(t)
 	defer db.Close()
-	
+
 	ctx := context.Background()
 	msgRepo := NewMessageRepository(db)
 	agentRepo := NewAgentRepository(db)
 	taskRepo := NewTaskRepository(db)
-	
+
 	// Create dependencies
 	agent := &Agent{
 		ID:           "agent-multi-msg",
@@ -1833,7 +1833,7 @@ func TestMessageRepository_DeleteByTask_Multiple(t *testing.T) {
 		UpdatedAt:    time.Now(),
 	}
 	agentRepo.Create(ctx, agent)
-	
+
 	task := &Task{
 		ID:        "task-multi-msg",
 		AgentID:   "agent-multi-msg",
@@ -1843,7 +1843,7 @@ func TestMessageRepository_DeleteByTask_Multiple(t *testing.T) {
 		UpdatedAt: time.Now(),
 	}
 	taskRepo.Create(ctx, task)
-	
+
 	// Create multiple messages
 	for i := 0; i < 5; i++ {
 		msg := &Message{
@@ -1856,13 +1856,13 @@ func TestMessageRepository_DeleteByTask_Multiple(t *testing.T) {
 		}
 		msgRepo.Create(ctx, msg)
 	}
-	
+
 	// Delete all messages for task
 	err := msgRepo.DeleteByTask(ctx, "task-multi-msg")
 	if err != nil {
 		t.Fatalf("DeleteByTask failed: %v", err)
 	}
-	
+
 	// Verify all deleted
 	for i := 0; i < 5; i++ {
 		_, err := msgRepo.Get(ctx, fmt.Sprintf("msg-%d", i))
@@ -1875,10 +1875,10 @@ func TestMessageRepository_DeleteByTask_Multiple(t *testing.T) {
 func TestStorage_CleanupOldData_NoOldData(t *testing.T) {
 	db, _ := setupTestDB(t)
 	defer db.Close()
-	
+
 	ctx := context.Background()
 	storage := NewStorage(db, 24*time.Hour)
-	
+
 	// Run cleanup on empty/new database
 	err := storage.CleanupOldData(ctx)
 	if err != nil {
@@ -1889,11 +1889,11 @@ func TestStorage_CleanupOldData_NoOldData(t *testing.T) {
 func TestTaskRepository_Update_AllFields(t *testing.T) {
 	db, _ := setupTestDB(t)
 	defer db.Close()
-	
+
 	ctx := context.Background()
 	taskRepo := NewTaskRepository(db)
 	agentRepo := NewAgentRepository(db)
-	
+
 	// Create agent
 	agent := &Agent{
 		ID:           "agent-task-update",
@@ -1904,7 +1904,7 @@ func TestTaskRepository_Update_AllFields(t *testing.T) {
 		UpdatedAt:    time.Now(),
 	}
 	agentRepo.Create(ctx, agent)
-	
+
 	// Create task
 	task := &Task{
 		ID:        "task-update",
@@ -1916,23 +1916,23 @@ func TestTaskRepository_Update_AllFields(t *testing.T) {
 		UpdatedAt: time.Now(),
 	}
 	taskRepo.Create(ctx, task)
-	
+
 	// Update all fields
 	task.Input = "updated input"
 	task.Output = "some output"
 	task.Status = "completed"
-	
+
 	err := taskRepo.Update(ctx, task)
 	if err != nil {
 		t.Fatalf("Update failed: %v", err)
 	}
-	
+
 	// Verify updates
 	updated, err := taskRepo.Get(ctx, "task-update")
 	if err != nil {
 		t.Fatalf("Get failed: %v", err)
 	}
-	
+
 	if updated.Input != "updated input" {
 		t.Errorf("Input not updated")
 	}
@@ -1947,10 +1947,10 @@ func TestTaskRepository_Update_AllFields(t *testing.T) {
 func TestAgentRepository_List_WithStatus(t *testing.T) {
 	db, _ := setupTestDB(t)
 	defer db.Close()
-	
+
 	ctx := context.Background()
 	repo := NewAgentRepository(db)
-	
+
 	// Create agents with different statuses
 	statuses := []string{"active", "idle", "running", "error"}
 	for i, status := range statuses {
@@ -1964,13 +1964,13 @@ func TestAgentRepository_List_WithStatus(t *testing.T) {
 		}
 		repo.Create(ctx, agent)
 	}
-	
+
 	// List all agents
 	agents, err := repo.List(ctx)
 	if err != nil {
 		t.Fatalf("List failed: %v", err)
 	}
-	
+
 	if len(agents) < 4 {
 		t.Errorf("Expected at least 4 agents, got %d", len(agents))
 	}
@@ -1979,11 +1979,11 @@ func TestAgentRepository_List_WithStatus(t *testing.T) {
 func TestTaskRepository_ListByStatus(t *testing.T) {
 	db, _ := setupTestDB(t)
 	defer db.Close()
-	
+
 	ctx := context.Background()
 	taskRepo := NewTaskRepository(db)
 	agentRepo := NewAgentRepository(db)
-	
+
 	// Create agent
 	agent := &Agent{
 		ID:           "agent-status-list",
@@ -1994,14 +1994,14 @@ func TestTaskRepository_ListByStatus(t *testing.T) {
 		UpdatedAt:    time.Now(),
 	}
 	agentRepo.Create(ctx, agent)
-	
+
 	// Create tasks with different statuses
 	statuses := map[string]int{
 		"pending":   2,
 		"running":   1,
 		"completed": 3,
 	}
-	
+
 	for status, count := range statuses {
 		for i := 0; i < count; i++ {
 			task := &Task{
@@ -2015,7 +2015,7 @@ func TestTaskRepository_ListByStatus(t *testing.T) {
 			taskRepo.Create(ctx, task)
 		}
 	}
-	
+
 	// List tasks by status
 	pendingTasks, err := taskRepo.ListByStatus(ctx, "pending", 100, 0)
 	if err != nil {
@@ -2024,7 +2024,7 @@ func TestTaskRepository_ListByStatus(t *testing.T) {
 	if len(pendingTasks) != 2 {
 		t.Errorf("Expected 2 pending tasks, got %d", len(pendingTasks))
 	}
-	
+
 	completedTasks, err := taskRepo.ListByStatus(ctx, "completed", 100, 0)
 	if err != nil {
 		t.Fatalf("ListByStatus failed: %v", err)
@@ -2034,14 +2034,13 @@ func TestTaskRepository_ListByStatus(t *testing.T) {
 	}
 }
 
-
 func TestAgentRepository_Update_NonExistent(t *testing.T) {
 	db, _ := setupTestDB(t)
 	defer db.Close()
-	
+
 	ctx := context.Background()
 	repo := NewAgentRepository(db)
-	
+
 	// Try to update non-existent agent
 	agent := &Agent{
 		ID:           "nonexistent",
@@ -2052,7 +2051,7 @@ func TestAgentRepository_Update_NonExistent(t *testing.T) {
 		CreatedAt:    time.Now(),
 		UpdatedAt:    time.Now(),
 	}
-	
+
 	err := repo.Update(ctx, agent)
 	// Should not error (UPDATE with no matches is not an SQL error)
 	if err != nil {
@@ -2063,10 +2062,10 @@ func TestAgentRepository_Update_NonExistent(t *testing.T) {
 func TestAgentRepository_Update_NilCapabilities(t *testing.T) {
 	db, _ := setupTestDB(t)
 	defer db.Close()
-	
+
 	ctx := context.Background()
 	repo := NewAgentRepository(db)
-	
+
 	// Create agent
 	agent := &Agent{
 		ID:           "agent-nil-cap",
@@ -2078,14 +2077,14 @@ func TestAgentRepository_Update_NilCapabilities(t *testing.T) {
 		UpdatedAt:    time.Now(),
 	}
 	repo.Create(ctx, agent)
-	
+
 	// Update with nil capabilities
 	agent.Capabilities = nil
 	err := repo.Update(ctx, agent)
 	if err != nil {
 		t.Fatalf("Update with nil capabilities failed: %v", err)
 	}
-	
+
 	// Verify update
 	updated, _ := repo.Get(ctx, "agent-nil-cap")
 	if updated.Capabilities == nil {
@@ -2097,10 +2096,10 @@ func TestAgentRepository_Update_NilCapabilities(t *testing.T) {
 func TestMessageRepository_Delete_NonExistent(t *testing.T) {
 	db, _ := setupTestDB(t)
 	defer db.Close()
-	
+
 	ctx := context.Background()
 	msgRepo := NewMessageRepository(db)
-	
+
 	// Try to delete non-existent message
 	err := msgRepo.Delete(ctx, "nonexistent-msg")
 	// Should not error (DELETE with no matches is not an SQL error)
@@ -2112,10 +2111,10 @@ func TestMessageRepository_Delete_NonExistent(t *testing.T) {
 func TestStorage_InitializeZeroState_MultipleAgents(t *testing.T) {
 	db, _ := setupTestDB(t)
 	defer db.Close()
-	
+
 	ctx := context.Background()
 	storage := NewStorage(db, 24*time.Hour)
-	
+
 	// Create multiple agents with different statuses
 	statuses := []string{"active", "running", "error"}
 	for i, status := range statuses {
@@ -2129,7 +2128,7 @@ func TestStorage_InitializeZeroState_MultipleAgents(t *testing.T) {
 		}
 		storage.Agents.Create(ctx, agent)
 	}
-	
+
 	// Create multiple tasks with different statuses
 	taskStatuses := []string{"pending", "running"}
 	for i, status := range taskStatuses {
@@ -2143,13 +2142,13 @@ func TestStorage_InitializeZeroState_MultipleAgents(t *testing.T) {
 		}
 		storage.Tasks.Create(ctx, task)
 	}
-	
+
 	// Initialize zero state
 	err := storage.InitializeZeroState(ctx)
 	if err != nil {
 		t.Fatalf("InitializeZeroState failed: %v", err)
 	}
-	
+
 	// Verify all agents are idle
 	for i := range statuses {
 		agent, _ := storage.Agents.Get(ctx, fmt.Sprintf("agent-zero-%d", i))
@@ -2157,7 +2156,7 @@ func TestStorage_InitializeZeroState_MultipleAgents(t *testing.T) {
 			t.Errorf("Agent %d should be idle, got %s", i, agent.Status)
 		}
 	}
-	
+
 	// Verify all tasks are cancelled
 	for i := range taskStatuses {
 		task, _ := storage.Tasks.Get(ctx, fmt.Sprintf("task-zero-%d", i))
@@ -2170,10 +2169,10 @@ func TestStorage_InitializeZeroState_MultipleAgents(t *testing.T) {
 func TestStorage_PerformHealthCheck_WithErrors(t *testing.T) {
 	db, _ := setupTestDB(t)
 	defer db.Close()
-	
+
 	ctx := context.Background()
 	storage := NewStorage(db, 24*time.Hour)
-	
+
 	// Add some data to verify DB is working
 	agent := &Agent{
 		ID:           "health-agent",
@@ -2184,16 +2183,16 @@ func TestStorage_PerformHealthCheck_WithErrors(t *testing.T) {
 		UpdatedAt:    time.Now(),
 	}
 	storage.Agents.Create(ctx, agent)
-	
+
 	// Perform health check
 	err := storage.PerformHealthCheck(ctx)
 	if err != nil {
 		t.Errorf("PerformHealthCheck failed: %v", err)
 	}
-	
+
 	// Close DB and try health check - should fail
 	storage.Close()
-	
+
 	err = storage.PerformHealthCheck(ctx)
 	if err == nil {
 		t.Error("Expected PerformHealthCheck to fail on closed DB")
@@ -2203,10 +2202,10 @@ func TestStorage_PerformHealthCheck_WithErrors(t *testing.T) {
 func TestStorage_CleanupOldData_EmptyTables(t *testing.T) {
 	db, _ := setupTestDB(t)
 	defer db.Close()
-	
+
 	ctx := context.Background()
 	storage := NewStorage(db, 1*time.Hour)
-	
+
 	// Run cleanup on empty database
 	err := storage.CleanupOldData(ctx)
 	if err != nil {
@@ -2217,10 +2216,10 @@ func TestStorage_CleanupOldData_EmptyTables(t *testing.T) {
 func TestStorage_CleanupOldData_MessagesAndTools(t *testing.T) {
 	db, _ := setupTestDB(t)
 	defer db.Close()
-	
+
 	ctx := context.Background()
 	storage := NewStorage(db, 24*time.Hour)
-	
+
 	// Create agent
 	agent := &Agent{
 		ID:           "cleanup-agent",
@@ -2231,7 +2230,7 @@ func TestStorage_CleanupOldData_MessagesAndTools(t *testing.T) {
 		UpdatedAt:    time.Now(),
 	}
 	storage.Agents.Create(ctx, agent)
-	
+
 	// Create task
 	task := &Task{
 		ID:        "cleanup-task",
@@ -2242,7 +2241,7 @@ func TestStorage_CleanupOldData_MessagesAndTools(t *testing.T) {
 		UpdatedAt: time.Now(),
 	}
 	storage.Tasks.Create(ctx, task)
-	
+
 	// Create message
 	msg := &Message{
 		ID:        "cleanup-msg",
@@ -2253,7 +2252,7 @@ func TestStorage_CleanupOldData_MessagesAndTools(t *testing.T) {
 		CreatedAt: time.Now(),
 	}
 	storage.Messages.Create(ctx, msg)
-	
+
 	// Create tool execution
 	tool := &ToolExecution{
 		ID:       "cleanup-tool",
@@ -2263,7 +2262,7 @@ func TestStorage_CleanupOldData_MessagesAndTools(t *testing.T) {
 		Status:   "completed",
 	}
 	storage.ToolExecutions.Create(ctx, tool)
-	
+
 	// Run cleanup
 	err := storage.CleanupOldData(ctx)
 	if err != nil {
@@ -2274,21 +2273,21 @@ func TestStorage_CleanupOldData_MessagesAndTools(t *testing.T) {
 func TestDatabase_CreateTables_Idempotent(t *testing.T) {
 	tempDir := t.TempDir()
 	dbPath := filepath.Join(tempDir, "test_tables_idempotent.db")
-	
+
 	// Create database twice
 	adb1, err := NewAgentDB(dbPath)
 	if err != nil {
 		t.Fatalf("First NewAgentDB failed: %v", err)
 	}
 	adb1.Close()
-	
+
 	// Reopen - tables should already exist
 	adb2, err := NewAgentDB(dbPath)
 	if err != nil {
 		t.Fatalf("Second NewAgentDB failed: %v", err)
 	}
 	defer adb2.Close()
-	
+
 	// Verify tables exist
 	var count int
 	err = adb2.GetDB().QueryRow("SELECT COUNT(*) FROM sqlite_master WHERE type='table'").Scan(&count)
@@ -2303,18 +2302,18 @@ func TestDatabase_CreateTables_Idempotent(t *testing.T) {
 func TestDatabase_Close_ErrorHandling(t *testing.T) {
 	tempDir := t.TempDir()
 	dbPath := filepath.Join(tempDir, "test_close_error.db")
-	
+
 	adb, err := NewAgentDB(dbPath)
 	if err != nil {
 		t.Fatalf("NewAgentDB failed: %v", err)
 	}
-	
+
 	// Close successfully
 	err = adb.Close()
 	if err != nil {
 		t.Errorf("First close failed: %v", err)
 	}
-	
+
 	// Close again - should not panic
 	err = adb.Close()
 	if err != nil {
@@ -2325,11 +2324,11 @@ func TestDatabase_Close_ErrorHandling(t *testing.T) {
 func TestTaskRepository_ListByAgent_Pagination(t *testing.T) {
 	db, _ := setupTestDB(t)
 	defer db.Close()
-	
+
 	ctx := context.Background()
 	taskRepo := NewTaskRepository(db)
 	agentRepo := NewAgentRepository(db)
-	
+
 	// Create agent
 	agent := &Agent{
 		ID:           "agent-pagination",
@@ -2340,7 +2339,7 @@ func TestTaskRepository_ListByAgent_Pagination(t *testing.T) {
 		UpdatedAt:    time.Now(),
 	}
 	agentRepo.Create(ctx, agent)
-	
+
 	// Create 10 tasks
 	for i := 0; i < 10; i++ {
 		task := &Task{
@@ -2353,7 +2352,7 @@ func TestTaskRepository_ListByAgent_Pagination(t *testing.T) {
 		}
 		taskRepo.Create(ctx, task)
 	}
-	
+
 	// Test pagination
 	page1, err := taskRepo.ListByAgent(ctx, "agent-pagination", 5, 0)
 	if err != nil {
@@ -2362,7 +2361,7 @@ func TestTaskRepository_ListByAgent_Pagination(t *testing.T) {
 	if len(page1) != 5 {
 		t.Errorf("Expected 5 tasks in page 1, got %d", len(page1))
 	}
-	
+
 	page2, err := taskRepo.ListByAgent(ctx, "agent-pagination", 5, 5)
 	if err != nil {
 		t.Fatalf("ListByAgent page 2 failed: %v", err)
@@ -2375,10 +2374,10 @@ func TestTaskRepository_ListByAgent_Pagination(t *testing.T) {
 func TestTeamRepository_Create_WithMetadata(t *testing.T) {
 	db, _ := setupTestDB(t)
 	defer db.Close()
-	
+
 	ctx := context.Background()
 	teamRepo := NewTeamRepository(db)
-	
+
 	// Create team with metadata
 	team := &Team{
 		ID:          "team-metadata",
@@ -2389,18 +2388,18 @@ func TestTeamRepository_Create_WithMetadata(t *testing.T) {
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 	}
-	
+
 	err := teamRepo.Create(ctx, team)
 	if err != nil {
 		t.Fatalf("Create failed: %v", err)
 	}
-	
+
 	// Verify creation
 	retrieved, err := teamRepo.Get(ctx, "team-metadata")
 	if err != nil {
 		t.Fatalf("Get failed: %v", err)
 	}
-	
+
 	if retrieved.Name != "Metadata Team" {
 		t.Errorf("Name mismatch: got %s", retrieved.Name)
 	}
@@ -2409,10 +2408,10 @@ func TestTeamRepository_Create_WithMetadata(t *testing.T) {
 func TestTeamRepository_Update_AllFields(t *testing.T) {
 	db, _ := setupTestDB(t)
 	defer db.Close()
-	
+
 	ctx := context.Background()
 	teamRepo := NewTeamRepository(db)
-	
+
 	// Create team
 	team := &Team{
 		ID:          "team-update-all",
@@ -2423,24 +2422,24 @@ func TestTeamRepository_Update_AllFields(t *testing.T) {
 		UpdatedAt:   time.Now(),
 	}
 	teamRepo.Create(ctx, team)
-	
+
 	// Update all fields
 	team.Name = "Updated Name"
 	team.Description = "Updated Description"
 	team.Config = `{"new":"value"}`
 	team.Metadata = map[string]interface{}{"updated": true}
-	
+
 	err := teamRepo.Update(ctx, team)
 	if err != nil {
 		t.Fatalf("Update failed: %v", err)
 	}
-	
+
 	// Verify updates
 	updated, err := teamRepo.Get(ctx, "team-update-all")
 	if err != nil {
 		t.Fatalf("Get failed: %v", err)
 	}
-	
+
 	if updated.Name != "Updated Name" {
 		t.Errorf("Name not updated")
 	}
@@ -2452,10 +2451,10 @@ func TestTeamRepository_Update_AllFields(t *testing.T) {
 func TestTeamRepository_Delete_Verified(t *testing.T) {
 	db, _ := setupTestDB(t)
 	defer db.Close()
-	
+
 	ctx := context.Background()
 	teamRepo := NewTeamRepository(db)
-	
+
 	// Create team
 	team := &Team{
 		ID:          "team-delete",
@@ -2465,13 +2464,13 @@ func TestTeamRepository_Delete_Verified(t *testing.T) {
 		UpdatedAt:   time.Now(),
 	}
 	teamRepo.Create(ctx, team)
-	
+
 	// Delete team
 	err := teamRepo.Delete(ctx, "team-delete")
 	if err != nil {
 		t.Fatalf("Delete failed: %v", err)
 	}
-	
+
 	// Verify deletion
 	_, err = teamRepo.Get(ctx, "team-delete")
 	if err == nil {
@@ -2482,10 +2481,10 @@ func TestTeamRepository_Delete_Verified(t *testing.T) {
 func TestTeamRepository_List_Multiple(t *testing.T) {
 	db, _ := setupTestDB(t)
 	defer db.Close()
-	
+
 	ctx := context.Background()
 	teamRepo := NewTeamRepository(db)
-	
+
 	// Create multiple teams
 	for i := 0; i < 5; i++ {
 		team := &Team{
@@ -2497,13 +2496,13 @@ func TestTeamRepository_List_Multiple(t *testing.T) {
 		}
 		teamRepo.Create(ctx, team)
 	}
-	
+
 	// List all teams
 	teams, err := teamRepo.List(ctx, 100, 0)
 	if err != nil {
 		t.Fatalf("List failed: %v", err)
 	}
-	
+
 	if len(teams) < 5 {
 		t.Errorf("Expected at least 5 teams, got %d", len(teams))
 	}
@@ -2512,12 +2511,12 @@ func TestTeamRepository_List_Multiple(t *testing.T) {
 func TestToolExecutionRepository_Create_Complete(t *testing.T) {
 	db, _ := setupTestDB(t)
 	defer db.Close()
-	
+
 	ctx := context.Background()
 	toolRepo := NewToolExecutionRepository(db)
 	agentRepo := NewAgentRepository(db)
 	taskRepo := NewTaskRepository(db)
-	
+
 	// Create dependencies
 	agent := &Agent{
 		ID:           "agent-tool-exec",
@@ -2528,7 +2527,7 @@ func TestToolExecutionRepository_Create_Complete(t *testing.T) {
 		UpdatedAt:    time.Now(),
 	}
 	agentRepo.Create(ctx, agent)
-	
+
 	task := &Task{
 		ID:        "task-tool-exec",
 		AgentID:   "agent-tool-exec",
@@ -2538,7 +2537,7 @@ func TestToolExecutionRepository_Create_Complete(t *testing.T) {
 		UpdatedAt: time.Now(),
 	}
 	taskRepo.Create(ctx, task)
-	
+
 	// Create tool execution with all fields
 	toolExec := &ToolExecution{
 		ID:       "tool-complete",
@@ -2552,18 +2551,18 @@ func TestToolExecutionRepository_Create_Complete(t *testing.T) {
 		Status:   "completed",
 		Duration: 150,
 	}
-	
+
 	err := toolRepo.Create(ctx, toolExec)
 	if err != nil {
 		t.Fatalf("Create failed: %v", err)
 	}
-	
+
 	// Verify creation
 	retrieved, err := toolRepo.Get(ctx, "tool-complete")
 	if err != nil {
 		t.Fatalf("Get failed: %v", err)
 	}
-	
+
 	if retrieved.ToolName != "test-tool" {
 		t.Errorf("ToolName mismatch")
 	}
@@ -2575,12 +2574,12 @@ func TestToolExecutionRepository_Create_Complete(t *testing.T) {
 func TestToolExecutionRepository_Update_Complete(t *testing.T) {
 	db, _ := setupTestDB(t)
 	defer db.Close()
-	
+
 	ctx := context.Background()
 	toolRepo := NewToolExecutionRepository(db)
 	agentRepo := NewAgentRepository(db)
 	taskRepo := NewTaskRepository(db)
-	
+
 	// Create dependencies
 	agent := &Agent{
 		ID:           "agent-tool-update",
@@ -2591,7 +2590,7 @@ func TestToolExecutionRepository_Update_Complete(t *testing.T) {
 		UpdatedAt:    time.Now(),
 	}
 	agentRepo.Create(ctx, agent)
-	
+
 	task := &Task{
 		ID:        "task-tool-update",
 		AgentID:   "agent-tool-update",
@@ -2601,7 +2600,7 @@ func TestToolExecutionRepository_Update_Complete(t *testing.T) {
 		UpdatedAt: time.Now(),
 	}
 	taskRepo.Create(ctx, task)
-	
+
 	// Create tool execution
 	toolExec := &ToolExecution{
 		ID:       "tool-update",
@@ -2611,23 +2610,23 @@ func TestToolExecutionRepository_Update_Complete(t *testing.T) {
 		Status:   "running",
 	}
 	toolRepo.Create(ctx, toolExec)
-	
+
 	// Update tool execution
 	toolExec.Status = "completed"
 	toolExec.Output = `{"result":"done"}`
 	toolExec.Duration = 200
-	
+
 	err := toolRepo.Update(ctx, toolExec)
 	if err != nil {
 		t.Fatalf("Update failed: %v", err)
 	}
-	
+
 	// Verify update
 	updated, err := toolRepo.Get(ctx, "tool-update")
 	if err != nil {
 		t.Fatalf("Get failed: %v", err)
 	}
-	
+
 	if updated.Status != "completed" {
 		t.Errorf("Status not updated")
 	}
@@ -2639,12 +2638,12 @@ func TestToolExecutionRepository_Update_Complete(t *testing.T) {
 func TestToolExecutionRepository_MarkFailed(t *testing.T) {
 	db, _ := setupTestDB(t)
 	defer db.Close()
-	
+
 	ctx := context.Background()
 	toolRepo := NewToolExecutionRepository(db)
 	agentRepo := NewAgentRepository(db)
 	taskRepo := NewTaskRepository(db)
-	
+
 	// Create dependencies
 	agent := &Agent{
 		ID:           "agent-tool-fail",
@@ -2655,7 +2654,7 @@ func TestToolExecutionRepository_MarkFailed(t *testing.T) {
 		UpdatedAt:    time.Now(),
 	}
 	agentRepo.Create(ctx, agent)
-	
+
 	task := &Task{
 		ID:        "task-tool-fail",
 		AgentID:   "agent-tool-fail",
@@ -2665,7 +2664,7 @@ func TestToolExecutionRepository_MarkFailed(t *testing.T) {
 		UpdatedAt: time.Now(),
 	}
 	taskRepo.Create(ctx, task)
-	
+
 	// Create tool execution
 	toolExec := &ToolExecution{
 		ID:       "tool-fail",
@@ -2675,19 +2674,19 @@ func TestToolExecutionRepository_MarkFailed(t *testing.T) {
 		Status:   "running",
 	}
 	toolRepo.Create(ctx, toolExec)
-	
+
 	// Mark as failed
 	err := toolRepo.MarkFailed(ctx, "tool-fail", "Something went wrong", 100)
 	if err != nil {
 		t.Fatalf("MarkFailed failed: %v", err)
 	}
-	
+
 	// Verify failure status
 	failed, err := toolRepo.Get(ctx, "tool-fail")
 	if err != nil {
 		t.Fatalf("Get failed: %v", err)
 	}
-	
+
 	if failed.Status != "failed" {
 		t.Errorf("Status should be failed, got %s", failed.Status)
 	}
@@ -2699,12 +2698,12 @@ func TestToolExecutionRepository_MarkFailed(t *testing.T) {
 func TestToolExecutionRepository_ListByAgent(t *testing.T) {
 	db, _ := setupTestDB(t)
 	defer db.Close()
-	
+
 	ctx := context.Background()
 	toolRepo := NewToolExecutionRepository(db)
 	agentRepo := NewAgentRepository(db)
 	taskRepo := NewTaskRepository(db)
-	
+
 	// Create agent
 	agent := &Agent{
 		ID:           "agent-tool-list",
@@ -2715,7 +2714,7 @@ func TestToolExecutionRepository_ListByAgent(t *testing.T) {
 		UpdatedAt:    time.Now(),
 	}
 	agentRepo.Create(ctx, agent)
-	
+
 	task := &Task{
 		ID:        "task-tool-list",
 		AgentID:   "agent-tool-list",
@@ -2725,7 +2724,7 @@ func TestToolExecutionRepository_ListByAgent(t *testing.T) {
 		UpdatedAt: time.Now(),
 	}
 	taskRepo.Create(ctx, task)
-	
+
 	// Create multiple tool executions
 	for i := 0; i < 3; i++ {
 		toolExec := &ToolExecution{
@@ -2737,13 +2736,13 @@ func TestToolExecutionRepository_ListByAgent(t *testing.T) {
 		}
 		toolRepo.Create(ctx, toolExec)
 	}
-	
+
 	// List by agent
 	executions, err := toolRepo.ListByAgent(ctx, "agent-tool-list", 100, 0)
 	if err != nil {
 		t.Fatalf("ListByAgent failed: %v", err)
 	}
-	
+
 	if len(executions) < 3 {
 		t.Errorf("Expected at least 3 executions, got %d", len(executions))
 	}
@@ -2752,12 +2751,12 @@ func TestToolExecutionRepository_ListByAgent(t *testing.T) {
 func TestToolExecutionRepository_ListByTool(t *testing.T) {
 	db, _ := setupTestDB(t)
 	defer db.Close()
-	
+
 	ctx := context.Background()
 	toolRepo := NewToolExecutionRepository(db)
 	agentRepo := NewAgentRepository(db)
 	taskRepo := NewTaskRepository(db)
-	
+
 	// Create agent
 	agent := &Agent{
 		ID:           "agent-tool-name",
@@ -2768,7 +2767,7 @@ func TestToolExecutionRepository_ListByTool(t *testing.T) {
 		UpdatedAt:    time.Now(),
 	}
 	agentRepo.Create(ctx, agent)
-	
+
 	task := &Task{
 		ID:        "task-tool-name",
 		AgentID:   "agent-tool-name",
@@ -2778,7 +2777,7 @@ func TestToolExecutionRepository_ListByTool(t *testing.T) {
 		UpdatedAt: time.Now(),
 	}
 	taskRepo.Create(ctx, task)
-	
+
 	// Create executions for specific tool
 	for i := 0; i < 3; i++ {
 		toolExec := &ToolExecution{
@@ -2790,17 +2789,17 @@ func TestToolExecutionRepository_ListByTool(t *testing.T) {
 		}
 		toolRepo.Create(ctx, toolExec)
 	}
-	
+
 	// List by tool name
 	executions, err := toolRepo.ListByTool(ctx, "specific-tool", 100, 0)
 	if err != nil {
 		t.Fatalf("ListByTool failed: %v", err)
 	}
-	
+
 	if len(executions) < 3 {
 		t.Errorf("Expected at least 3 executions for specific-tool, got %d", len(executions))
 	}
-	
+
 	// Verify all are for the right tool
 	for _, exec := range executions {
 		if exec.ToolName != "specific-tool" {
@@ -2941,29 +2940,29 @@ func TestStorage_InitializeZeroState_ContextCancel(t *testing.T) {
 func TestTeamRepository_GetAgentTeams_MultipleTeamsWithMetadata(t *testing.T) {
 	db, _ := setupTestDB(t)
 	defer db.Close()
-	
+
 	s := NewStorage(db, time.Hour)
 	ctx := context.Background()
-	
+
 	// Create agent
 	agent := s.NewAgentWithDefaults("test-agent", "test", nil)
 	if err := s.Agents.Create(ctx, agent); err != nil {
 		t.Fatalf("Create agent: %v", err)
 	}
-	
+
 	// Create teams with metadata
 	team1 := s.NewTeamWithDefaults("team1", "Team 1")
 	team1.Metadata = map[string]interface{}{"priority": "high", "type": "dev"}
 	if err := s.Teams.Create(ctx, team1); err != nil {
 		t.Fatalf("Create team1: %v", err)
 	}
-	
+
 	team2 := s.NewTeamWithDefaults("team2", "Team 2")
 	team2.Metadata = map[string]interface{}{"priority": "low", "type": "ops"}
 	if err := s.Teams.Create(ctx, team2); err != nil {
 		t.Fatalf("Create team2: %v", err)
 	}
-	
+
 	// Add agent to teams with different roles
 	if err := s.Teams.AddMember(ctx, team1.ID, agent.ID, "member"); err != nil {
 		t.Fatalf("Add to team1: %v", err)
@@ -2971,17 +2970,17 @@ func TestTeamRepository_GetAgentTeams_MultipleTeamsWithMetadata(t *testing.T) {
 	if err := s.Teams.AddMember(ctx, team2.ID, agent.ID, "leader"); err != nil {
 		t.Fatalf("Add to team2: %v", err)
 	}
-	
+
 	// Get agent's teams - this covers the query path and metadata deserialization
 	teams, err := s.Teams.GetAgentTeams(ctx, agent.ID)
 	if err != nil {
 		t.Fatalf("GetAgentTeams: %v", err)
 	}
-	
+
 	if len(teams) != 2 {
 		t.Fatalf("Expected 2 teams, got %d", len(teams))
 	}
-	
+
 	// Verify metadata deserialization
 	for _, team := range teams {
 		if team.Metadata == nil {
@@ -2998,22 +2997,22 @@ func TestTeamRepository_GetAgentTeams_MultipleTeamsWithMetadata(t *testing.T) {
 func TestTeamRepository_GetAgentTeams_NoMemberships(t *testing.T) {
 	db, _ := setupTestDB(t)
 	defer db.Close()
-	
+
 	s := NewStorage(db, time.Hour)
 	ctx := context.Background()
-	
+
 	// Create agent but don't add to any teams
 	agent := s.NewAgentWithDefaults("solo-agent", "test", nil)
 	if err := s.Agents.Create(ctx, agent); err != nil {
 		t.Fatalf("Create agent: %v", err)
 	}
-	
+
 	// Should return empty list, not error
 	teams, err := s.Teams.GetAgentTeams(ctx, agent.ID)
 	if err != nil {
 		t.Fatalf("GetAgentTeams should not error on no teams: %v", err)
 	}
-	
+
 	if len(teams) != 0 {
 		t.Errorf("Expected 0 teams for agent with no memberships, got %d", len(teams))
 	}
@@ -3022,12 +3021,12 @@ func TestTeamRepository_GetAgentTeams_NoMemberships(t *testing.T) {
 func TestStorage_CleanupOldData_ContextCancel(t *testing.T) {
 	db, _ := setupTestDB(t)
 	defer db.Close()
-	
+
 	s := NewStorage(db, time.Hour)
-	
+
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel() // Cancel immediately
-	
+
 	err := s.CleanupOldData(ctx)
 	if err == nil || !strings.Contains(err.Error(), "context") {
 		t.Errorf("Expected context canceled error, got %v", err)
@@ -3047,17 +3046,17 @@ func TestStorage_Close_NilDB(t *testing.T) {
 func TestAgentDB_Close_DoubleClose(t *testing.T) {
 	tempDir := t.TempDir()
 	dbPath := filepath.Join(tempDir, "test.db")
-	
+
 	adb, err := NewAgentDB(dbPath)
 	if err != nil {
 		t.Fatalf("NewAgentDB failed: %v", err)
 	}
-	
+
 	err = adb.Close()
 	if err != nil {
 		t.Errorf("First close failed: %v", err)
 	}
-	
+
 	// Closing again should not panic
 	_ = adb.Close()
 }
@@ -3065,10 +3064,10 @@ func TestAgentDB_Close_DoubleClose(t *testing.T) {
 func TestToolExecutionRepository_Get_NotFound(t *testing.T) {
 	db, _ := setupTestDB(t)
 	defer db.Close()
-	
+
 	s := NewStorage(db, time.Hour)
 	ctx := context.Background()
-	
+
 	_, err := s.ToolExecutions.Get(ctx, "nonexistent-id")
 	if err == nil {
 		t.Error("Expected error for nonexistent tool execution")
@@ -3078,16 +3077,16 @@ func TestToolExecutionRepository_Get_NotFound(t *testing.T) {
 func TestToolExecutionRepository_Update_AllFields(t *testing.T) {
 	db, _ := setupTestDB(t)
 	defer db.Close()
-	
+
 	s := NewStorage(db, time.Hour)
 	ctx := context.Background()
-	
+
 	// Create agent
 	agent := s.NewAgentWithDefaults("test-agent", "test", nil)
 	if err := s.Agents.Create(ctx, agent); err != nil {
 		t.Fatalf("Create agent: %v", err)
 	}
-	
+
 	// Create tool execution
 	toolExec := &ToolExecution{
 		ID:        "test-exec",
@@ -3101,7 +3100,7 @@ func TestToolExecutionRepository_Update_AllFields(t *testing.T) {
 	if err := s.ToolExecutions.Create(ctx, toolExec); err != nil {
 		t.Fatalf("Create: %v", err)
 	}
-	
+
 	// Update all fields
 	toolExec.Status = "completed"
 	toolExec.Output = "success output"
@@ -3109,17 +3108,17 @@ func TestToolExecutionRepository_Update_AllFields(t *testing.T) {
 	toolExec.Metadata["updated"] = true
 	completedAt := time.Now()
 	toolExec.CompletedAt = &completedAt
-	
+
 	if err := s.ToolExecutions.Update(ctx, toolExec); err != nil {
 		t.Fatalf("Update: %v", err)
 	}
-	
+
 	// Verify all fields updated
 	retrieved, err := s.ToolExecutions.Get(ctx, toolExec.ID)
 	if err != nil {
 		t.Fatalf("Get: %v", err)
 	}
-	
+
 	if retrieved.Status != "completed" {
 		t.Errorf("Expected status completed, got %s", retrieved.Status)
 	}
@@ -3139,12 +3138,12 @@ func TestToolExecutionRepository_Update_AllFields(t *testing.T) {
 func TestTaskRepository_Update_ContextCancel(t *testing.T) {
 	db, _ := setupTestDB(t)
 	defer db.Close()
-	
+
 	s := NewStorage(db, time.Hour)
-	
+
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel() // Cancel immediately
-	
+
 	task := s.NewTaskWithDefaults("agent-id", "task-type", "input", 1)
 	err := s.Tasks.Update(ctx, task)
 	if err == nil {
@@ -3155,12 +3154,12 @@ func TestTaskRepository_Update_ContextCancel(t *testing.T) {
 func TestTeamRepository_Update_ContextCancel(t *testing.T) {
 	db, _ := setupTestDB(t)
 	defer db.Close()
-	
+
 	s := NewStorage(db, time.Hour)
-	
+
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
-	
+
 	team := s.NewTeamWithDefaults("team-name", "description")
 	err := s.Teams.Update(ctx, team)
 	if err == nil {
@@ -3171,12 +3170,12 @@ func TestTeamRepository_Update_ContextCancel(t *testing.T) {
 func TestTeamRepository_Delete_ContextCancel(t *testing.T) {
 	db, _ := setupTestDB(t)
 	defer db.Close()
-	
+
 	s := NewStorage(db, time.Hour)
-	
+
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
-	
+
 	err := s.Teams.Delete(ctx, "team-id")
 	if err == nil {
 		t.Error("Expected context canceled error")
@@ -3186,12 +3185,12 @@ func TestTeamRepository_Delete_ContextCancel(t *testing.T) {
 func TestToolExecutionRepository_Update_ContextCancel(t *testing.T) {
 	db, _ := setupTestDB(t)
 	defer db.Close()
-	
+
 	s := NewStorage(db, time.Hour)
-	
+
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
-	
+
 	toolExec := &ToolExecution{
 		ID:        "test-id",
 		AgentID:   "agent-id",
@@ -3208,12 +3207,12 @@ func TestToolExecutionRepository_Update_ContextCancel(t *testing.T) {
 func TestAgentRepository_Delete_ContextCancel(t *testing.T) {
 	db, _ := setupTestDB(t)
 	defer db.Close()
-	
+
 	s := NewStorage(db, time.Hour)
-	
+
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
-	
+
 	err := s.Agents.Delete(ctx, "agent-id")
 	if err == nil {
 		t.Error("Expected context canceled error")
@@ -3223,12 +3222,12 @@ func TestAgentRepository_Delete_ContextCancel(t *testing.T) {
 func TestAgentRepository_UpdateStatus_ContextCancel(t *testing.T) {
 	db, _ := setupTestDB(t)
 	defer db.Close()
-	
+
 	s := NewStorage(db, time.Hour)
-	
+
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel() // Cancel immediately
-	
+
 	err := s.Agents.UpdateStatus(ctx, "test-agent", "active")
 	if err == nil || !strings.Contains(err.Error(), "context") {
 		t.Error("Expected context cancellation error")
@@ -3243,9 +3242,9 @@ func TestTeamRepository_AddMember_Errors(t *testing.T) {
 		t.Fatalf("Failed to create test database: %v", err)
 	}
 	defer adb.Close()
-	
+
 	teamRepo := NewTeamRepository(adb.GetDB())
-	
+
 	// Test adding member to non-existent team
 	ctx := context.Background()
 	err = teamRepo.AddMember(ctx, "non-existent-team", "agent-1", "member")
@@ -3262,9 +3261,9 @@ func TestTeamRepository_RemoveMember_Errors(t *testing.T) {
 		t.Fatalf("Failed to create test database: %v", err)
 	}
 	defer adb.Close()
-	
+
 	teamRepo := NewTeamRepository(adb.GetDB())
-	
+
 	// Test removing member from non-existent team
 	ctx := context.Background()
 	err = teamRepo.RemoveMember(ctx, "non-existent-team", "agent-1")
@@ -3281,9 +3280,9 @@ func TestTeamRepository_UpdateMemberRole_Errors(t *testing.T) {
 		t.Fatalf("Failed to create test database: %v", err)
 	}
 	defer adb.Close()
-	
+
 	teamRepo := NewTeamRepository(adb.GetDB())
-	
+
 	// Test updating role for non-existent membership
 	ctx := context.Background()
 	err = teamRepo.UpdateMemberRole(ctx, "non-existent-team", "agent-1", "admin")
@@ -3300,9 +3299,9 @@ func TestToolExecutionRepository_MarkCompleted_Errors(t *testing.T) {
 		t.Fatalf("Failed to create test database: %v", err)
 	}
 	defer adb.Close()
-	
+
 	toolRepo := NewToolExecutionRepository(adb.GetDB())
-	
+
 	// Test marking non-existent execution as completed
 	ctx := context.Background()
 	err = toolRepo.MarkCompleted(ctx, "non-existent-id", "success", "completed", 100)
@@ -3319,9 +3318,9 @@ func TestToolExecutionRepository_MarkFailed_Errors(t *testing.T) {
 		t.Fatalf("Failed to create test database: %v", err)
 	}
 	defer adb.Close()
-	
+
 	toolRepo := NewToolExecutionRepository(adb.GetDB())
-	
+
 	// Test marking non-existent execution as failed
 	ctx := context.Background()
 	err = toolRepo.MarkFailed(ctx, "non-existent-id", "test error", 100)
@@ -3338,23 +3337,23 @@ func TestToolExecutionRepository_DeleteByTask_Success(t *testing.T) {
 		t.Fatalf("Failed to create test database: %v", err)
 	}
 	defer adb.Close()
-	
+
 	toolRepo := NewToolExecutionRepository(adb.GetDB())
 	taskRepo := NewTaskRepository(adb.GetDB())
 	agentRepo := NewAgentRepository(adb.GetDB())
-	
+
 	// Create task and agent
 	ctx := context.Background()
 	agent := &Agent{ID: "agent-1", Name: "Test Agent"}
 	if err := agentRepo.Create(ctx, agent); err != nil {
 		t.Fatalf("Failed to create agent: %v", err)
 	}
-	
+
 	task := &Task{ID: "task-1", AgentID: "agent-1", Status: "pending"}
 	if err := taskRepo.Create(ctx, task); err != nil {
 		t.Fatalf("Failed to create task: %v", err)
 	}
-	
+
 	// Create tool execution
 	execution := &ToolExecution{
 		ID:       "exec-1",
@@ -3366,12 +3365,12 @@ func TestToolExecutionRepository_DeleteByTask_Success(t *testing.T) {
 	if err := toolRepo.Create(ctx, execution); err != nil {
 		t.Fatalf("Failed to create execution: %v", err)
 	}
-	
+
 	// Delete by task
 	if err := toolRepo.DeleteByTask(ctx, "task-1"); err != nil {
 		t.Errorf("DeleteByTask failed: %v", err)
 	}
-	
+
 	// Verify deleted
 	executions, err := toolRepo.ListByTask(ctx, "task-1", 10, 0)
 	if err != nil {

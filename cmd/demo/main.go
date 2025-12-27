@@ -28,7 +28,7 @@ func main() {
 	// Demo 1: Rate Limiting
 	fmt.Println("📊 DEMO 1: Token Bucket Rate Limiting")
 	fmt.Println("-" + strings.Repeat("-", 70))
-	
+
 	limiter, err := ratelimit.NewRateLimiter("openai", "tier-1")
 	if err != nil {
 		log.Printf("Rate limiter error: %v", err)
@@ -40,7 +40,7 @@ func main() {
 			available := details["available"]
 			refill := details["refill"]
 			interval := details["interval"]
-			fmt.Printf("  • %s: %v/%v available (refills %v every %s)\n", 
+			fmt.Printf("  • %s: %v/%v available (refills %v every %s)\n",
 				limitType, available, capacity, refill, interval)
 		}
 
@@ -63,7 +63,7 @@ func main() {
 	// Demo 2: Intelligent Routing
 	fmt.Println("🧠 DEMO 2: Intelligent Provider Routing")
 	fmt.Println("-" + strings.Repeat("-", 70))
-	
+
 	// Test each routing strategy
 	strategies := []struct {
 		name     string
@@ -76,7 +76,7 @@ func main() {
 
 	for _, s := range strategies {
 		r := router.NewRouter(s.strategy)
-		
+
 		// Simulate some health data
 		r.RecordSuccess("groq", 50)
 		r.RecordSuccess("openai", 200)
@@ -192,7 +192,7 @@ data: [DONE]
 	fmt.Println("-" + strings.Repeat("-", 70))
 
 	healthRouter := router.NewRouter(router.StrategyFallback)
-	
+
 	// Simulate provider behavior
 	healthRouter.RecordSuccess("openai", 150)
 	healthRouter.RecordSuccess("openai", 180)

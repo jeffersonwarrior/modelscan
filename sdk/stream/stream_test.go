@@ -421,7 +421,7 @@ func TestStream_ProcessWebSocket(t *testing.T) {
 	responseBody := `{"choices":[{"delta":{"content":"Test"}}]}`
 	stream := NewStream(context.Background(), io.NopCloser(strings.NewReader(responseBody)), StreamTypeWebSocket)
 	defer stream.Close()
-	
+
 	// Collect chunks - just verify it works without panic
 	var chunkCount int
 	for chunk := range stream.Chunks() {
@@ -429,12 +429,9 @@ func TestStream_ProcessWebSocket(t *testing.T) {
 			chunkCount++
 		}
 	}
-	
+
 	// WebSocket processing should work (at least 1 chunk)
 	if chunkCount < 1 {
 		t.Errorf("Expected at least 1 chunk from WebSocket processing, got %d", chunkCount)
 	}
 }
-
-
-

@@ -388,13 +388,13 @@ func BenchmarkStoreProviderInfo(b *testing.B) {
 func TestGetProviderEndpoints_Complete(t *testing.T) {
 	dbPath := "/tmp/test_endpoints_complete.db"
 	defer os.Remove(dbPath)
-	
+
 	err := InitDB(dbPath)
 	if err != nil {
 		t.Fatalf("InitDB failed: %v", err)
 	}
 	defer CloseDB()
-	
+
 	// Store some endpoints
 	endpoints := []providers.Endpoint{
 		{
@@ -419,27 +419,27 @@ func TestGetProviderEndpoints_Complete(t *testing.T) {
 			Error:       "timeout",
 		},
 	}
-	
+
 	err = StoreEndpointResults("test-provider", endpoints)
 	if err != nil {
 		t.Fatalf("StoreEndpointResults failed: %v", err)
 	}
-	
+
 	// Test retrieval
 	retrieved, err := GetProviderEndpoints("test-provider")
 	if err != nil {
 		t.Fatalf("GetProviderEndpoints failed: %v", err)
 	}
-	
+
 	if len(retrieved) != 3 {
 		t.Errorf("Expected 3 endpoints, got %d", len(retrieved))
 	}
-	
+
 	// Verify endpoint details
 	found := map[string]bool{}
 	for _, ep := range retrieved {
 		found[ep.Path] = true
-		
+
 		if ep.Path == "/v1/chat" {
 			if ep.Status != providers.StatusWorking {
 				t.Errorf("Expected /v1/chat to have StatusWorking")
@@ -448,7 +448,7 @@ func TestGetProviderEndpoints_Complete(t *testing.T) {
 				t.Errorf("Expected /v1/chat latency 100ms, got %v", ep.Latency)
 			}
 		}
-		
+
 		if ep.Path == "/v1/broken" {
 			if ep.Status != providers.StatusFailed {
 				t.Errorf("Expected /v1/broken to have StatusFailed")
@@ -458,11 +458,11 @@ func TestGetProviderEndpoints_Complete(t *testing.T) {
 			}
 		}
 	}
-	
+
 	if !found["/v1/chat"] || !found["/v1/models"] || !found["/v1/broken"] {
 		t.Error("Not all endpoints were retrieved")
 	}
-	
+
 	// Test non-existent provider
 	empty, err := GetProviderEndpoints("nonexistent")
 	if err != nil {
@@ -476,7 +476,7 @@ func TestGetProviderEndpoints_Complete(t *testing.T) {
 func TestGetProviderEndpoints_NoDatabase(t *testing.T) {
 	// Test without initializing database
 	CloseDB() // Make sure DB is closed
-	
+
 	_, err := GetProviderEndpoints("test")
 	if err == nil {
 		t.Error("Expected error when database not initialized")
@@ -489,18 +489,18 @@ func TestGetProviderEndpoints_NoDatabase(t *testing.T) {
 func TestCloseDB_Multiple(t *testing.T) {
 	dbPath := "/tmp/test_close_multiple.db"
 	defer os.Remove(dbPath)
-	
+
 	err := InitDB(dbPath)
 	if err != nil {
 		t.Fatalf("InitDB failed: %v", err)
 	}
-	
+
 	// First close
 	err = CloseDB()
 	if err != nil {
 		t.Errorf("First CloseDB failed: %v", err)
 	}
-	
+
 	// Second close should handle nil db gracefully
 	err = CloseDB()
 	if err != nil {
@@ -511,7 +511,7 @@ func TestCloseDB_Multiple(t *testing.T) {
 func TestCloseDB_NilDatabase(t *testing.T) {
 	// Test closing when db is already nil
 	CloseDB() // Ensure it's nil
-	
+
 	err := CloseDB()
 	if err != nil {
 		t.Errorf("CloseDB on nil database should not error, got: %v", err)
@@ -522,13 +522,13 @@ func TestAppendProviderDetails(t *testing.T) {
 	// Initialize database with test data
 	dbPath := "/tmp/test_markdown_export.db"
 	defer os.Remove(dbPath)
-	
+
 	err := InitDB(dbPath)
 	if err != nil {
 		t.Fatalf("InitDB failed: %v", err)
 	}
 	defer CloseDB()
-	
+
 	// Store some test models
 	models := []providers.Model{
 		{
@@ -571,19 +571,19 @@ func TestAppendProviderDetails(t *testing.T) {
 			Categories:     []string{}, // Empty categories
 		},
 	}
-	
+
 	capabilities := providers.ProviderCapabilities{
-		SupportsChat:       true,
-		SupportsStreaming:  true,
-		SupportsVision:     true,
+		SupportsChat:      true,
+		SupportsStreaming: true,
+		SupportsVision:    true,
 		// SupportsTools field does not exist
 	}
-	
+
 	err = StoreProviderInfo("test-provider", models, capabilities)
 	if err != nil {
 		t.Fatalf("StoreProviderInfo failed: %v", err)
 	}
-	
+
 	// Create temporary file for export
 	tmpFile := filepath.Join(t.TempDir(), "test_export.md")
 	file, err := os.Create(tmpFile)
@@ -591,29 +591,29 @@ func TestAppendProviderDetails(t *testing.T) {
 		t.Fatalf("Failed to create temp file: %v", err)
 	}
 	defer file.Close()
-	
+
 	// Test appendProviderDetails
 	err = appendProviderDetails(file, "test-provider")
 	if err != nil {
 		t.Fatalf("appendProviderDetails failed: %v", err)
 	}
-	
+
 	// Close file to flush
 	file.Close()
-	
+
 	// Read back and verify content
 	content, err := os.ReadFile(tmpFile)
 	if err != nil {
 		t.Fatalf("Failed to read exported file: %v", err)
 	}
-	
+
 	contentStr := string(content)
-	
+
 	// Verify provider name is present
 	if !strings.Contains(contentStr, "test-provider") {
 		t.Error("Provider name not found in export")
 	}
-	
+
 	// Verify model names are present
 	if !strings.Contains(contentStr, "Test Model 1") {
 		t.Error("Model 1 name not found in export")
@@ -624,7 +624,7 @@ func TestAppendProviderDetails(t *testing.T) {
 	if !strings.Contains(contentStr, "Test Model 3") {
 		t.Error("Model 3 name not found in export")
 	}
-	
+
 	// Verify categories are present
 	if !strings.Contains(contentStr, "chat") {
 		t.Error("'chat' category not found in export")
@@ -635,7 +635,7 @@ func TestAppendProviderDetails(t *testing.T) {
 	if !strings.Contains(contentStr, "general") {
 		t.Error("'general' category not found for model without categories")
 	}
-	
+
 	// Verify feature icons are present
 	if !strings.Contains(contentStr, "🖼️") {
 		t.Error("Image support icon not found")
@@ -646,7 +646,7 @@ func TestAppendProviderDetails(t *testing.T) {
 	if !strings.Contains(contentStr, "🧠") {
 		t.Error("Reasoning icon not found")
 	}
-	
+
 	// Verify markdown table structure
 	if !strings.Contains(contentStr, "| Name | ID | Context |") {
 		t.Error("Markdown table header not found")
@@ -664,17 +664,17 @@ func TestAppendProviderDetails_Error(t *testing.T) {
 		t.Fatalf("Failed to create temp file: %v", err)
 	}
 	defer file.Close()
-	
+
 	// Initialize empty database
 	dbPath := "/tmp/test_markdown_error.db"
 	defer os.Remove(dbPath)
-	
+
 	err = InitDB(dbPath)
 	if err != nil {
 		t.Fatalf("InitDB failed: %v", err)
 	}
 	defer CloseDB()
-	
+
 	// Try to export non-existent provider
 	err = appendProviderDetails(file, "nonexistent-provider")
 	// Should complete without error even if no models found

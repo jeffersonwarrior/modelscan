@@ -8,14 +8,14 @@ import (
 
 // Team represents a collection of agents working together
 type Team struct {
-	name         string
-	agents       map[string]*Agent
-	coordinator  *Coordinator
-	messageBus   MessageBus
-	maxParallel  int
-	timeout      time.Duration
-	ctx          context.Context
-	cancel       context.CancelFunc
+	name        string
+	agents      map[string]*Agent
+	coordinator *Coordinator
+	messageBus  MessageBus
+	maxParallel int
+	timeout     time.Duration
+	ctx         context.Context
+	cancel      context.CancelFunc
 }
 
 // TeamOption configures a team
@@ -47,13 +47,13 @@ func NewTeam(name string, opts ...TeamOption) *Team {
 		ctx:         ctx,
 		cancel:      cancel,
 	}
-	
+
 	team.coordinator = NewCoordinator(team)
-	
+
 	for _, opt := range opts {
 		opt(team)
 	}
-	
+
 	return team
 }
 
@@ -62,10 +62,10 @@ func (t *Team) AddAgent(id string, agent *Agent) error {
 	if _, exists := t.agents[id]; exists {
 		return fmt.Errorf("agent with ID %s already exists", id)
 	}
-	
+
 	t.agents[id] = agent
 	agent.teamContext = t // Link agent to team
-	
+
 	// Subscribe to team messages
 	t.messageBus.Subscribe(id, func(msg TeamMessage) error {
 		if agent.memory != nil {
@@ -82,7 +82,7 @@ func (t *Team) AddAgent(id string, agent *Agent) error {
 		}
 		return nil
 	})
-	
+
 	return nil
 }
 
@@ -103,7 +103,7 @@ func (t *Team) ExecuteTask(ctx context.Context, task Task) (*TaskResult, error) 
 		ctx, cancel = context.WithTimeout(ctx, t.timeout)
 		defer cancel()
 	}
-	
+
 	return t.coordinator.ExecuteTask(ctx, task)
 }
 
@@ -171,16 +171,16 @@ const (
 
 // TaskResult represents the result of a task execution
 type TaskResult struct {
-	TaskID      string                 `json:"task_id"`
-	Status      TaskStatus             `json:"status"`
-	Result      string                 `json:"result"`
-	Error       string                 `json:"error,omitempty"`
-	AgentID     string                 `json:"agent_id,omitempty"`
-	StartTime   time.Time              `json:"start_time"`
-	EndTime     time.Time              `json:"end_time"`
-	Duration    time.Duration          `json:"duration"`
-	Metadata    map[string]interface{} `json:"metadata,omitempty"`
-	SubTasks    []*TaskResult          `json:"sub_tasks,omitempty"`
+	TaskID    string                 `json:"task_id"`
+	Status    TaskStatus             `json:"status"`
+	Result    string                 `json:"result"`
+	Error     string                 `json:"error,omitempty"`
+	AgentID   string                 `json:"agent_id,omitempty"`
+	StartTime time.Time              `json:"start_time"`
+	EndTime   time.Time              `json:"end_time"`
+	Duration  time.Duration          `json:"duration"`
+	Metadata  map[string]interface{} `json:"metadata,omitempty"`
+	SubTasks  []*TaskResult          `json:"sub_tasks,omitempty"`
 }
 
 // NewTask creates a new task

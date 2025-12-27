@@ -13,16 +13,16 @@ import (
 func setupTestDB(t *testing.T) string {
 	dbPath := "/tmp/test_ratelimit_" + t.Name() + ".db"
 	os.Remove(dbPath)
-	
+
 	if err := storage.InitRateLimitDB(dbPath); err != nil {
 		t.Fatalf("Failed to init test DB: %v", err)
 	}
-	
+
 	// Seed test data
 	if err := scraper.SeedInitialRateLimits(); err != nil {
 		t.Fatalf("Failed to seed test data: %v", err)
 	}
-	
+
 	return dbPath
 }
 
@@ -238,7 +238,7 @@ func TestMultiLimitCoordinator_AcquireAll_Rollback(t *testing.T) {
 	// Try to acquire more (should fail and rollback)
 	ctx, cancel := context.WithTimeout(context.Background(), 50*time.Millisecond)
 	defer cancel()
-	
+
 	err := coordinator.AcquireAll(ctx, 1, 0)
 	if err == nil {
 		t.Error("Expected AcquireAll to fail due to test-provider exhaustion")
@@ -259,10 +259,10 @@ func TestEstimateTokens_ReasonableApproximation(t *testing.T) {
 		text     string
 		expected int64
 	}{
-		{"Hello world", 2},                           // 11 chars / 4 = 2
-		{"The quick brown fox", 4},                   // 19 chars / 4 = 4
-		{"A much longer piece of text here", 8},      // 34 chars / 4 = 8
-		{"", 0},                                       // Empty string
+		{"Hello world", 2},                      // 11 chars / 4 = 2
+		{"The quick brown fox", 4},              // 19 chars / 4 = 4
+		{"A much longer piece of text here", 8}, // 34 chars / 4 = 8
+		{"", 0},                                 // Empty string
 	}
 
 	for _, test := range tests {

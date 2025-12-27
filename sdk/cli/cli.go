@@ -10,10 +10,10 @@ import (
 
 // CLI represents the command-line interface
 type CLI struct {
-	rootCmd        *cobra.Command
-	orchestrator   *Orchestrator
-	commands       map[string]Command
-	initialized    bool
+	rootCmd      *cobra.Command
+	orchestrator *Orchestrator
+	commands     map[string]Command
+	initialized  bool
 }
 
 // NewCLI creates a new CLI instance

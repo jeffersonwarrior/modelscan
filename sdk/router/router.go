@@ -35,16 +35,16 @@ type ProviderHealth struct {
 
 // ProviderOption represents a provider with its cost and availability
 type ProviderOption struct {
-	ProviderName string
-	ModelID      string
-	PlanType     string
-	InputCost    float64
-	OutputCost   float64
+	ProviderName  string
+	ModelID       string
+	PlanType      string
+	InputCost     float64
+	OutputCost    float64
 	EstimatedCost float64
-	AvgLatencyMs int64
-	IsAvailable  bool
-	RateLimiter  *ratelimit.RateLimiter
-	Health       *ProviderHealth
+	AvgLatencyMs  int64
+	IsAvailable   bool
+	RateLimiter   *ratelimit.RateLimiter
+	Health        *ProviderHealth
 }
 
 // Router selects the best provider based on strategy
@@ -57,11 +57,11 @@ type Router struct {
 
 // RouteRequest contains the routing decision context
 type RouteRequest struct {
-	Capability      string  // "chat", "embedding", "image", "audio", "video"
-	EstimatedTokens int64   // Input + output token estimate
-	MaxCost         float64 // Budget constraint
-	MaxLatencyMs    int64   // Latency requirement
-	RequiredModels  []string // Specific models to consider
+	Capability       string   // "chat", "embedding", "image", "audio", "video"
+	EstimatedTokens  int64    // Input + output token estimate
+	MaxCost          float64  // Budget constraint
+	MaxLatencyMs     int64    // Latency requirement
+	RequiredModels   []string // Specific models to consider
 	ExcludeProviders []string // Providers to avoid
 }
 
@@ -145,7 +145,7 @@ func (r *Router) getAvailableProviders(ctx context.Context, req RouteRequest) ([
 	var providers []*ProviderOption
 	for rows.Next() {
 		var opt ProviderOption
-		err := rows.Scan(&opt.ProviderName, &opt.ModelID, &opt.PlanType, 
+		err := rows.Scan(&opt.ProviderName, &opt.ModelID, &opt.PlanType,
 			&opt.InputCost, &opt.OutputCost)
 		if err != nil {
 			continue
@@ -292,7 +292,7 @@ func (r *Router) selectBalanced(providers []*ProviderOption) (*ProviderOption, s
 		}
 	}
 
-	return best.provider, fmt.Sprintf("balanced score %.3f (cost: $%.6f, latency: %dms)", 
+	return best.provider, fmt.Sprintf("balanced score %.3f (cost: $%.6f, latency: %dms)",
 		best.score, best.provider.EstimatedCost, best.provider.AvgLatencyMs)
 }
 

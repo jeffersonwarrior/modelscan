@@ -100,7 +100,7 @@ func NewOrchestrator(config *Config) (*Orchestrator, error) {
 	storage := storage.NewStorage(agentDB.GetDB(), config.DataRetention)
 
 	ctx, cancel := context.WithCancel(context.Background())
-	
+
 	orchestrator := &Orchestrator{
 		storage:      storage,
 		config:       config,

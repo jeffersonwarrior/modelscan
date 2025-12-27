@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"time"
 
-	_ "github.com/mattn/go-sqlite3"
 	"github.com/jeffersonwarrior/modelscan/providers"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 var db *sql.DB

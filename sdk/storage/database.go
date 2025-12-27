@@ -60,7 +60,7 @@ func (adb *AgentDB) createTables() error {
 			version INTEGER PRIMARY KEY,
 			applied_at DATETIME DEFAULT CURRENT_TIMESTAMP
 		)`,
-		
+
 		// Agents table
 		`CREATE TABLE IF NOT EXISTS agents (
 			id TEXT PRIMARY KEY,
@@ -71,7 +71,7 @@ func (adb *AgentDB) createTables() error {
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 		)`,
-		
+
 		// Teams table
 		`CREATE TABLE IF NOT EXISTS teams (
 			id TEXT PRIMARY KEY,
@@ -80,7 +80,7 @@ func (adb *AgentDB) createTables() error {
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 		)`,
-		
+
 		// Team membership
 		`CREATE TABLE IF NOT EXISTS team_members (
 			team_id TEXT,
@@ -91,7 +91,7 @@ func (adb *AgentDB) createTables() error {
 			FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE,
 			FOREIGN KEY (agent_id) REFERENCES agents(id) ON DELETE CASCADE
 		)`,
-		
+
 		// Tasks table
 		`CREATE TABLE IF NOT EXISTS tasks (
 			id TEXT PRIMARY KEY,
@@ -110,7 +110,7 @@ func (adb *AgentDB) createTables() error {
 			FOREIGN KEY (agent_id) REFERENCES agents(id) ON DELETE CASCADE,
 			FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE SET NULL
 		)`,
-		
+
 		// Messages table
 		`CREATE TABLE IF NOT EXISTS messages (
 			id TEXT PRIMARY KEY,
@@ -125,7 +125,7 @@ func (adb *AgentDB) createTables() error {
 			FOREIGN KEY (to_agent) REFERENCES agents(id),
 			FOREIGN KEY (team_id) REFERENCES teams(id)
 		)`,
-		
+
 		// Tool executions
 		`CREATE TABLE IF NOT EXISTS tool_executions (
 			id TEXT PRIMARY KEY,
@@ -144,7 +144,7 @@ func (adb *AgentDB) createTables() error {
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			FOREIGN KEY (agent_id) REFERENCES agents(id)
 		)`,
-		
+
 		// Agent statistics
 		`CREATE TABLE IF NOT EXISTS agent_stats (
 			agent_id TEXT PRIMARY KEY,
@@ -240,7 +240,7 @@ func migrationV2AddTeamDescription(db *sql.DB) error {
 			return fmt.Errorf("failed to add description column to teams: %w", err)
 		}
 	}
-	
+
 	// Add metadata column to teams table
 	_, err = db.Exec("ALTER TABLE teams ADD COLUMN metadata TEXT")
 	if err != nil {
@@ -248,56 +248,56 @@ func migrationV2AddTeamDescription(db *sql.DB) error {
 			return fmt.Errorf("failed to add metadata column to teams: %w", err)
 		}
 	}
-	
+
 	// Update schema for tasks table to match Task struct
 	// Add agent_id column (if assigned_to doesn't exist, use it)
 	_, err = db.Exec("ALTER TABLE tasks ADD COLUMN agent_id TEXT")
 	if err != nil && !strings.Contains(err.Error(), "duplicate column name") {
 		return fmt.Errorf("failed to add agent_id column to tasks: %w", err)
 	}
-	
+
 	// Add team_id column
 	_, err = db.Exec("ALTER TABLE tasks ADD COLUMN team_id TEXT")
 	if err != nil && !strings.Contains(err.Error(), "duplicate column name") {
 		return fmt.Errorf("failed to add team_id column to tasks: %w", err)
 	}
-	
+
 	// Add type column
 	_, err = db.Exec("ALTER TABLE tasks ADD COLUMN type TEXT")
 	if err != nil && !strings.Contains(err.Error(), "duplicate column name") {
 		return fmt.Errorf("failed to add type column to tasks: %w", err)
 	}
-	
+
 	// Add input column
 	_, err = db.Exec("ALTER TABLE tasks ADD COLUMN input TEXT")
 	if err != nil && !strings.Contains(err.Error(), "duplicate column name") {
 		return fmt.Errorf("failed to add input column to tasks: %w", err)
 	}
-	
+
 	// Add output column
 	_, err = db.Exec("ALTER TABLE tasks ADD COLUMN output TEXT")
 	if err != nil && !strings.Contains(err.Error(), "duplicate column name") {
 		return fmt.Errorf("failed to add output column to tasks: %w", err)
 	}
-	
+
 	// Add metadata column
 	_, err = db.Exec("ALTER TABLE tasks ADD COLUMN metadata TEXT")
 	if err != nil && !strings.Contains(err.Error(), "duplicate column name") {
 		return fmt.Errorf("failed to add metadata column to tasks: %w", err)
 	}
-	
+
 	// Add started_at column
 	_, err = db.Exec("ALTER TABLE tasks ADD COLUMN started_at DATETIME")
 	if err != nil && !strings.Contains(err.Error(), "duplicate column name") {
 		return fmt.Errorf("failed to add started_at column to tasks: %w", err)
 	}
-	
+
 	// Add updated_at column to team_members table
 	_, err = db.Exec("ALTER TABLE team_members ADD COLUMN updated_at DATETIME DEFAULT CURRENT_TIMESTAMP")
 	if err != nil && !strings.Contains(err.Error(), "duplicate column name") {
 		return fmt.Errorf("failed to add updated_at column to team_members: %w", err)
 	}
-	
+
 	return nil
 }
 
@@ -315,20 +315,20 @@ func migrationV3UpdateToolExecutions(db *sql.DB) error {
 		{"started_at", "DATETIME"},
 		{"completed_at", "DATETIME"},
 	}
-	
+
 	for _, col := range columns {
 		_, err := db.Exec(fmt.Sprintf("ALTER TABLE tool_executions ADD COLUMN %s %s", col.name, col.sqlType))
 		if err != nil && !strings.Contains(err.Error(), "duplicate column name") {
 			return fmt.Errorf("failed to add %s column to tool_executions: %w", col.name, err)
 		}
 	}
-	
+
 	// Rename error_message to error if it exists
 	_, err := db.Exec("ALTER TABLE tool_executions RENAME COLUMN error_message TO error")
 	if err != nil && !strings.Contains(err.Error(), "no such column") {
 		// Column might not exist or rename failed, that's okay for this migration
 	}
-	
+
 	return nil
 }
 
@@ -348,7 +348,7 @@ func (adb *AgentDB) GetDB() *sql.DB {
 // CleanupOldData removes records older than the specified duration
 func (adb *AgentDB) CleanupOldData(ctx context.Context, olderThan time.Duration) error {
 	cutoffTime := time.Now().Add(-olderThan)
-	
+
 	queries := []string{
 		"DELETE FROM messages WHERE created_at < ?",
 		"DELETE FROM tool_executions WHERE started_at < ? OR (started_at IS NULL AND created_at < ?)",
@@ -362,12 +362,12 @@ func (adb *AgentDB) CleanupOldData(ctx context.Context, olderThan time.Duration)
 		} else {
 			args = []interface{}{cutoffTime}
 		}
-		
+
 		result, err := adb.db.ExecContext(ctx, query, args...)
 		if err != nil {
 			return fmt.Errorf("cleanup query failed: %s: %w", query, err)
 		}
-		
+
 		rowsAffected, _ := result.RowsAffected()
 		if rowsAffected > 0 {
 			log.Printf("Cleaned up %d rows with query: %s", rowsAffected, query)

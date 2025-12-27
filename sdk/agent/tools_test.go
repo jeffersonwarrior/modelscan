@@ -50,7 +50,7 @@ func TestToolRegistry_Get_UnknownTool_ReturnsError(t *testing.T) {
 // TestToolRegistry_List_ReturnsAllTools tests listing all tools
 func TestToolRegistry_List_ReturnsAllTools(t *testing.T) {
 	registry := NewToolRegistry()
-	
+
 	tools := []*MockTool{
 		NewMockTool("tool1", "First tool", nil),
 		NewMockTool("tool2", "Second tool", nil),
@@ -158,8 +158,8 @@ func TestCalculatorTool_Execute_Addition(t *testing.T) {
 	tool := &CalculatorTool{}
 
 	input := map[string]interface{}{
-		"a":        15.0,
-		"b":        27.0,
+		"a":         15.0,
+		"b":         27.0,
 		"operation": "+",
 	}
 
@@ -174,8 +174,8 @@ func TestCalculatorTool_Execute_Subtraction(t *testing.T) {
 	tool := &CalculatorTool{}
 
 	input := map[string]interface{}{
-		"a":        100.0,
-		"b":        57.0,
+		"a":         100.0,
+		"b":         57.0,
 		"operation": "-",
 	}
 
@@ -190,8 +190,8 @@ func TestCalculatorTool_Execute_Multiplication(t *testing.T) {
 	tool := &CalculatorTool{}
 
 	input := map[string]interface{}{
-		"a":        6.0,
-		"b":        7.0,
+		"a":         6.0,
+		"b":         7.0,
 		"operation": "*",
 	}
 
@@ -206,8 +206,8 @@ func TestCalculatorTool_Execute_Division(t *testing.T) {
 	tool := &CalculatorTool{}
 
 	input := map[string]interface{}{
-		"a":        84.0,
-		"b":        2.0,
+		"a":         84.0,
+		"b":         2.0,
 		"operation": "/",
 	}
 
@@ -222,8 +222,8 @@ func TestCalculatorTool_Execute_DivisionByZero_ReturnsError(t *testing.T) {
 	tool := &CalculatorTool{}
 
 	input := map[string]interface{}{
-		"a":        42.0,
-		"b":        0.0,
+		"a":         42.0,
+		"b":         0.0,
 		"operation": "/",
 	}
 
@@ -237,8 +237,8 @@ func TestCalculatorTool_Execute_InvalidOperation_ReturnsError(t *testing.T) {
 	tool := &CalculatorTool{}
 
 	input := map[string]interface{}{
-		"a":        42.0,
-		"b":        1.0,
+		"a":         42.0,
+		"b":         1.0,
 		"operation": "invalid",
 	}
 

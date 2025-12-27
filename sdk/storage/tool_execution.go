@@ -38,12 +38,12 @@ func NewToolExecutionRepository(db *sql.DB) *ToolExecutionRepository {
 // Create creates a new tool execution
 func (r *ToolExecutionRepository) Create(ctx context.Context, execution *ToolExecution) error {
 	metadataJSON, _ := json.Marshal(execution.Metadata)
-	
+
 	query := `
 		INSERT INTO tool_executions (id, task_id, agent_id, tool_name, tool_type, input, output, error, status, duration, metadata, started_at, completed_at)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`
-	
+
 	_, err := r.db.ExecContext(ctx, query,
 		execution.ID, execution.TaskID, execution.AgentID, execution.ToolName, execution.ToolType,
 		execution.Input, execution.Output, execution.Error, execution.Status, execution.Duration,
@@ -51,7 +51,7 @@ func (r *ToolExecutionRepository) Create(ctx context.Context, execution *ToolExe
 	if err != nil {
 		return fmt.Errorf("failed to create tool execution: %w", err)
 	}
-	
+
 	return nil
 }
 
@@ -61,10 +61,10 @@ func (r *ToolExecutionRepository) Get(ctx context.Context, id string) (*ToolExec
 		SELECT id, task_id, agent_id, tool_name, tool_type, input, output, error, status, duration, metadata, started_at, completed_at
 		FROM tool_executions WHERE id = ?
 	`
-	
+
 	execution := &ToolExecution{}
 	var metadataJSON []byte
-	
+
 	err := r.db.QueryRowContext(ctx, query, id).Scan(
 		&execution.ID, &execution.TaskID, &execution.AgentID, &execution.ToolName, &execution.ToolType,
 		&execution.Input, &execution.Output, &execution.Error, &execution.Status, &execution.Duration,
@@ -75,27 +75,27 @@ func (r *ToolExecutionRepository) Get(ctx context.Context, id string) (*ToolExec
 		}
 		return nil, fmt.Errorf("failed to get tool execution: %w", err)
 	}
-	
+
 	if len(metadataJSON) > 0 {
 		if err := json.Unmarshal(metadataJSON, &execution.Metadata); err != nil {
 			return nil, fmt.Errorf("failed to unmarshal metadata: %w", err)
 		}
 	}
-	
+
 	return execution, nil
 }
 
 // Update updates a tool execution
 func (r *ToolExecutionRepository) Update(ctx context.Context, execution *ToolExecution) error {
 	metadataJSON, _ := json.Marshal(execution.Metadata)
-	
+
 	query := `
 		UPDATE tool_executions 
 		SET task_id = ?, agent_id = ?, tool_name = ?, tool_type = ?, input = ?, output = ?, 
 		    error = ?, status = ?, duration = ?, metadata = ?, started_at = ?, completed_at = ?
 		WHERE id = ?
 	`
-	
+
 	result, err := r.db.ExecContext(ctx, query,
 		execution.TaskID, execution.AgentID, execution.ToolName, execution.ToolType,
 		execution.Input, execution.Output, execution.Error, execution.Status, execution.Duration,
@@ -103,16 +103,16 @@ func (r *ToolExecutionRepository) Update(ctx context.Context, execution *ToolExe
 	if err != nil {
 		return fmt.Errorf("failed to update tool execution: %w", err)
 	}
-	
+
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
 		return fmt.Errorf("failed to get rows affected: %w", err)
 	}
-	
+
 	if rowsAffected == 0 {
 		return fmt.Errorf("tool execution not found: %s", execution.ID)
 	}
-	
+
 	return nil
 }
 
@@ -123,21 +123,21 @@ func (r *ToolExecutionRepository) MarkCompleted(ctx context.Context, id, output,
 		SET output = ?, status = ?, duration = ?, completed_at = CURRENT_TIMESTAMP
 		WHERE id = ?
 	`
-	
+
 	result, err := r.db.ExecContext(ctx, query, output, status, duration, id)
 	if err != nil {
 		return fmt.Errorf("failed to mark tool execution completed: %w", err)
 	}
-	
+
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
 		return fmt.Errorf("failed to get rows affected: %w", err)
 	}
-	
+
 	if rowsAffected == 0 {
 		return fmt.Errorf("tool execution not found: %s", id)
 	}
-	
+
 	return nil
 }
 
@@ -148,21 +148,21 @@ func (r *ToolExecutionRepository) MarkFailed(ctx context.Context, id, errorMsg s
 		SET error = ?, status = 'failed', duration = ?, completed_at = CURRENT_TIMESTAMP
 		WHERE id = ?
 	`
-	
+
 	result, err := r.db.ExecContext(ctx, query, errorMsg, duration, id)
 	if err != nil {
 		return fmt.Errorf("failed to mark tool execution failed: %w", err)
 	}
-	
+
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
 		return fmt.Errorf("failed to get rows affected: %w", err)
 	}
-	
+
 	if rowsAffected == 0 {
 		return fmt.Errorf("tool execution not found: %s", id)
 	}
-	
+
 	return nil
 }
 
@@ -175,18 +175,18 @@ func (r *ToolExecutionRepository) ListByTask(ctx context.Context, taskID string,
 		ORDER BY started_at DESC
 		LIMIT ? OFFSET ?
 	`
-	
+
 	rows, err := r.db.QueryContext(ctx, query, taskID, limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list tool executions by task: %w", err)
 	}
 	defer rows.Close()
-	
+
 	var executions []*ToolExecution
 	for rows.Next() {
 		execution := &ToolExecution{}
 		var metadataJSON []byte
-		
+
 		err := rows.Scan(
 			&execution.ID, &execution.TaskID, &execution.AgentID, &execution.ToolName, &execution.ToolType,
 			&execution.Input, &execution.Output, &execution.Error, &execution.Status, &execution.Duration,
@@ -194,16 +194,16 @@ func (r *ToolExecutionRepository) ListByTask(ctx context.Context, taskID string,
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan tool execution: %w", err)
 		}
-		
+
 		if len(metadataJSON) > 0 {
 			if err := json.Unmarshal(metadataJSON, &execution.Metadata); err != nil {
 				return nil, fmt.Errorf("failed to unmarshal metadata: %w", err)
 			}
 		}
-		
+
 		executions = append(executions, execution)
 	}
-	
+
 	return executions, nil
 }
 
@@ -216,18 +216,18 @@ func (r *ToolExecutionRepository) ListByAgent(ctx context.Context, agentID strin
 		ORDER BY started_at DESC
 		LIMIT ? OFFSET ?
 	`
-	
+
 	rows, err := r.db.QueryContext(ctx, query, agentID, limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list tool executions by agent: %w", err)
 	}
 	defer rows.Close()
-	
+
 	var executions []*ToolExecution
 	for rows.Next() {
 		execution := &ToolExecution{}
 		var metadataJSON []byte
-		
+
 		err := rows.Scan(
 			&execution.ID, &execution.TaskID, &execution.AgentID, &execution.ToolName, &execution.ToolType,
 			&execution.Input, &execution.Output, &execution.Error, &execution.Status, &execution.Duration,
@@ -235,16 +235,16 @@ func (r *ToolExecutionRepository) ListByAgent(ctx context.Context, agentID strin
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan tool execution: %w", err)
 		}
-		
+
 		if len(metadataJSON) > 0 {
 			if err := json.Unmarshal(metadataJSON, &execution.Metadata); err != nil {
 				return nil, fmt.Errorf("failed to unmarshal metadata: %w", err)
 			}
 		}
-		
+
 		executions = append(executions, execution)
 	}
-	
+
 	return executions, nil
 }
 
@@ -257,18 +257,18 @@ func (r *ToolExecutionRepository) ListByTool(ctx context.Context, toolName strin
 		ORDER BY started_at DESC
 		LIMIT ? OFFSET ?
 	`
-	
+
 	rows, err := r.db.QueryContext(ctx, query, toolName, limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list tool executions by tool: %w", err)
 	}
 	defer rows.Close()
-	
+
 	var executions []*ToolExecution
 	for rows.Next() {
 		execution := &ToolExecution{}
 		var metadataJSON []byte
-		
+
 		err := rows.Scan(
 			&execution.ID, &execution.TaskID, &execution.AgentID, &execution.ToolName, &execution.ToolType,
 			&execution.Input, &execution.Output, &execution.Error, &execution.Status, &execution.Duration,
@@ -276,28 +276,28 @@ func (r *ToolExecutionRepository) ListByTool(ctx context.Context, toolName strin
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan tool execution: %w", err)
 		}
-		
+
 		if len(metadataJSON) > 0 {
 			if err := json.Unmarshal(metadataJSON, &execution.Metadata); err != nil {
 				return nil, fmt.Errorf("failed to unmarshal metadata: %w", err)
 			}
 		}
-		
+
 		executions = append(executions, execution)
 	}
-	
+
 	return executions, nil
 }
 
 // DeleteByTask deletes all tool executions for a task
 func (r *ToolExecutionRepository) DeleteByTask(ctx context.Context, taskID string) error {
 	query := `DELETE FROM tool_executions WHERE task_id = ?`
-	
+
 	_, err := r.db.ExecContext(ctx, query, taskID)
 	if err != nil {
 		return fmt.Errorf("failed to delete tool executions by task: %w", err)
 	}
-	
+
 	return nil
 }
 
@@ -315,24 +315,24 @@ func (r *ToolExecutionRepository) GetUsageStats(ctx context.Context, since time.
 		GROUP BY tool_name
 		ORDER BY execution_count DESC
 	`
-	
+
 	rows, err := r.db.QueryContext(ctx, query, since)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get tool usage stats: %w", err)
 	}
 	defer rows.Close()
-	
+
 	var stats []map[string]interface{}
 	for rows.Next() {
 		var toolName string
 		var executionCount, successCount, failureCount int
 		var avgDuration float64
-		
+
 		err := rows.Scan(&toolName, &executionCount, &avgDuration, &successCount, &failureCount)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan usage stats: %w", err)
 		}
-		
+
 		stat := map[string]interface{}{
 			"tool_name":       toolName,
 			"execution_count": executionCount,
@@ -342,6 +342,6 @@ func (r *ToolExecutionRepository) GetUsageStats(ctx context.Context, since time.
 		}
 		stats = append(stats, stat)
 	}
-	
+
 	return stats, nil
 }

@@ -24,16 +24,16 @@ func NewToolRegistry() *ToolRegistry {
 func (tr *ToolRegistry) Register(tool Tool) error {
 	tr.mu.Lock()
 	defer tr.mu.Unlock()
-	
+
 	name := tool.Name()
 	if name == "" {
 		return fmt.Errorf("tool has empty name")
 	}
-	
+
 	if _, exists := tr.tools[name]; exists {
 		return fmt.Errorf("tool '%s' already registered", name)
 	}
-	
+
 	tr.tools[name] = tool
 	return nil
 }
@@ -42,7 +42,7 @@ func (tr *ToolRegistry) Register(tool Tool) error {
 func (tr *ToolRegistry) Get(name string) (Tool, error) {
 	tr.mu.RLock()
 	defer tr.mu.RUnlock()
-	
+
 	tool, exists := tr.tools[name]
 	if !exists {
 		return nil, fmt.Errorf("tool '%s' not found", name)
@@ -54,7 +54,7 @@ func (tr *ToolRegistry) Get(name string) (Tool, error) {
 func (tr *ToolRegistry) List() []string {
 	tr.mu.RLock()
 	defer tr.mu.RUnlock()
-	
+
 	names := make([]string, 0, len(tr.tools))
 	for name := range tr.tools {
 		names = append(names, name)
@@ -100,33 +100,33 @@ func (te *ToolExecutor) Execute(ctx context.Context, toolName string, input map[
 	if err != nil {
 		return nil, fmt.Errorf("tool executor: %w", err)
 	}
-	
+
 	// Validate input if tool provides validation
 	if validator, ok := tool.(ToolInputValidator); ok {
 		if err := validator.ValidateInput(input); err != nil {
 			return nil, fmt.Errorf("input validation failed for tool '%s': %w", toolName, err)
 		}
 	}
-	
+
 	// Execute the tool
 	startTime := time.Now()
 	output, err := tool.Execute(ctx, input)
 	duration := time.Since(startTime)
-	
+
 	// Log the execution
 	te.logger.LogExecution(ctx, toolName, input, output, err, duration.Nanoseconds())
-	
+
 	if err != nil {
 		return nil, fmt.Errorf("tool execution failed for '%s': %w", toolName, err)
 	}
-	
+
 	// Validate output if tool provides validation
 	if validator, ok := tool.(ToolOutputValidator); ok {
 		if err := validator.ValidateOutput(output); err != nil {
 			return nil, fmt.Errorf("output validation failed for tool '%s': %w", toolName, err)
 		}
 	}
-	
+
 	return output, nil
 }
 
@@ -137,7 +137,7 @@ type ToolInputValidator interface {
 	ValidateInput(input map[string]interface{}) error
 }
 
-// ToolOutputValidator can be implemented by tools that need output validation  
+// ToolOutputValidator can be implemented by tools that need output validation
 type ToolOutputValidator interface {
 	ValidateOutput(output map[string]interface{}) error
 }
@@ -189,17 +189,17 @@ func (c *CalculatorTool) Execute(ctx context.Context, input map[string]interface
 	if !ok {
 		return nil, &ToolError{Message: "missing 'operation' parameter"}
 	}
-	
+
 	a, ok := input["a"].(float64)
 	if !ok {
 		return nil, &ToolError{Message: "missing or invalid 'a' parameter"}
 	}
-	
+
 	b, ok := input["b"].(float64)
 	if !ok {
 		return nil, &ToolError{Message: "missing or invalid 'b' parameter"}
 	}
-	
+
 	var result float64
 	switch op {
 	case "+":
@@ -216,7 +216,7 @@ func (c *CalculatorTool) Execute(ctx context.Context, input map[string]interface
 	default:
 		return nil, &ToolError{Message: fmt.Sprintf("unsupported operation: %s", op)}
 	}
-	
+
 	return map[string]interface{}{
 		"result": result,
 	}, nil

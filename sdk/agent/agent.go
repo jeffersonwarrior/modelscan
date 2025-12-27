@@ -10,15 +10,15 @@ import (
 type Memory interface {
 	// Store stores a message in memory
 	Store(ctx context.Context, message MemoryMessage) error
-	
+
 	// Retrieve retrieves relevant messages from memory
 	// If query is empty, returns all messages up to limit
 	// Returns messages in reverse chronological order (newest first)
 	Retrieve(ctx context.Context, query string, limit int) ([]MemoryMessage, error)
-	
+
 	// Search searches for messages matching the pattern
 	Search(ctx context.Context, pattern string) ([]MemoryMessage, error)
-	
+
 	// Clear clears all memory
 	Clear(ctx context.Context) error
 }
@@ -52,16 +52,16 @@ type Plan struct {
 
 // PlanStep represents a single step in a plan
 type PlanStep struct {
-	Type        string                 `json:"type"`        // "tool", "think", "wait"
-	ToolName    string                 `json:"tool_name,omitempty"`
-	Parameters  map[string]interface{} `json:"parameters,omitempty"`
-	Thought     string                 `json:"thought,omitempty"`
+	Type       string                 `json:"type"` // "tool", "think", "wait"
+	ToolName   string                 `json:"tool_name,omitempty"`
+	Parameters map[string]interface{} `json:"parameters,omitempty"`
+	Thought    string                 `json:"thought,omitempty"`
 }
 
 // State represents the current state of the agent
 type State struct {
-	Messages []MemoryMessage `json:"messages"`
-	Tools    []Tool          `json:"tools"`
+	Messages []MemoryMessage        `json:"messages"`
+	Tools    []Tool                 `json:"tools"`
 	Context  map[string]interface{} `json:"context"`
 }
 
@@ -88,9 +88,9 @@ type Agent struct {
 
 // TokenUsage tracks token consumption
 type TokenUsage struct {
-	InputTokens  int
-	OutputTokens int
-	TotalTokens  int
+	InputTokens   int
+	OutputTokens  int
+	TotalTokens   int
 	EstimatedCost float64
 }
 
@@ -110,7 +110,7 @@ type RetryOptions struct {
 func (a *Agent) Execute(ctx context.Context, prompt string) (string, error) {
 	// Initialize usage tracking
 	a.usage = TokenUsage{}
-	
+
 	// Check budget before starting
 	if a.costEst != nil {
 		cost := a.costEst(prompt)
@@ -119,20 +119,20 @@ func (a *Agent) Execute(ctx context.Context, prompt string) (string, error) {
 			return "", fmt.Errorf("budget exceeded: estimated cost %.4f exceeds budget %.4f", cost, a.budget)
 		}
 	}
-	
+
 	// Count tokens
 	if a.tokenCounter != nil {
 		a.usage.InputTokens = a.tokenCounter(prompt)
 		a.usage.TotalTokens = a.usage.InputTokens
 	}
-	
+
 	// Set timeout context
 	if a.timeout > 0 {
 		var cancel context.CancelFunc
 		ctx, cancel = context.WithTimeout(ctx, a.timeout)
 		defer cancel()
 	}
-	
+
 	// Create initial state
 	state := State{
 		Messages: []MemoryMessage{
@@ -141,25 +141,25 @@ func (a *Agent) Execute(ctx context.Context, prompt string) (string, error) {
 		Tools:   a.tools,
 		Context: make(map[string]interface{}),
 	}
-	
+
 	// Main execution loop
 	var result string
 	var lastErr error
 	iterations := 0
-	
+
 	for iterations < a.maxIter {
 		iterations++
-		
+
 		// Check for context timeout/cancellation
 		select {
 		case <-ctx.Done():
 			return "", fmt.Errorf("execution timeout: %v", ctx.Err())
 		default:
 		}
-		
+
 		var plan Plan
 		var err error
-		
+
 		if a.planner != nil {
 			plan, err = a.planner.Plan(ctx, state, prompt)
 			if err != nil {
@@ -182,10 +182,10 @@ func (a *Agent) Execute(ctx context.Context, prompt string) (string, error) {
 				return result, nil
 			}
 		}
-		
+
 		// Initialize needsMoreIterations per iteration
 		needsMoreIterations := false
-		
+
 		// Execute plan steps
 		for _, step := range plan.Steps {
 			switch step.Type {
@@ -194,7 +194,7 @@ func (a *Agent) Execute(ctx context.Context, prompt string) (string, error) {
 				state.Messages = append(state.Messages, MemoryMessage{
 					Role: "assistant", Content: step.Thought, Timestamp: time.Now().Unix(),
 				})
-				
+
 			case "tool":
 				// Mark that we executed a tool
 				// Find the tool
@@ -209,37 +209,37 @@ func (a *Agent) Execute(ctx context.Context, prompt string) (string, error) {
 					lastErr = fmt.Errorf("tool not found: %s", step.ToolName)
 					continue
 				}
-				
+
 				// Execute tool with retry logic
 				var toolResult map[string]interface{}
 				var toolErr error
-				
+
 				maxRetries := 0
 				backoff := time.Duration(0)
 				if a.options.RetryOptions.MaxRetries > 0 {
 					maxRetries = a.options.RetryOptions.MaxRetries
 					backoff = a.options.RetryOptions.Backoff
 				}
-				
+
 				retryCount := 0
 				for retryCount <= maxRetries {
 					retryCount++
-					
+
 					// Execute tool
 					toolCtx := ctx
 					// Don't set tool-level timeout, just use the main context timeout
-					
+
 					toolResult, toolErr = tool.Execute(toolCtx, step.Parameters)
 					if toolErr == nil {
 						break // Success
 					}
-					
+
 					// Check if this is a context timeout
 					if ctx.Err() != nil {
 						toolErr = fmt.Errorf("timeout")
 						break
 					}
-					
+
 					// Check if it's a tool error that should be retried
 					if _, isToolErr := toolErr.(*ToolError); isToolErr && retryCount <= maxRetries {
 						// Wait for backoff
@@ -256,7 +256,7 @@ func (a *Agent) Execute(ctx context.Context, prompt string) (string, error) {
 					}
 					break
 				}
-				
+
 				if toolErr != nil {
 					lastErr = toolErr
 					state.Messages = append(state.Messages, MemoryMessage{
@@ -264,32 +264,32 @@ func (a *Agent) Execute(ctx context.Context, prompt string) (string, error) {
 					})
 					continue
 				}
-				
+
 				// Record tool result
 				resultStr := fmt.Sprintf("mock response with result from %s", tool.Name())
-				
+
 				// Check if tool indicates more work is needed
 				if toolResult != nil {
 					if needsMore, ok := toolResult["needs_more"].(bool); ok && needsMore {
 						needsMoreIterations = true
 					}
 				}
-				
+
 				state.Messages = append(state.Messages, MemoryMessage{
 					Role: "tool", Content: resultStr, Timestamp: time.Now().Unix(),
 				})
-				
+
 				// Update token usage
 				if a.tokenCounter != nil {
 					tokens := a.tokenCounter(resultStr)
 					a.usage.OutputTokens += tokens
 					a.usage.TotalTokens += tokens
 				}
-				
+
 				result = resultStr
 			}
 		}
-		
+
 		// If we got a successful result, or completed all plan steps, break
 		if result != "" && lastErr == nil && !needsMoreIterations {
 			// If no tools were executed (e.g., only thinking), return a mock result
@@ -299,16 +299,16 @@ func (a *Agent) Execute(ctx context.Context, prompt string) (string, error) {
 			break
 		}
 	}
-	
+
 	// Check if we exceeded max iterations
 	if iterations >= a.maxIter && lastErr == nil {
 		lastErr = fmt.Errorf("max iterations exceeded")
 	}
-	
+
 	if lastErr != nil {
 		return "", lastErr
 	}
-	
+
 	return result, nil
 }
 
@@ -320,18 +320,18 @@ func (a *Agent) TokenUsage() TokenUsage {
 // NewAgent creates a new agent with the given options
 func NewAgent(opts ...AgentOption) *Agent {
 	a := &Agent{
-		budget:   1.0,
-		maxIter:  10,
-		timeout:  0, // No timeout by default
+		budget:  1.0,
+		maxIter: 10,
+		timeout: 0, // No timeout by default
 		options: AgentOptions{
 			EnableLoopDetection: true,
 		},
 	}
-	
+
 	for _, opt := range opts {
 		opt(a)
 	}
-	
+
 	return a
 }
 
@@ -423,11 +423,11 @@ func (a *Agent) SendMessageToAgent(ctx context.Context, toAgentID, content strin
 	if a.teamContext == nil {
 		return fmt.Errorf("agent is not part of any team")
 	}
-	
+
 	if a.teamContext.messageBus == nil {
 		return fmt.Errorf("team message bus is not initialized")
 	}
-	
+
 	msg := NewTeamMessage(msgType, a.getID(), toAgentID, content)
 	return a.teamContext.messageBus.Send(ctx, msg)
 }
@@ -437,11 +437,11 @@ func (a *Agent) BroadcastMessage(ctx context.Context, content string, msgType Me
 	if a.teamContext == nil {
 		return fmt.Errorf("agent is not part of any team")
 	}
-	
+
 	if a.teamContext.messageBus == nil {
 		return fmt.Errorf("team message bus is not initialized")
 	}
-	
+
 	msg := NewTeamMessage(msgType, a.getID(), "", content)
 	return a.teamContext.messageBus.Broadcast(ctx, msg)
 }
@@ -459,14 +459,14 @@ func (a *Agent) CreateTask(ctx context.Context, description string, priority int
 	if a.teamContext == nil {
 		return nil, fmt.Errorf("agent is not part of any team")
 	}
-	
+
 	if a.teamContext.coordinator == nil {
 		return nil, fmt.Errorf("team coordinator is not initialized")
 	}
-	
+
 	task := NewTask(description, priority)
 	task.CreatedBy = a.getID()
-	
+
 	return task, a.teamContext.coordinator.SubmitTask(ctx, task)
 }
 
@@ -475,12 +475,12 @@ func (a *Agent) RequestHelp(ctx context.Context, taskDescription string, require
 	if a.teamContext == nil {
 		return fmt.Errorf("agent is not part of any team")
 	}
-	
+
 	// Create a help request message
 	content := fmt.Sprintf("Help needed for task: %s (Required capabilities: %v)", taskDescription, requiredCapabilities)
 	msg := NewTeamMessage(MessageTypeHandoff, a.getID(), "", content)
 	msg.AddData("task_description", taskDescription)
 	msg.AddData("required_capabilities", requiredCapabilities)
-	
+
 	return a.BroadcastMessage(ctx, content, MessageTypeHandoff)
 }

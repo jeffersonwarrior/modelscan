@@ -33,19 +33,19 @@ func NewMessageRepository(db *sql.DB) *MessageRepository {
 // Create creates a new message
 func (r *MessageRepository) Create(ctx context.Context, message *Message) error {
 	metadataJSON, _ := json.Marshal(message.Metadata)
-	
+
 	query := `
 		INSERT INTO messages (id, task_id, agent_id, team_id, type, content, metadata)
 		VALUES (?, ?, ?, ?, ?, ?, ?)
 	`
-	
+
 	_, err := r.db.ExecContext(ctx, query,
 		message.ID, message.TaskID, message.AgentID, message.TeamID,
 		message.Type, message.Content, metadataJSON)
 	if err != nil {
 		return fmt.Errorf("failed to create message: %w", err)
 	}
-	
+
 	return nil
 }
 
@@ -55,10 +55,10 @@ func (r *MessageRepository) Get(ctx context.Context, id string) (*Message, error
 		SELECT id, task_id, agent_id, team_id, type, content, metadata, created_at
 		FROM messages WHERE id = ?
 	`
-	
+
 	message := &Message{}
 	var metadataJSON []byte
-	
+
 	err := r.db.QueryRowContext(ctx, query, id).Scan(
 		&message.ID, &message.TaskID, &message.AgentID, &message.TeamID,
 		&message.Type, &message.Content, &metadataJSON, &message.CreatedAt)
@@ -68,34 +68,34 @@ func (r *MessageRepository) Get(ctx context.Context, id string) (*Message, error
 		}
 		return nil, fmt.Errorf("failed to get message: %w", err)
 	}
-	
+
 	if len(metadataJSON) > 0 {
 		if err := json.Unmarshal(metadataJSON, &message.Metadata); err != nil {
 			return nil, fmt.Errorf("failed to unmarshal metadata: %w", err)
 		}
 	}
-	
+
 	return message, nil
 }
 
 // Delete deletes a message
 func (r *MessageRepository) Delete(ctx context.Context, id string) error {
 	query := `DELETE FROM messages WHERE id = ?`
-	
+
 	result, err := r.db.ExecContext(ctx, query, id)
 	if err != nil {
 		return fmt.Errorf("failed to delete message: %w", err)
 	}
-	
+
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
 		return fmt.Errorf("failed to get rows affected: %w", err)
 	}
-	
+
 	if rowsAffected == 0 {
 		return fmt.Errorf("message not found: %s", id)
 	}
-	
+
 	return nil
 }
 
@@ -108,34 +108,34 @@ func (r *MessageRepository) ListByTask(ctx context.Context, taskID string, limit
 		ORDER BY created_at ASC
 		LIMIT ? OFFSET ?
 	`
-	
+
 	rows, err := r.db.QueryContext(ctx, query, taskID, limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list messages by task: %w", err)
 	}
 	defer rows.Close()
-	
+
 	var messages []*Message
 	for rows.Next() {
 		message := &Message{}
 		var metadataJSON []byte
-		
+
 		err := rows.Scan(
 			&message.ID, &message.TaskID, &message.AgentID, &message.TeamID,
 			&message.Type, &message.Content, &metadataJSON, &message.CreatedAt)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan message: %w", err)
 		}
-		
+
 		if len(metadataJSON) > 0 {
 			if err := json.Unmarshal(metadataJSON, &message.Metadata); err != nil {
 				return nil, fmt.Errorf("failed to unmarshal metadata: %w", err)
 			}
 		}
-		
+
 		messages = append(messages, message)
 	}
-	
+
 	return messages, nil
 }
 
@@ -148,34 +148,34 @@ func (r *MessageRepository) ListByAgent(ctx context.Context, agentID string, lim
 		ORDER BY created_at DESC
 		LIMIT ? OFFSET ?
 	`
-	
+
 	rows, err := r.db.QueryContext(ctx, query, agentID, limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list messages by agent: %w", err)
 	}
 	defer rows.Close()
-	
+
 	var messages []*Message
 	for rows.Next() {
 		message := &Message{}
 		var metadataJSON []byte
-		
+
 		err := rows.Scan(
 			&message.ID, &message.TaskID, &message.AgentID, &message.TeamID,
 			&message.Type, &message.Content, &metadataJSON, &message.CreatedAt)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan message: %w", err)
 		}
-		
+
 		if len(metadataJSON) > 0 {
 			if err := json.Unmarshal(metadataJSON, &message.Metadata); err != nil {
 				return nil, fmt.Errorf("failed to unmarshal metadata: %w", err)
 			}
 		}
-		
+
 		messages = append(messages, message)
 	}
-	
+
 	return messages, nil
 }
 
@@ -188,46 +188,46 @@ func (r *MessageRepository) ListByTeam(ctx context.Context, teamID string, limit
 		ORDER BY created_at DESC
 		LIMIT ? OFFSET ?
 	`
-	
+
 	rows, err := r.db.QueryContext(ctx, query, teamID, limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list messages by team: %w", err)
 	}
 	defer rows.Close()
-	
+
 	var messages []*Message
 	for rows.Next() {
 		message := &Message{}
 		var metadataJSON []byte
-		
+
 		err := rows.Scan(
 			&message.ID, &message.TaskID, &message.AgentID, &message.TeamID,
 			&message.Type, &message.Content, &metadataJSON, &message.CreatedAt)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan message: %w", err)
 		}
-		
+
 		if len(metadataJSON) > 0 {
 			if err := json.Unmarshal(metadataJSON, &message.Metadata); err != nil {
 				return nil, fmt.Errorf("failed to unmarshal metadata: %w", err)
 			}
 		}
-		
+
 		messages = append(messages, message)
 	}
-	
+
 	return messages, nil
 }
 
 // DeleteByTask deletes all messages for a task
 func (r *MessageRepository) DeleteByTask(ctx context.Context, taskID string) error {
 	query := `DELETE FROM messages WHERE task_id = ?`
-	
+
 	_, err := r.db.ExecContext(ctx, query, taskID)
 	if err != nil {
 		return fmt.Errorf("failed to delete messages by task: %w", err)
 	}
-	
+
 	return nil
 }
 
@@ -239,33 +239,33 @@ func (r *MessageRepository) GetConversationThread(ctx context.Context, taskID st
 		WHERE task_id = ?
 		ORDER BY created_at ASC
 	`
-	
+
 	rows, err := r.db.QueryContext(ctx, query, taskID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get conversation thread: %w", err)
 	}
 	defer rows.Close()
-	
+
 	var messages []*Message
 	for rows.Next() {
 		message := &Message{}
 		var metadataJSON []byte
-		
+
 		err := rows.Scan(
 			&message.ID, &message.TaskID, &message.AgentID, &message.TeamID,
 			&message.Type, &message.Content, &metadataJSON, &message.CreatedAt)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan message: %w", err)
 		}
-		
+
 		if len(metadataJSON) > 0 {
 			if err := json.Unmarshal(metadataJSON, &message.Metadata); err != nil {
 				return nil, fmt.Errorf("failed to unmarshal metadata: %w", err)
 			}
 		}
-		
+
 		messages = append(messages, message)
 	}
-	
+
 	return messages, nil
 }

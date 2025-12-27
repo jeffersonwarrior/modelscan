@@ -119,7 +119,7 @@ func TestAgent_Stops_OnMaxIterations(t *testing.T) {
 
 	agent := NewAgent(
 		WithTools(tool),
-		WithMaxIterations(3), // Low limit
+		WithMaxIterations(3),           // Low limit
 		WithPlanner(NewReActPlanner()), // ReAct will keep trying
 	)
 
@@ -187,25 +187,25 @@ func TestAgent_UseReActPlanner(t *testing.T) {
 		// Handle missing parameters gracefully
 		var a, b float64
 		var op string
-		
+
 		if val, ok := input["a"].(float64); ok {
 			a = val
 		} else {
 			a = 5 // default value
 		}
-		
+
 		if val, ok := input["b"].(float64); ok {
 			b = val
 		} else {
 			b = 7 // default value
 		}
-		
+
 		if val, ok := input["op"].(string); ok {
 			op = val
 		} else {
 			op = "*" // default operation
 		}
-		
+
 		var result float64
 		switch op {
 		case "+":
@@ -215,7 +215,7 @@ func TestAgent_UseReActPlanner(t *testing.T) {
 		default:
 			return nil, &ToolError{Message: "unknown operation"}
 		}
-		
+
 		return map[string]interface{}{"result": result}, nil
 	})
 

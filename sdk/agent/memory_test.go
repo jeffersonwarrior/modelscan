@@ -236,7 +236,7 @@ func TestInMemoryMemory_Expiration_RemovesOldMessages(t *testing.T) {
 
 	// Create memory with 1 nanosecond expiration (already expired)
 	expiredMemory := NewInMemoryMemory(WithExpiration(time.Nanosecond))
-	
+
 	// Store a message
 	err = expiredMemory.Store(ctx, MemoryMessage{
 		Role:    "user",

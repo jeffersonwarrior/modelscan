@@ -14,9 +14,9 @@ import (
 type StreamType string
 
 const (
-	StreamTypeSSE       StreamType = "sse"        // Server-Sent Events
-	StreamTypeWebSocket StreamType = "websocket"  // WebSocket
-	StreamTypeHTTP      StreamType = "http"       // HTTP chunked
+	StreamTypeSSE       StreamType = "sse"       // Server-Sent Events
+	StreamTypeWebSocket StreamType = "websocket" // WebSocket
+	StreamTypeHTTP      StreamType = "http"      // HTTP chunked
 )
 
 // ChunkType indicates what kind of data is in the chunk
@@ -54,7 +54,7 @@ type Stream struct {
 // NewStream creates a new stream from a reader
 func NewStream(ctx context.Context, reader io.Reader, streamType StreamType) *Stream {
 	ctx, cancel := context.WithCancel(ctx)
-	
+
 	s := &Stream{
 		streamType: streamType,
 		reader:     reader,
@@ -108,7 +108,7 @@ func (s *Stream) processStream() {
 // processSSE handles Server-Sent Events format
 func (s *Stream) processSSE() {
 	var currentEvent strings.Builder
-	
+
 	for s.scanner.Scan() {
 		select {
 		case <-s.ctx.Done():
@@ -154,7 +154,7 @@ func (s *Stream) parseSSEEvent(event string) {
 		if strings.HasPrefix(line, "data: ") {
 			data := strings.TrimPrefix(line, "data: ")
 			hasData = true
-			
+
 			// Check for [DONE] marker (OpenAI convention)
 			if data == "[DONE]" {
 				chunk.Type = ChunkTypeDone

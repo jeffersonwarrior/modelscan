@@ -18,19 +18,19 @@ func SeedInitialRateLimits() error {
 		{ProviderName: "openai", PlanType: "tier-1", LimitType: "rpm", LimitValue: 500, ResetWindowSeconds: 60, AppliesTo: "account", SourceURL: "https://platform.openai.com/docs/guides/rate-limits", LastVerified: time.Now()},
 		{ProviderName: "openai", PlanType: "tier-1", LimitType: "tpm", LimitValue: 200000, ResetWindowSeconds: 60, AppliesTo: "account", SourceURL: "https://platform.openai.com/docs/guides/rate-limits", LastVerified: time.Now()},
 		{ProviderName: "openai", PlanType: "tier-1", LimitType: "rpd", LimitValue: 10000, ResetWindowSeconds: 86400, AppliesTo: "account", SourceURL: "https://platform.openai.com/docs/guides/rate-limits", LastVerified: time.Now()},
-		
+
 		// Tier 2
 		{ProviderName: "openai", PlanType: "tier-2", LimitType: "rpm", LimitValue: 3500, ResetWindowSeconds: 60, AppliesTo: "account", SourceURL: "https://platform.openai.com/docs/guides/rate-limits", LastVerified: time.Now()},
 		{ProviderName: "openai", PlanType: "tier-2", LimitType: "tpm", LimitValue: 450000, ResetWindowSeconds: 60, AppliesTo: "account", SourceURL: "https://platform.openai.com/docs/guides/rate-limits", LastVerified: time.Now()},
-		
+
 		// Tier 3
 		{ProviderName: "openai", PlanType: "tier-3", LimitType: "rpm", LimitValue: 5000, ResetWindowSeconds: 60, AppliesTo: "account", SourceURL: "https://platform.openai.com/docs/guides/rate-limits", LastVerified: time.Now()},
 		{ProviderName: "openai", PlanType: "tier-3", LimitType: "tpm", LimitValue: 1000000, ResetWindowSeconds: 60, AppliesTo: "account", SourceURL: "https://platform.openai.com/docs/guides/rate-limits", LastVerified: time.Now()},
-		
+
 		// Tier 4
 		{ProviderName: "openai", PlanType: "tier-4", LimitType: "rpm", LimitValue: 10000, ResetWindowSeconds: 60, AppliesTo: "account", SourceURL: "https://platform.openai.com/docs/guides/rate-limits", LastVerified: time.Now()},
 		{ProviderName: "openai", PlanType: "tier-4", LimitType: "tpm", LimitValue: 10000000, ResetWindowSeconds: 60, AppliesTo: "account", SourceURL: "https://platform.openai.com/docs/guides/rate-limits", LastVerified: time.Now()},
-		
+
 		// Tier 5
 		{ProviderName: "openai", PlanType: "tier-5", LimitType: "rpm", LimitValue: 30000, ResetWindowSeconds: 60, AppliesTo: "account", SourceURL: "https://platform.openai.com/docs/guides/rate-limits", LastVerified: time.Now()},
 		{ProviderName: "openai", PlanType: "tier-5", LimitType: "tpm", LimitValue: 100000000, ResetWindowSeconds: 60, AppliesTo: "account", SourceURL: "https://platform.openai.com/docs/guides/rate-limits", LastVerified: time.Now()},
@@ -42,15 +42,15 @@ func SeedInitialRateLimits() error {
 		{ProviderName: "anthropic", PlanType: "tier-1", LimitType: "rpm", LimitValue: 50, ResetWindowSeconds: 60, AppliesTo: "account", SourceURL: "https://docs.anthropic.com/en/api/rate-limits", LastVerified: time.Now()},
 		{ProviderName: "anthropic", PlanType: "tier-1", LimitType: "tpm", LimitValue: 100000, ResetWindowSeconds: 60, AppliesTo: "account", SourceURL: "https://docs.anthropic.com/en/api/rate-limits", LastVerified: time.Now()},
 		{ProviderName: "anthropic", PlanType: "tier-1", LimitType: "rpd", LimitValue: 1000, ResetWindowSeconds: 86400, AppliesTo: "account", SourceURL: "https://docs.anthropic.com/en/api/rate-limits", LastVerified: time.Now()},
-		
+
 		// Tier 2
 		{ProviderName: "anthropic", PlanType: "tier-2", LimitType: "rpm", LimitValue: 1000, ResetWindowSeconds: 60, AppliesTo: "account", SourceURL: "https://docs.anthropic.com/en/api/rate-limits", LastVerified: time.Now()},
 		{ProviderName: "anthropic", PlanType: "tier-2", LimitType: "tpm", LimitValue: 300000, ResetWindowSeconds: 60, AppliesTo: "account", SourceURL: "https://docs.anthropic.com/en/api/rate-limits", LastVerified: time.Now()},
-		
+
 		// Tier 3
 		{ProviderName: "anthropic", PlanType: "tier-3", LimitType: "rpm", LimitValue: 2000, ResetWindowSeconds: 60, AppliesTo: "account", SourceURL: "https://docs.anthropic.com/en/api/rate-limits", LastVerified: time.Now()},
 		{ProviderName: "anthropic", PlanType: "tier-3", LimitType: "tpm", LimitValue: 1000000, ResetWindowSeconds: 60, AppliesTo: "account", SourceURL: "https://docs.anthropic.com/en/api/rate-limits", LastVerified: time.Now()},
-		
+
 		// Tier 4
 		{ProviderName: "anthropic", PlanType: "tier-4", LimitType: "rpm", LimitValue: 4000, ResetWindowSeconds: 60, AppliesTo: "account", SourceURL: "https://docs.anthropic.com/en/api/rate-limits", LastVerified: time.Now()},
 		{ProviderName: "anthropic", PlanType: "tier-4", LimitType: "tpm", LimitValue: 4000000, ResetWindowSeconds: 60, AppliesTo: "account", SourceURL: "https://docs.anthropic.com/en/api/rate-limits", LastVerified: time.Now()},
@@ -174,40 +174,40 @@ func SeedInitialPricing() error {
 		{ProviderName: "openai", ModelID: "gpt-4o", PlanType: "tier-1", InputCost: 2.50, OutputCost: 10.00, UnitType: "1M tokens", Currency: "USD"},
 		{ProviderName: "openai", ModelID: "gpt-4o-mini", PlanType: "tier-1", InputCost: 0.15, OutputCost: 0.60, UnitType: "1M tokens", Currency: "USD"},
 		{ProviderName: "openai", ModelID: "o1", PlanType: "tier-1", InputCost: 15.00, OutputCost: 60.00, UnitType: "1M tokens", Currency: "USD"},
-		
+
 		// Anthropic
 		{ProviderName: "anthropic", ModelID: "claude-3.5-sonnet", PlanType: "tier-1", InputCost: 3.00, OutputCost: 15.00, UnitType: "1M tokens", Currency: "USD"},
 		{ProviderName: "anthropic", ModelID: "claude-3.5-haiku", PlanType: "tier-1", InputCost: 0.80, OutputCost: 4.00, UnitType: "1M tokens", Currency: "USD"},
-		
+
 		// DeepSeek
 		{ProviderName: "deepseek", ModelID: "deepseek-chat", PlanType: "pay_per_go", InputCost: 0.14, OutputCost: 0.28, UnitType: "1M tokens", Currency: "USD"},
 		{ProviderName: "deepseek", ModelID: "deepseek-reasoner", PlanType: "pay_per_go", InputCost: 0.55, OutputCost: 2.19, UnitType: "1M tokens", Currency: "USD"},
-		
+
 		// Cerebras (FREE!)
 		{ProviderName: "cerebras", ModelID: "llama3.1-8b", PlanType: "free", InputCost: 0.00, OutputCost: 0.00, UnitType: "1M tokens", Currency: "USD", IncludedUnits: sql.NullInt64{Int64: 1000000, Valid: true}},
 		{ProviderName: "cerebras", ModelID: "llama3.1-70b", PlanType: "pay_per_go", InputCost: 0.60, OutputCost: 0.60, UnitType: "1M tokens", Currency: "USD"},
-		
+
 		// Google Gemini
 		{ProviderName: "google-gemini", ModelID: "gemini-2.0-flash", PlanType: "free", InputCost: 0.00, OutputCost: 0.00, UnitType: "1M tokens", Currency: "USD", IncludedUnits: sql.NullInt64{Int64: 1500, Valid: true}},
 		{ProviderName: "google-gemini", ModelID: "gemini-1.5-pro", PlanType: "pay_per_go", InputCost: 1.25, OutputCost: 5.00, UnitType: "1M tokens", Currency: "USD"},
-		
+
 		// ElevenLabs
 		{ProviderName: "elevenlabs", ModelID: "eleven_turbo_v2_5", PlanType: "free", InputCost: 0.00, OutputCost: 0.00, UnitType: "per character", Currency: "USD", IncludedUnits: sql.NullInt64{Int64: 10000, Valid: true}},
 		{ProviderName: "elevenlabs", ModelID: "eleven_turbo_v2_5", PlanType: "starter", InputCost: 0.00003, OutputCost: 0.00003, UnitType: "per character", Currency: "USD"},
-		
+
 		// Deepgram
 		{ProviderName: "deepgram", ModelID: "nova-2", PlanType: "pay_per_go", InputCost: 0.0043, OutputCost: 0.0043, UnitType: "per second", Currency: "USD"},
-		
+
 		// Groq
 		{ProviderName: "groq", ModelID: "llama-3.3-70b", PlanType: "pay_per_go", InputCost: 0.59, OutputCost: 0.79, UnitType: "1M tokens", Currency: "USD"},
 		{ProviderName: "groq", ModelID: "mixtral-8x7b", PlanType: "pay_per_go", InputCost: 0.24, OutputCost: 0.24, UnitType: "1M tokens", Currency: "USD"},
-		
+
 		// Together.ai
 		{ProviderName: "together", ModelID: "meta-llama/Meta-Llama-3.1-70B", PlanType: "pay_per_go", InputCost: 0.60, OutputCost: 0.60, UnitType: "1M tokens", Currency: "USD"},
-		
+
 		// Cohere
 		{ProviderName: "cohere", ModelID: "command-r-plus", PlanType: "pay_per_go", InputCost: 2.50, OutputCost: 10.00, UnitType: "1M tokens", Currency: "USD"},
-		
+
 		// Mistral
 		{ProviderName: "mistral", ModelID: "mistral-large", PlanType: "pay_per_go", InputCost: 2.00, OutputCost: 6.00, UnitType: "1M tokens", Currency: "USD"},
 	}
