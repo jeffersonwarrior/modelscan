@@ -2,9 +2,41 @@
 
 **21 Production-Ready Go SDKs for LLM Providers** • Zero Dependencies • 100% Go Stdlib
 
-> **Version 1.0** by Jefferson Nunn and Claude Sonnet 4.5
+> **Version 0.3** - Auto-Discovering SDK Service
+> by Jefferson Nunn and Claude Sonnet 4.5
 
-A comprehensive Go toolkit providing production-ready SDKs for all major LLM providers. Write once, run anywhere - consistent APIs across 21 different providers with zero external dependencies.
+A comprehensive Go toolkit providing production-ready SDKs for all major LLM providers. **NEW in v0.3**: Auto-discovering service that generates SDKs on-demand for any AI model with intelligent provider onboarding.
+
+## 🆕 What's New in v0.3
+
+**Auto-Discovering SDK Service** - Add any AI model by identifier, and ModelScan will:
+- 🔍 Discover metadata from 4 sources (models.dev, GPUStack, ModelScope, HuggingFace)
+- 🤖 Use Claude Sonnet 4.5/GPT-4o to synthesize API structure
+- ⚡ Auto-generate working Go SDK code
+- ✅ Validate with TDD approach (3-loop retry)
+- 🔄 Hot-reload into routing layer
+- 🔑 Manage up to 100 API keys per provider with intelligent round-robin
+
+**Quick Start v0.3**:
+```bash
+# Build and initialize
+go build -o modelscan ./cmd/modelscan/
+./modelscan --init
+
+# Start service
+./modelscan
+
+# Add any model (e.g., DeepSeek Coder)
+curl -X POST http://localhost:8080/api/providers/add \
+  -d '{"identifier": "deepseek/deepseek-coder", "api_key": "sk-..."}'
+
+# Use it immediately
+curl http://localhost:8080/v1/chat/completions \
+  -H "Authorization: Bearer YOUR_KEY" \
+  -d '{"model": "deepseek-coder", "messages": [...]}'
+```
+
+📖 **Documentation**: [V0.3 Architecture](V0.3_ARCHITECTURE.md) | [Usage Guide](USAGE.md) | [Quick Reference](QUICKREF.md)
 
 ---
 

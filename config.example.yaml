@@ -1,0 +1,34 @@
+# ModelScan v0.3 Configuration Example
+# Minimal bootstrap configuration - everything else managed in database
+
+# Database settings
+database:
+  path: modelscan.db  # SQLite database path
+
+# Server settings
+server:
+  host: 127.0.0.1  # Bind address (use 0.0.0.0 for LAN access)
+  port: 8080       # HTTP port
+
+# API Keys (bootstrap only - can also manage via API)
+api_keys:
+  openai:
+    - sk-...  # Add your OpenAI API keys
+  anthropic:
+    - sk-ant-...  # Add your Anthropic API keys
+  # Add more providers as needed
+
+# Discovery agent settings
+discovery:
+  agent_model: claude-sonnet-4-5  # Agent model for provider discovery
+                                   # Options: claude-sonnet-4-5, gpt-4o, or custom
+  parallel_batch: 5                # Concurrent discovery tasks
+  cache_days: 7                    # Cache scraped data for N days
+
+# Environment variable overrides (highest priority):
+# MODELSCAN_DB_PATH=/custom/path/db.db
+# MODELSCAN_HOST=192.168.1.100
+# MODELSCAN_PORT=3000
+# MODELSCAN_AGENT_MODEL=gpt-4o
+# MODELSCAN_PARALLEL_BATCH=10
+# MODELSCAN_CACHE_DAYS=14
