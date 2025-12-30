@@ -2,7 +2,10 @@ package discovery
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
 	"strings"
 	"time"
 )
@@ -75,36 +78,194 @@ func (v *Validator) Validate(ctx context.Context, result *DiscoveryResult, apiKe
 
 // testConnectivity tests basic HTTP connectivity to the provider
 func (v *Validator) testConnectivity(ctx context.Context, baseURL string) error {
-	// TODO: Implement actual HTTP connectivity test
-	// For now, just check if URL is non-empty
 	if baseURL == "" {
 		return fmt.Errorf("base URL is empty")
 	}
-	return nil
+
+	// Create a HEAD request to check basic connectivity
+	req, err := http.NewRequestWithContext(ctx, "HEAD", baseURL, nil)
+	if err != nil {
+		return fmt.Errorf("failed to create request: %w", err)
+	}
+
+	client := &http.Client{
+		Timeout: 10 * time.Second,
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return fmt.Errorf("connectivity failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	// Accept any response (including 404, 401) - we just want to confirm the server responds
+	if resp.StatusCode >= 200 && resp.StatusCode < 600 {
+		return nil
+	}
+
+	return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 }
 
 // testAuth tests authentication with the provider
 func (v *Validator) testAuth(ctx context.Context, result *DiscoveryResult, apiKey string) error {
-	// TODO: Implement actual authentication test
-	// This should make a minimal authenticated request to verify the API key works
 	if apiKey == "" {
 		return fmt.Errorf("no API key provided")
 	}
-	return nil
+
+	// Try common endpoints for authentication testing
+	testPaths := []string{
+		"/v1/models",    // OpenAI-compatible
+		"/models",       // Alternative
+		"/v1/chat/completions", // Chat endpoint (might need body)
+	}
+
+	var lastErr error
+	for _, path := range testPaths {
+		url := strings.TrimRight(result.Provider.BaseURL, "/") + path
+
+		req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+		if err != nil {
+			lastErr = err
+			continue
+		}
+
+		// Set authentication header based on provider config
+		authHeader := result.Provider.AuthHeader
+		if authHeader == "" {
+			authHeader = "Authorization"
+		}
+
+		if strings.ToLower(result.Provider.AuthMethod) == "bearer" {
+			req.Header.Set(authHeader, "Bearer "+apiKey)
+		} else {
+			req.Header.Set(authHeader, apiKey)
+		}
+
+		client := &http.Client{Timeout: 10 * time.Second}
+		resp, err := client.Do(req)
+		if err != nil {
+			lastErr = err
+			continue
+		}
+		defer resp.Body.Close()
+
+		// Success if we get a valid response (not 401/403)
+		if resp.StatusCode != http.StatusUnauthorized && resp.StatusCode != http.StatusForbidden {
+			return nil
+		}
+
+		lastErr = fmt.Errorf("authentication failed with status %d", resp.StatusCode)
+	}
+
+	if lastErr != nil {
+		return fmt.Errorf("auth test failed: %w", lastErr)
+	}
+
+	return fmt.Errorf("no valid endpoints found for auth testing")
 }
 
 // testEndpoint tests a specific endpoint
 func (v *Validator) testEndpoint(ctx context.Context, result *DiscoveryResult, apiKey string, endpoint EndpointInfo) error {
-	// TODO: Implement actual endpoint testing
-	// This should make a minimal request to the endpoint and verify it responds correctly
-	return nil
+	url := strings.TrimRight(result.Provider.BaseURL, "/") + endpoint.Path
+
+	method := endpoint.Method
+	if method == "" {
+		method = "GET"
+	}
+
+	req, err := http.NewRequestWithContext(ctx, method, url, nil)
+	if err != nil {
+		return fmt.Errorf("failed to create request: %w", err)
+	}
+
+	// Set authentication
+	authHeader := result.Provider.AuthHeader
+	if authHeader == "" {
+		authHeader = "Authorization"
+	}
+
+	if strings.ToLower(result.Provider.AuthMethod) == "bearer" {
+		req.Header.Set(authHeader, "Bearer "+apiKey)
+	} else {
+		req.Header.Set(authHeader, apiKey)
+	}
+
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return fmt.Errorf("request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	// Accept any non-500 error as success (endpoint exists)
+	if resp.StatusCode < 500 {
+		return nil
+	}
+
+	return fmt.Errorf("endpoint returned status %d", resp.StatusCode)
 }
 
 // testListModels tests model listing functionality
 func (v *Validator) testListModels(ctx context.Context, result *DiscoveryResult, apiKey string) ([]string, error) {
-	// TODO: Implement actual model listing test
-	// This should attempt to list available models from the provider
-	return []string{}, nil
+	// Try common model listing endpoints
+	testPaths := []string{
+		"/v1/models",
+		"/models",
+	}
+
+	for _, path := range testPaths {
+		url := strings.TrimRight(result.Provider.BaseURL, "/") + path
+
+		req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+		if err != nil {
+			continue
+		}
+
+		// Set authentication
+		authHeader := result.Provider.AuthHeader
+		if authHeader == "" {
+			authHeader = "Authorization"
+		}
+
+		if strings.ToLower(result.Provider.AuthMethod) == "bearer" {
+			req.Header.Set(authHeader, "Bearer "+apiKey)
+		} else {
+			req.Header.Set(authHeader, apiKey)
+		}
+
+		client := &http.Client{Timeout: 10 * time.Second}
+		resp, err := client.Do(req)
+		if err != nil {
+			continue
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			continue
+		}
+
+		// Try to parse OpenAI-compatible response
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			continue
+		}
+
+		var modelsResp struct {
+			Data []struct {
+				ID string `json:"id"`
+			} `json:"data"`
+		}
+
+		if err := json.Unmarshal(body, &modelsResp); err == nil && len(modelsResp.Data) > 0 {
+			models := make([]string, len(modelsResp.Data))
+			for i, m := range modelsResp.Data {
+				models[i] = m.ID
+			}
+			return models, nil
+		}
+	}
+
+	return nil, fmt.Errorf("model listing not supported or failed")
 }
 
 // ValidateWithRetry validates with automatic retries on failure

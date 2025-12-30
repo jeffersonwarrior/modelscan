@@ -148,12 +148,39 @@ func (s *GPUStackSource) Name() string {
 }
 
 func (s *GPUStackSource) Fetch(ctx context.Context, identifier string) (SourceResult, error) {
-	// TODO: Implement YAML parsing for GPUStack catalog
-	// For now, return empty result
-	return SourceResult{
+	req, err := http.NewRequestWithContext(ctx, "GET", s.catalogURL, nil)
+	if err != nil {
+		return SourceResult{}, err
+	}
+
+	resp, err := s.httpClient.Do(req)
+	if err != nil {
+		return SourceResult{}, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return SourceResult{}, fmt.Errorf("GPUStack returned %d", resp.StatusCode)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return SourceResult{}, err
+	}
+
+	// Store raw YAML as string in RawData for LLM synthesis
+	// Note: We can't parse YAML without external dependencies,
+	// but the LLM can extract information from the raw text
+	result := SourceResult{
 		SourceName: "GPUStack",
 		ProviderID: extractProvider(identifier),
-	}, nil
+		RawData: map[string]interface{}{
+			"yaml_catalog": string(body),
+			"note":         "Raw YAML catalog - requires LLM synthesis to extract structured data",
+		},
+	}
+
+	return result, nil
 }
 
 // ModelScopeSource scrapes ModelScope
@@ -177,12 +204,53 @@ func (s *ModelScopeSource) Name() string {
 }
 
 func (s *ModelScopeSource) Fetch(ctx context.Context, identifier string) (SourceResult, error) {
-	// TODO: Implement ModelScope API fetching
-	// For now, return empty result
-	return SourceResult{
+	// ModelScope uses format: namespace/model-name
+	// API endpoint: /api/v1/models/{namespace}/{model-name}
+	providerID := extractProvider(identifier)
+
+	url := fmt.Sprintf("%s/models/%s", s.apiURL, identifier)
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	if err != nil {
+		return SourceResult{}, err
+	}
+
+	req.Header.Set("Accept", "application/json")
+
+	resp, err := s.httpClient.Do(req)
+	if err != nil {
+		return SourceResult{}, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return SourceResult{}, fmt.Errorf("ModelScope returned %d", resp.StatusCode)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return SourceResult{}, err
+	}
+
+	var data map[string]interface{}
+	if err := json.Unmarshal(body, &data); err != nil {
+		return SourceResult{}, err
+	}
+
+	result := SourceResult{
 		SourceName: "ModelScope",
-		ProviderID: extractProvider(identifier),
-	}, nil
+		ProviderID: providerID,
+		RawData:    data,
+	}
+
+	// Extract basic info if available
+	if name, ok := data["name"].(string); ok {
+		result.ProviderName = name
+	}
+	if desc, ok := data["description"].(string); ok {
+		result.RawData["description"] = desc
+	}
+
+	return result, nil
 }
 
 // HuggingFaceSource scrapes HuggingFace
@@ -263,7 +331,18 @@ func extractProvider(identifier string) string {
 // extractHFRepoID extracts repo ID from HuggingFace URL
 // e.g., "https://huggingface.co/openai/gpt-4" -> "openai/gpt-4"
 func extractHFRepoID(url string) string {
-	// Simple extraction - find last two path segments
-	// This is a placeholder - would need more robust parsing
+	// Remove protocol and domain
+	const prefix = "https://huggingface.co/"
+	if len(url) > len(prefix) && url[:len(prefix)] == prefix {
+		return url[len(prefix):]
+	}
+
+	// Try http as well
+	const httpPrefix = "http://huggingface.co/"
+	if len(url) > len(httpPrefix) && url[:len(httpPrefix)] == httpPrefix {
+		return url[len(httpPrefix):]
+	}
+
+	// If no recognized prefix, return as-is (might already be repo ID)
 	return url
 }
