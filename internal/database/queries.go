@@ -396,7 +396,7 @@ func (db *DB) GetUsageStats(modelID string, since time.Time) (map[string]interfa
 		totalTokensOut     sql.NullInt64
 		totalCost          sql.NullFloat64
 		avgLatencyMS       sql.NullFloat64
-		successfulRequests int
+		successfulRequests sql.NullInt64
 	)
 
 	err := db.conn.QueryRow(query, modelID, since).Scan(
@@ -407,14 +407,19 @@ func (db *DB) GetUsageStats(modelID string, since time.Time) (map[string]interfa
 		return nil, err
 	}
 
+	successRate := 0.0
+	if totalRequests > 0 {
+		successRate = float64(successfulRequests.Int64) / float64(totalRequests)
+	}
+
 	stats := map[string]interface{}{
 		"total_requests":      totalRequests,
 		"total_tokens_in":     int(totalTokensIn.Int64),
 		"total_tokens_out":    int(totalTokensOut.Int64),
 		"total_cost":          totalCost.Float64,
 		"avg_latency_ms":      avgLatencyMS.Float64,
-		"successful_requests": successfulRequests,
-		"success_rate":        float64(successfulRequests) / float64(totalRequests),
+		"successful_requests": int(successfulRequests.Int64),
+		"success_rate":        successRate,
 	}
 
 	return stats, nil

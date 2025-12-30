@@ -1,5 +1,6 @@
 # Binaries
 modelscan
+modelscan-server
 pv
 validator
 *.exe
@@ -98,6 +99,11 @@ build/
 bin/
 vendor/
 !vendor/modules.txt
+generated/
+
+# Internal module files (should not exist in single-module architecture)
+internal/*/go.mod
+internal/*/go.sum
 
 # OS specific
 Thumbs.db

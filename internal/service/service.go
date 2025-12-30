@@ -7,18 +7,25 @@ import (
 	"net/http"
 	"sync"
 	"time"
+
+	"github.com/jeffersonwarrior/modelscan/internal/admin"
+	"github.com/jeffersonwarrior/modelscan/internal/database"
+	"github.com/jeffersonwarrior/modelscan/internal/discovery"
+	"github.com/jeffersonwarrior/modelscan/internal/generator"
+	"github.com/jeffersonwarrior/modelscan/internal/keymanager"
+	"github.com/jeffersonwarrior/modelscan/routing"
 )
 
 // Service orchestrates all modelscan components
 type Service struct {
 	config     *Config
-	db         Database
-	discovery  DiscoveryAgent
-	generator  Generator
-	keyManager KeyManager
-	adminAPI   AdminAPI
+	db         *database.DB
+	discovery  *discovery.Agent
+	generator  *generator.Generator
+	keyManager *keymanager.KeyManager
+	router     routing.Router
+	adminAPI   *admin.API
 	httpServer *http.Server
-	router     Router
 
 	mu          sync.RWMutex
 	restarting  bool
@@ -33,80 +40,8 @@ type Config struct {
 	AgentModel    string
 	ParallelBatch int
 	CacheDays     int
-}
-
-// Database interface for data operations
-type Database interface {
-	Close() error
-	ListProviders() ([]*Provider, error)
-	ListActiveAPIKeys(providerID string) ([]*APIKey, error)
-}
-
-// DiscoveryAgent interface for provider discovery
-type DiscoveryAgent interface {
-	Close() error
-}
-
-// Generator interface for SDK generation
-type Generator interface {
-	GenerateBatch(requests []GenerateRequest) []*GenerateResult
-}
-
-// KeyManager interface for key management
-type KeyManager interface {
-	Close() error
-}
-
-// AdminAPI interface for admin operations
-type AdminAPI interface {
-	http.Handler
-}
-
-// Router interface for request routing
-type Router interface {
-	Route(ctx context.Context, req Request) (*Response, error)
-	Close() error
-}
-
-// Provider represents a provider
-type Provider struct {
-	ID   string
-	Name string
-}
-
-// APIKey represents an API key
-type APIKey struct {
-	ID         int
-	ProviderID string
-}
-
-// GenerateRequest represents SDK generation request
-type GenerateRequest struct {
-	ProviderID string
-}
-
-// GenerateResult represents SDK generation result
-type GenerateResult struct {
-	Success bool
-	Error   error
-}
-
-// Request represents a routing request
-type Request struct {
-	Provider string
-	Model    string
-	Messages []Message
-}
-
-// Message represents a chat message
-type Message struct {
-	Role    string
-	Content string
-}
-
-// Response represents a routing response
-type Response struct {
-	Content string
+	OutputDir     string
+	RoutingMode   string
 }
 
 // NewService creates a new service instance
@@ -116,168 +51,184 @@ func NewService(cfg *Config) *Service {
 	}
 }
 
-// Initialize initializes all service components
+// Initialize initializes all components
 func (s *Service) Initialize() error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	if s.initialized {
-		return nil
+		return fmt.Errorf("service already initialized")
 	}
 
 	log.Println("Initializing modelscan service...")
 
-	// TODO: Initialize database
-	// s.db = database.Open(s.config.DatabasePath)
+	// Initialize database
+	db, err := database.Open(s.config.DatabasePath)
+	if err != nil {
+		return fmt.Errorf("database init failed: %w", err)
+	}
+	s.db = db
+	log.Println("  ✓ Database initialized")
 
-	// TODO: Initialize discovery agent
-	// s.discovery = discovery.NewAgent(...)
+	// Initialize discovery agent
+	agent, err := discovery.NewAgent(discovery.Config{
+		Model:         s.config.AgentModel,
+		ParallelBatch: s.config.ParallelBatch,
+		CacheDays:     s.config.CacheDays,
+		MaxRetries:    3,
+	})
+	if err != nil {
+		return fmt.Errorf("discovery agent init failed: %w", err)
+	}
+	s.discovery = agent
+	log.Println("  ✓ Discovery agent initialized")
 
-	// TODO: Initialize generator
-	// s.generator = generator.NewGenerator(...)
+	// Initialize SDK generator
+	gen, err := generator.NewGenerator(generator.Config{
+		OutputDir: s.config.OutputDir,
+	})
+	if err != nil {
+		return fmt.Errorf("generator init failed: %w", err)
+	}
+	s.generator = gen
+	log.Println("  ✓ SDK generator initialized")
 
-	// TODO: Initialize key manager
-	// s.keyManager = keymanager.NewKeyManager(...)
+	// Initialize key manager
+	dbAdapter := &keyManagerDatabaseAdapter{db: s.db}
+	keyMgr := keymanager.NewKeyManager(dbAdapter, keymanager.Config{
+		CacheTTL:        5 * time.Minute,
+		DegradeDuration: 15 * time.Minute,
+	})
+	s.keyManager = keyMgr
+	log.Println("  ✓ Key manager initialized")
 
-	// TODO: Initialize admin API
-	// s.adminAPI = admin.NewAPI(...)
+	// Initialize router
+	routerCfg := routing.DefaultConfig()
+	if s.config.RoutingMode != "" {
+		routerCfg.Mode = routing.RoutingMode(s.config.RoutingMode)
+	}
+	router, err := routing.NewRouter(routerCfg)
+	if err != nil {
+		return fmt.Errorf("router init failed: %w", err)
+	}
+	s.router = router
+	log.Println("  ✓ Router initialized")
 
-	// TODO: Initialize router
-	// s.router = routing.NewRouter(...)
+	// Initialize admin API with adapters
+	s.adminAPI = admin.NewAPI(
+		admin.Config{Host: s.config.ServerHost, Port: s.config.ServerPort},
+		admin.NewDatabaseAdapter(s.db),
+		admin.NewDiscoveryAdapter(s.discovery),
+		admin.NewGeneratorAdapter(s.generator),
+		admin.NewKeyManagerAdapter(s.keyManager),
+	)
+	log.Println("  ✓ Admin API initialized")
 
 	s.initialized = true
-	log.Println("Service initialized successfully")
+	log.Println("Service initialization complete")
+	return nil
+}
+
+// Bootstrap loads existing data from database
+func (s *Service) Bootstrap() error {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	if !s.initialized {
+		return fmt.Errorf("service not initialized")
+	}
+
+	log.Println("Bootstrapping from database...")
+
+	providers, err := s.db.ListProviders()
+	if err != nil {
+		return fmt.Errorf("failed to list providers: %w", err)
+	}
+
+	log.Printf("Found %d existing providers", len(providers))
+	for _, p := range providers {
+		log.Printf("  - %s (%s)", p.Name, p.Status)
+	}
 
 	return nil
 }
 
-// Start starts the service
+// Start starts the HTTP server
 func (s *Service) Start() error {
-	if err := s.Initialize(); err != nil {
-		return fmt.Errorf("initialization failed: %w", err)
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if !s.initialized {
+		return fmt.Errorf("service not initialized - call Initialize() first")
 	}
 
-	// Start HTTP server
 	addr := fmt.Sprintf("%s:%d", s.config.ServerHost, s.config.ServerPort)
 	s.httpServer = &http.Server{
 		Addr:    addr,
 		Handler: s.adminAPI,
 	}
 
-	log.Printf("Starting server on %s...", addr)
+	go func() {
+		log.Printf("✓ HTTP server listening on %s", addr)
+		log.Println("")
+		log.Println("Admin API endpoints:")
+		log.Printf("  - GET  http://%s/health", addr)
+		log.Printf("  - GET  http://%s/api/providers", addr)
+		log.Printf("  - POST http://%s/api/providers/add", addr)
+		log.Printf("  - GET  http://%s/api/keys?provider=<id>", addr)
+		log.Printf("  - POST http://%s/api/keys/add", addr)
+		log.Printf("  - GET  http://%s/api/sdks", addr)
+		log.Printf("  - GET  http://%s/api/stats?model=<id>", addr)
+		log.Println("")
 
-	if err := s.httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-		return fmt.Errorf("server failed: %w", err)
-	}
+		if err := s.httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Printf("HTTP server error: %v", err)
+		}
+	}()
 
 	return nil
 }
 
-// Stop gracefully stops the service
+// Stop gracefully shuts down the service
 func (s *Service) Stop() error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if !s.initialized {
+		return nil
+	}
+
 	log.Println("Stopping service...")
 
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
-
-	// Stop HTTP server
+	// Shutdown HTTP server with timeout
 	if s.httpServer != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
+
 		if err := s.httpServer.Shutdown(ctx); err != nil {
-			log.Printf("Server shutdown error: %v", err)
+			log.Printf("HTTP server shutdown error: %v", err)
 		}
 	}
 
-	// Close components
+	// Close all components
 	if s.router != nil {
 		s.router.Close()
 	}
+
 	if s.keyManager != nil {
 		s.keyManager.Close()
 	}
+
 	if s.discovery != nil {
 		s.discovery.Close()
 	}
+
 	if s.db != nil {
 		s.db.Close()
 	}
 
-	log.Println("Service stopped")
-	return nil
-}
-
-// Restart performs a graceful restart (brief downtime with HTTP 503)
-func (s *Service) Restart() error {
-	s.mu.Lock()
-	if s.restarting {
-		s.mu.Unlock()
-		return fmt.Errorf("restart already in progress")
-	}
-	s.restarting = true
-	s.mu.Unlock()
-
-	defer func() {
-		s.mu.Lock()
-		s.restarting = false
-		s.mu.Unlock()
-	}()
-
-	log.Println("Restarting service...")
-
-	// Stop current instance
-	if err := s.Stop(); err != nil {
-		return fmt.Errorf("stop failed: %w", err)
-	}
-
-	// Brief pause
-	time.Sleep(1 * time.Second)
-
-	// Reinitialize
 	s.initialized = false
-	if err := s.Initialize(); err != nil {
-		return fmt.Errorf("reinitialization failed: %w", err)
-	}
-
-	// Start again
-	go func() {
-		if err := s.Start(); err != nil {
-			log.Printf("Restart failed: %v", err)
-		}
-	}()
-
-	log.Println("Service restarted")
-	return nil
-}
-
-// IsRestarting returns whether service is currently restarting
-func (s *Service) IsRestarting() bool {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-	return s.restarting
-}
-
-// Bootstrap initializes service from existing configuration
-func (s *Service) Bootstrap() error {
-	log.Println("Bootstrapping service...")
-
-	// Load providers from database
-	providers, err := s.db.ListProviders()
-	if err != nil {
-		return fmt.Errorf("failed to load providers: %w", err)
-	}
-
-	log.Printf("Found %d existing providers", len(providers))
-
-	// Load API keys for each provider
-	for _, provider := range providers {
-		keys, err := s.db.ListActiveAPIKeys(provider.ID)
-		if err != nil {
-			log.Printf("Warning: failed to load keys for %s: %v", provider.ID, err)
-			continue
-		}
-		log.Printf("  - %s: %d keys", provider.Name, len(keys))
-	}
-
-	log.Println("Bootstrap complete")
+	log.Println("✓ Service stopped")
 	return nil
 }
 
@@ -286,10 +237,129 @@ func (s *Service) Health() map[string]interface{} {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
+	status := "ok"
+	if s.restarting {
+		status = "restarting"
+	} else if !s.initialized {
+		status = "not_initialized"
+	}
+
 	return map[string]interface{}{
-		"status":      "ok",
+		"status":      status,
 		"initialized": s.initialized,
 		"restarting":  s.restarting,
 		"time":        time.Now(),
 	}
+}
+
+// Restart performs a graceful restart (for SDK reloading)
+func (s *Service) Restart() error {
+	s.mu.Lock()
+	s.restarting = true
+	s.mu.Unlock()
+
+	log.Println("Initiating service restart...")
+
+	// Stop current service
+	if err := s.Stop(); err != nil {
+		return fmt.Errorf("stop failed: %w", err)
+	}
+
+	// Brief pause
+	time.Sleep(1 * time.Second)
+
+	// Reinitialize
+	if err := s.Initialize(); err != nil {
+		return fmt.Errorf("initialization failed: %w", err)
+	}
+
+	// Bootstrap
+	if err := s.Bootstrap(); err != nil {
+		log.Printf("Warning: bootstrap failed: %v", err)
+	}
+
+	// Restart HTTP server
+	if err := s.Start(); err != nil {
+		return fmt.Errorf("start failed: %w", err)
+	}
+
+	s.mu.Lock()
+	s.restarting = false
+	s.mu.Unlock()
+
+	log.Println("✓ Service restart complete")
+	return nil
+}
+
+// keyManagerDatabaseAdapter adapts database.DB for keymanager.Database interface
+type keyManagerDatabaseAdapter struct {
+	db *database.DB
+}
+
+func (a *keyManagerDatabaseAdapter) ListActiveAPIKeys(providerID string) ([]*keymanager.APIKey, error) {
+	keys, err := a.db.ListActiveAPIKeys(providerID)
+	if err != nil {
+		return nil, err
+	}
+
+	result := make([]*keymanager.APIKey, len(keys))
+	for i, k := range keys {
+		result[i] = &keymanager.APIKey{
+			ID:            k.ID,
+			ProviderID:    k.ProviderID,
+			KeyHash:       k.KeyHash,
+			KeyPrefix:     k.KeyPrefix,
+			Tier:          k.Tier,
+			RPMLimit:      k.RPMLimit,
+			TPMLimit:      k.TPMLimit,
+			DailyLimit:    k.DailyLimit,
+			ResetInterval: k.ResetInterval,
+			LastReset:     k.LastReset,
+			RequestsCount: k.RequestsCount,
+			TokensCount:   k.TokensCount,
+			Active:        k.Active,
+			Degraded:      k.Degraded,
+			DegradedUntil: k.DegradedUntil,
+			CreatedAt:     k.CreatedAt,
+		}
+	}
+	return result, nil
+}
+
+func (a *keyManagerDatabaseAdapter) IncrementKeyUsage(keyID int, tokens int) error {
+	return a.db.IncrementKeyUsage(keyID, tokens)
+}
+
+func (a *keyManagerDatabaseAdapter) MarkKeyDegraded(keyID int, until time.Time) error {
+	return a.db.MarkKeyDegraded(keyID, until)
+}
+
+func (a *keyManagerDatabaseAdapter) ResetKeyLimits(keyID int) error {
+	return a.db.ResetKeyLimits(keyID)
+}
+
+func (a *keyManagerDatabaseAdapter) GetAPIKey(id int) (*keymanager.APIKey, error) {
+	key, err := a.db.GetAPIKey(id)
+	if err != nil || key == nil {
+		return nil, err
+	}
+
+	return &keymanager.APIKey{
+		ID:            key.ID,
+		ProviderID:    key.ProviderID,
+		KeyHash:       key.KeyHash,
+		KeyPrefix:     key.KeyPrefix,
+		Tier:          key.Tier,
+		RPMLimit:      key.RPMLimit,
+		TPMLimit:      key.TPMLimit,
+		DailyLimit:    key.DailyLimit,
+		ResetInterval: key.ResetInterval,
+		LastReset:     key.LastReset,
+		RequestsCount: key.RequestsCount,
+		TokensCount:   key.TokensCount,
+		Active:        key.Active,
+		Degraded:      key.Degraded,
+		DegradedUntil: key.DegradedUntil,
+		CreatedAt:     key.CreatedAt,
+	}, nil
 }
