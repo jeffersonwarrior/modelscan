@@ -3,20 +3,34 @@ package routing
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
+)
+
+const (
+	healthCheckInterval = 30 * time.Second
+	maxRestartAttempts  = 3
+	restartBackoff      = 2 * time.Second
 )
 
 // PlanoEmbeddedRouter manages an embedded Plano Docker container
 type PlanoEmbeddedRouter struct {
-	config      *EmbeddedConfig
-	containerID string
-	proxyRouter *PlanoProxyRouter
-	fallback    Router
-	isRunning   bool
+	config         *EmbeddedConfig
+	containerID    string
+	proxyRouter    *PlanoProxyRouter
+	fallback       Router
+	isRunning      bool
+	mu             sync.RWMutex
+	stopChan       chan struct{}
+	restartCount   int
+	lastHealthy    time.Time
+	isHealthy      bool
+	useFallbackNow bool // Set to true when max restarts exceeded
 }
 
 // NewPlanoEmbeddedRouter creates a new embedded Plano router
@@ -42,7 +56,10 @@ func NewPlanoEmbeddedRouter(config *EmbeddedConfig) (*PlanoEmbeddedRouter, error
 	}
 
 	return &PlanoEmbeddedRouter{
-		config: config,
+		config:      config,
+		stopChan:    make(chan struct{}),
+		isHealthy:   false,
+		lastHealthy: time.Now(),
 	}, nil
 }
 
@@ -126,16 +143,38 @@ func (r *PlanoEmbeddedRouter) Start() error {
 
 	r.proxyRouter = proxyRouter
 
+	// Mark as healthy and start health monitoring
+	r.mu.Lock()
+	r.isHealthy = true
+	r.lastHealthy = time.Now()
+	r.mu.Unlock()
+
+	// Start health monitoring goroutine
+	go r.healthMonitor()
+
 	return nil
 }
 
 // Route routes through the embedded Plano container
 func (r *PlanoEmbeddedRouter) Route(ctx context.Context, req Request) (*Response, error) {
-	if !r.isRunning || r.proxyRouter == nil {
+	r.mu.RLock()
+	useFallback := r.useFallbackNow || !r.isRunning || !r.isHealthy
+	r.mu.RUnlock()
+
+	// Use fallback if container is unhealthy or max restarts exceeded
+	if useFallback {
 		if r.fallback != nil {
 			return r.fallback.Route(ctx, req)
 		}
-		return nil, fmt.Errorf("embedded plano is not running")
+		return nil, fmt.Errorf("embedded plano is unhealthy and no fallback configured")
+	}
+
+	// Try routing through proxy
+	if r.proxyRouter == nil {
+		if r.fallback != nil {
+			return r.fallback.Route(ctx, req)
+		}
+		return nil, fmt.Errorf("embedded plano proxy not initialized")
 	}
 
 	return r.proxyRouter.Route(ctx, req)
@@ -167,9 +206,15 @@ func (r *PlanoEmbeddedRouter) Stop() error {
 
 // Close stops the container and closes the proxy router
 func (r *PlanoEmbeddedRouter) Close() error {
+	// Stop health monitoring
+	close(r.stopChan)
+
+	// Close proxy router
 	if r.proxyRouter != nil {
 		_ = r.proxyRouter.Close()
 	}
+
+	// Stop container
 	return r.Stop()
 }
 
@@ -247,4 +292,124 @@ func (r *PlanoEmbeddedRouter) IsRunning() bool {
 // GetContainerID returns the Docker container ID
 func (r *PlanoEmbeddedRouter) GetContainerID() string {
 	return r.containerID
+}
+
+// healthMonitor continuously monitors container health and triggers restarts
+func (r *PlanoEmbeddedRouter) healthMonitor() {
+	ticker := time.NewTicker(healthCheckInterval)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-r.stopChan:
+			return
+		case <-ticker.C:
+			if err := r.performHealthCheck(); err != nil {
+				log.Printf("Health check failed: %v", err)
+				r.handleUnhealthy()
+			}
+		}
+	}
+}
+
+// performHealthCheck checks if the container is healthy
+func (r *PlanoEmbeddedRouter) performHealthCheck() error {
+	// Check if container is still running
+	if r.containerID == "" {
+		return fmt.Errorf("no container ID")
+	}
+
+	cmd := exec.Command("docker", "inspect", "--format", "{{.State.Running}}", r.containerID)
+	output, err := cmd.Output()
+	if err != nil {
+		return fmt.Errorf("failed to inspect container: %w", err)
+	}
+
+	if strings.TrimSpace(string(output)) != "true" {
+		return fmt.Errorf("container is not running")
+	}
+
+	// Try a simple health check through the proxy
+	if r.proxyRouter != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		testReq := Request{
+			Model: "none",
+			Messages: []Message{
+				{Role: "user", Content: "health"},
+			},
+		}
+
+		_, err = r.proxyRouter.Route(ctx, testReq)
+		if err != nil {
+			return fmt.Errorf("proxy health check failed: %w", err)
+		}
+	}
+
+	// Update health status
+	r.mu.Lock()
+	r.isHealthy = true
+	r.lastHealthy = time.Now()
+	r.mu.Unlock()
+
+	return nil
+}
+
+// handleUnhealthy handles container becoming unhealthy
+func (r *PlanoEmbeddedRouter) handleUnhealthy() {
+	r.mu.Lock()
+	r.isHealthy = false
+	currentRestarts := r.restartCount
+	r.mu.Unlock()
+
+	// Check if max restarts exceeded
+	if currentRestarts >= maxRestartAttempts {
+		r.mu.Lock()
+		r.useFallbackNow = true
+		r.mu.Unlock()
+		log.Printf("Max restart attempts (%d) exceeded, switching to fallback mode permanently", maxRestartAttempts)
+		return
+	}
+
+	// Attempt restart
+	log.Printf("Container unhealthy, attempting restart %d/%d", currentRestarts+1, maxRestartAttempts)
+
+	r.mu.Lock()
+	r.restartCount++
+	r.mu.Unlock()
+
+	// Wait before restarting
+	time.Sleep(restartBackoff * time.Duration(currentRestarts+1))
+
+	// Stop container
+	_ = r.Stop()
+
+	// Try to restart
+	if err := r.Start(); err != nil {
+		log.Printf("Restart failed: %v", err)
+		r.mu.Lock()
+		r.isHealthy = false
+		r.mu.Unlock()
+	} else {
+		log.Printf("Container restarted successfully")
+		r.mu.Lock()
+		r.isHealthy = true
+		r.lastHealthy = time.Now()
+		r.mu.Unlock()
+	}
+}
+
+// IsHealthy returns whether the embedded container is healthy
+func (r *PlanoEmbeddedRouter) IsHealthy() bool {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	return r.isHealthy
+}
+
+// GetRestartCount returns the number of times the container has been restarted
+func (r *PlanoEmbeddedRouter) GetRestartCount() int {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	return r.restartCount
 }

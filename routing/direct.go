@@ -40,6 +40,16 @@ func (r *DirectRouter) RegisterClient(provider string, client Client) {
 	r.clients[provider] = client
 }
 
+// RegisterClientWithTooling registers an SDK client wrapped with tooling middleware
+func (r *DirectRouter) RegisterClientWithTooling(provider string, client Client) error {
+	toolingClient, err := NewToolingClient(provider, client)
+	if err != nil {
+		return err
+	}
+	r.clients[provider] = toolingClient
+	return nil
+}
+
 // SetFallback sets a fallback router
 func (r *DirectRouter) SetFallback(fallback Router) {
 	r.fallback = fallback

@@ -10,6 +10,13 @@ import (
 	"time"
 )
 
+const (
+	maxRetries      = 3
+	initialBackoff  = 500 * time.Millisecond
+	maxBackoff      = 5 * time.Second
+	backoffMultiple = 2
+)
+
 // PlanoProxyRouter routes requests through an external Plano proxy
 type PlanoProxyRouter struct {
 	config     *ProxyConfig
@@ -27,10 +34,12 @@ func NewPlanoProxyRouter(config *ProxyConfig) (*PlanoProxyRouter, error) {
 		return nil, fmt.Errorf("base URL is required")
 	}
 
-	timeout := 30 * time.Second
-	if config.Timeout > 0 {
-		timeout = time.Duration(config.Timeout) * time.Second
+	// Set default timeout if not specified
+	if config.Timeout == 0 {
+		config.Timeout = 30
 	}
+
+	timeout := time.Duration(config.Timeout) * time.Second
 
 	return &PlanoProxyRouter{
 		config: config,
@@ -45,7 +54,7 @@ func (r *PlanoProxyRouter) SetFallback(fallback Router) {
 	r.fallback = fallback
 }
 
-// Route sends the request through the Plano proxy
+// Route sends the request through the Plano proxy with retry logic
 func (r *PlanoProxyRouter) Route(ctx context.Context, req Request) (*Response, error) {
 	start := time.Now()
 
@@ -61,63 +70,96 @@ func (r *PlanoProxyRouter) Route(ctx context.Context, req Request) (*Response, e
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	// Create HTTP request
-	url := fmt.Sprintf("%s/v1/chat/completions", r.config.BaseURL)
-	httpReq, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewReader(reqBody))
-	if err != nil {
-		if r.fallback != nil {
-			return r.fallback.Route(ctx, req)
+	// Retry loop with exponential backoff
+	backoff := initialBackoff
+	var lastErr error
+
+	for attempt := 0; attempt <= maxRetries; attempt++ {
+		// Create HTTP request for this attempt
+		url := fmt.Sprintf("%s/v1/chat/completions", r.config.BaseURL)
+		httpReq, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewReader(reqBody))
+		if err != nil {
+			lastErr = fmt.Errorf("failed to create request: %w", err)
+			break
 		}
-		return nil, fmt.Errorf("failed to create request: %w", err)
-	}
 
-	httpReq.Header.Set("Content-Type", "application/json")
-	if r.config.APIKey != "" {
-		httpReq.Header.Set("Authorization", "Bearer "+r.config.APIKey)
-	}
-
-	// Send request
-	httpResp, err := r.httpClient.Do(httpReq)
-	if err != nil {
-		if r.fallback != nil {
-			return r.fallback.Route(ctx, req)
+		httpReq.Header.Set("Content-Type", "application/json")
+		if r.config.APIKey != "" {
+			httpReq.Header.Set("Authorization", "Bearer "+r.config.APIKey)
 		}
-		return nil, fmt.Errorf("failed to send request: %w", err)
-	}
-	defer httpResp.Body.Close()
 
-	// Read response
-	respBody, err := io.ReadAll(httpResp.Body)
-	if err != nil {
-		if r.fallback != nil {
-			return r.fallback.Route(ctx, req)
+		// Send request
+		httpResp, err := r.httpClient.Do(httpReq)
+		if err != nil {
+			lastErr = fmt.Errorf("failed to send request: %w", err)
+			if attempt < maxRetries {
+				time.Sleep(backoff)
+				backoff *= backoffMultiple
+				if backoff > maxBackoff {
+					backoff = maxBackoff
+				}
+				continue
+			}
+			break
 		}
-		return nil, fmt.Errorf("failed to read response: %w", err)
-	}
 
-	// Check status code
-	if httpResp.StatusCode != http.StatusOK {
-		if r.fallback != nil {
-			return r.fallback.Route(ctx, req)
+		// Read response
+		respBody, err := io.ReadAll(httpResp.Body)
+		httpResp.Body.Close()
+		if err != nil {
+			lastErr = fmt.Errorf("failed to read response: %w", err)
+			if attempt < maxRetries {
+				time.Sleep(backoff)
+				backoff *= backoffMultiple
+				if backoff > maxBackoff {
+					backoff = maxBackoff
+				}
+				continue
+			}
+			break
 		}
-		return nil, fmt.Errorf("plano returned status %d: %s", httpResp.StatusCode, string(respBody))
-	}
 
-	// Parse response
-	var planoResp planoResponse
-	if err := json.Unmarshal(respBody, &planoResp); err != nil {
-		if r.fallback != nil {
-			return r.fallback.Route(ctx, req)
+		// Check status code
+		if httpResp.StatusCode >= 500 {
+			// Server error - retry
+			lastErr = fmt.Errorf("plano returned status %d: %s", httpResp.StatusCode, string(respBody))
+			if attempt < maxRetries {
+				time.Sleep(backoff)
+				backoff *= backoffMultiple
+				if backoff > maxBackoff {
+					backoff = maxBackoff
+				}
+				continue
+			}
+			break
 		}
-		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
+
+		if httpResp.StatusCode != http.StatusOK {
+			// Client error - don't retry
+			lastErr = fmt.Errorf("plano returned status %d: %s", httpResp.StatusCode, string(respBody))
+			break
+		}
+
+		// Parse response
+		var planoResp planoResponse
+		if err := json.Unmarshal(respBody, &planoResp); err != nil {
+			lastErr = fmt.Errorf("failed to unmarshal response: %w", err)
+			break
+		}
+
+		// Success - convert and return
+		resp := r.convertFromPlanoResponse(planoResp)
+		resp.Latency = time.Since(start)
+		resp.Provider = "plano"
+		return resp, nil
 	}
 
-	// Convert to standard response
-	resp := r.convertFromPlanoResponse(planoResp)
-	resp.Latency = time.Since(start)
-	resp.Provider = "plano"
+	// All retries failed - try fallback
+	if r.fallback != nil {
+		return r.fallback.Route(ctx, req)
+	}
 
-	return resp, nil
+	return nil, fmt.Errorf("request failed after %d attempts: %w", maxRetries+1, lastErr)
 }
 
 // Close closes the HTTP client

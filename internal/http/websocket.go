@@ -153,7 +153,11 @@ func (ws *WebSocket) WriteBinary(data []byte) error {
 // ReadMessage reads the next message from the WebSocket.
 // Returns the message data and opcode (text/binary).
 func (ws *WebSocket) ReadMessage() ([]byte, int, error) {
-	if ws.closed {
+	ws.mu.Lock()
+	isClosed := ws.closed
+	ws.mu.Unlock()
+
+	if isClosed {
 		return nil, 0, ErrWebSocketClosed
 	}
 
