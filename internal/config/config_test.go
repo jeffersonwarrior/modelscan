@@ -200,3 +200,37 @@ server:
 		t.Errorf("expected database path '/tmp/test.db', got %s", cfg.Database.Path)
 	}
 }
+
+func TestEnvOutputDirAndRoutingMode(t *testing.T) {
+	os.Setenv("MODELSCAN_OUTPUT_DIR", "/custom/output")
+	os.Setenv("MODELSCAN_ROUTING_MODE", "plano")
+	defer func() {
+		os.Unsetenv("MODELSCAN_OUTPUT_DIR")
+		os.Unsetenv("MODELSCAN_ROUTING_MODE")
+	}()
+
+	cfg := DefaultConfig()
+
+	if cfg.Discovery.OutputDir != "/custom/output" {
+		t.Errorf("expected output dir '/custom/output', got %s", cfg.Discovery.OutputDir)
+	}
+	if cfg.Discovery.RoutingMode != "plano" {
+		t.Errorf("expected routing mode 'plano', got %s", cfg.Discovery.RoutingMode)
+	}
+}
+
+func TestDefaultFallbacks(t *testing.T) {
+	// Test that applyDefaults fills in missing values
+	cfg := &Config{}
+	cfg.applyDefaults()
+
+	if cfg.Discovery.OutputDir != "generated" {
+		t.Errorf("expected default output dir 'generated', got %s", cfg.Discovery.OutputDir)
+	}
+	if cfg.Discovery.RoutingMode != "direct" {
+		t.Errorf("expected default routing mode 'direct', got %s", cfg.Discovery.RoutingMode)
+	}
+	if cfg.Discovery.AgentModel != "claude-sonnet-4-5" {
+		t.Errorf("expected default agent model 'claude-sonnet-4-5', got %s", cfg.Discovery.AgentModel)
+	}
+}

@@ -10,6 +10,30 @@ import (
 	"time"
 )
 
+// ValidationError types for categorization
+type ValidationErrorType string
+
+const (
+	ErrorConnectivity   ValidationErrorType = "connectivity"
+	ErrorAuthentication ValidationErrorType = "authentication"
+	ErrorEndpoint       ValidationErrorType = "endpoint"
+	ErrorModel          ValidationErrorType = "model"
+)
+
+// ValidationError represents a categorized validation failure
+type ValidationError struct {
+	Type    ValidationErrorType
+	Message string
+	Err     error
+}
+
+func (ve *ValidationError) Error() string {
+	if ve.Err != nil {
+		return fmt.Sprintf("%s error: %s (%v)", ve.Type, ve.Message, ve.Err)
+	}
+	return fmt.Sprintf("%s error: %s", ve.Type, ve.Message)
+}
+
 // Validator validates discovered providers using TDD approach
 type Validator struct {
 	maxRetries int
@@ -114,8 +138,8 @@ func (v *Validator) testAuth(ctx context.Context, result *DiscoveryResult, apiKe
 
 	// Try common endpoints for authentication testing
 	testPaths := []string{
-		"/v1/models",    // OpenAI-compatible
-		"/models",       // Alternative
+		"/v1/models",           // OpenAI-compatible
+		"/models",              // Alternative
 		"/v1/chat/completions", // Chat endpoint (might need body)
 	}
 

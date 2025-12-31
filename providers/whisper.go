@@ -256,16 +256,16 @@ func (p *WhisperProvider) TestModel(ctx context.Context, modelID string, verbose
 	if err != nil {
 		return fmt.Errorf("create form file: %w", err)
 	}
-	if _, err := fileWriter.Write(wavData); err != nil {
+	if _, err = fileWriter.Write(wavData); err != nil {
 		return fmt.Errorf("write file data: %w", err)
 	}
 
 	// Add model field
-	if err := writer.WriteField("model", modelID); err != nil {
+	if err = writer.WriteField("model", modelID); err != nil {
 		return fmt.Errorf("write model field: %w", err)
 	}
 
-	if err := writer.Close(); err != nil {
+	if err = writer.Close(); err != nil {
 		return fmt.Errorf("close writer: %w", err)
 	}
 

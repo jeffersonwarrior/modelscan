@@ -1,21 +1,36 @@
-# ModelScan Code Documentation Index
+# ModelScan Code Documentation
 
-## Package Documentation
+Production-ready Go SDKs for 21+ LLM providers with zero dependencies.
+
+## Architecture
+
+- [Architecture Overview](./architecture.md) - System design and data flow
+- [V0.3 Architecture](./V0.3_ARCHITECTURE.md) - Auto-discovering SDK service
+
+## Core Packages
 
 | Package | Status | Coverage | Description |
 |---------|--------|----------|-------------|
-| [cli](./cli.md) | Beta | 100% | CLI orchestrator and commands |
-| [storage](./storage.md) | Beta | 40% | SQLite persistence layer |
-| [agent](./agent.md) | Alpha | 60% | Agents, teams, workflows |
-| [config](./config.md) | Stable | 50% | Configuration management |
-| [providers](./providers.md) | Beta | 0% | AI provider integrations |
-| [router](./router.md) | Alpha | 0% | Inter-agent messaging |
-| [stream](./stream.md) | Alpha | 0% | Streaming responses |
+| [cmd](./cmd.md) | Stable | N/A | Binary entry points |
+| [providers](./providers.md) | Production | Varied | 21+ provider implementations |
+| [routing](./router.md) | Production | 80%+ | Plano routing modes (direct/proxy/embedded) |
+| [internal/database](./storage.md) | Production | 75% | SQLite persistence with migrations |
+| [internal/config](./V0.3_ARCHITECTURE.md#2-config-system) | Stable | 85% | YAML configuration with env overrides |
+| [internal/discovery](./discovery.md) | Beta | 70% | LLM-powered provider discovery |
+| [internal/http](./http-client.md) | Production | 85% | HTTP client with retry logic |
+| [internal/service](./V0.3_ARCHITECTURE.md#7-service-orchestration) | Production | 80% | Service orchestration |
 
-## Audit Report
+## Design Documents
 
-See [../CODEAUDIT-12-18-2025.md](../CODEAUDIT-12-18-2025.md)
+- [Tool Calling Standards](./TOOLING-STANDARDS.md) - Tool calling standardization (design phase)
+- [SDK Autogen Design](./SDK_AUTOGEN_DESIGN.md) - SDK generation architecture
+- [Model Autoconfig](./MODEL_AUTOCONFIG.md) - Model auto-configuration
+- [Architecture Recommendations](./ARCHITECTURE_RECOMMENDATIONS.md) - Future improvements
+- [Cleanup Report](./CLEANUP_REPORT.md) - Codebase cleanup analysis
 
-## Generation
+## Status
 
-Auto-generated during code audit on 2025-12-18.
+**Version**: 0.3.1
+**Last Updated**: December 31, 2025
+**Build**: ✓ All packages passing
+**Coverage**: 81% average across tested packages

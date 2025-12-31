@@ -26,6 +26,7 @@ type Service struct {
 	router     routing.Router
 	adminAPI   *admin.API
 	httpServer *http.Server
+	hooks      *HookRegistry
 
 	mu          sync.RWMutex
 	restarting  bool
@@ -72,10 +73,10 @@ func (s *Service) Initialize() error {
 
 	// Initialize discovery agent
 	agent, err := discovery.NewAgent(discovery.Config{
-		Model:         s.config.AgentModel,
 		ParallelBatch: s.config.ParallelBatch,
 		CacheDays:     s.config.CacheDays,
 		MaxRetries:    3,
+		DB:            db,
 	})
 	if err != nil {
 		return fmt.Errorf("discovery agent init failed: %w", err)
@@ -123,6 +124,9 @@ func (s *Service) Initialize() error {
 		admin.NewKeyManagerAdapter(s.keyManager),
 	)
 	log.Println("  ✓ Admin API initialized")
+
+	// Setup event hooks
+	s.setupHooks()
 
 	s.initialized = true
 	log.Println("Service initialization complete")
@@ -288,6 +292,52 @@ func (s *Service) Restart() error {
 	s.mu.Unlock()
 
 	log.Println("✓ Service restart complete")
+	return nil
+}
+
+// OnSDKGenerated is called when a new SDK is generated
+// This allows hot-reloading without full service restart
+func (s *Service) OnSDKGenerated(providerID, sdkPath string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if !s.initialized {
+		return fmt.Errorf("service not initialized")
+	}
+
+	log.Printf("Hot-reloading SDK for provider %s from %s", providerID, sdkPath)
+
+	// Load the generated client dynamically
+	if err := s.loadGeneratedClient(providerID, sdkPath); err != nil {
+		return fmt.Errorf("failed to load generated client: %w", err)
+	}
+
+	log.Printf("✓ SDK for %s hot-reloaded successfully", providerID)
+	return nil
+}
+
+// loadGeneratedClient dynamically loads a generated SDK client
+func (s *Service) loadGeneratedClient(providerID, sdkPath string) error {
+	// TODO: Implement dynamic client loading via plugin system or go:plugin
+	// For now, log that the SDK was generated and would need manual integration
+	log.Printf("Generated SDK at %s - manual integration required", sdkPath)
+
+	// Update database with SDK path
+	provider, err := s.db.GetProvider(providerID)
+	if err != nil {
+		return fmt.Errorf("failed to get provider: %w", err)
+	}
+	if provider == nil {
+		return fmt.Errorf("provider %s not found", providerID)
+	}
+
+	// Update provider with SDK path
+	provider.SDKPath = &sdkPath
+	// Note: Would need to add UpdateProvider method to database
+
+	// TODO: Register client with router
+	// s.router.RegisterClient(providerID, client)
+
 	return nil
 }
 

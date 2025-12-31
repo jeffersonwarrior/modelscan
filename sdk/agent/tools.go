@@ -103,7 +103,7 @@ func (te *ToolExecutor) Execute(ctx context.Context, toolName string, input map[
 
 	// Validate input if tool provides validation
 	if validator, ok := tool.(ToolInputValidator); ok {
-		if err := validator.ValidateInput(input); err != nil {
+		if err = validator.ValidateInput(input); err != nil {
 			return nil, fmt.Errorf("input validation failed for tool '%s': %w", toolName, err)
 		}
 	}

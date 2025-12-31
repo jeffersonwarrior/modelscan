@@ -29,7 +29,7 @@ func ExportToMarkdown(outputPath string) error {
 	var providerNames []string
 	for rows.Next() {
 		var name string
-		if err := rows.Scan(&name); err != nil {
+		if err = rows.Scan(&name); err != nil {
 			return fmt.Errorf("failed to scan provider name: %w", err)
 		}
 		providerNames = append(providerNames, name)

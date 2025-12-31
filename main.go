@@ -103,7 +103,7 @@ func validateProvider(ctx context.Context, name string, cfg *config.Config) erro
 	provider := factory(apiKey)
 
 	// Validate endpoints
-	if err := provider.ValidateEndpoints(ctx, *verbose); err != nil {
+	if err = provider.ValidateEndpoints(ctx, *verbose); err != nil {
 		return fmt.Errorf("endpoint validation failed: %w", err)
 	}
 

@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	CurrentSchemaVersion = 1
+	CurrentSchemaVersion = 2
 )
 
 // DB wraps the SQLite database
@@ -88,7 +88,11 @@ func (db *DB) runMigration(version int) error {
 
 	switch version {
 	case 1:
-		if err := db.migration1(tx); err != nil {
+		if err = db.migration1(tx); err != nil {
+			return err
+		}
+	case 2:
+		if err = db.migration2(tx); err != nil {
 			return err
 		}
 	default:
@@ -235,6 +239,33 @@ func (db *DB) migration1(tx *sql.Tx) error {
 	CREATE INDEX idx_providers_status ON providers(status);
 	CREATE INDEX idx_api_keys_provider ON api_keys(provider_id);
 	CREATE INDEX idx_api_keys_active ON api_keys(active, degraded);
+	`
+
+	_, err := tx.Exec(schema)
+	return err
+}
+
+// migration2 adds discovery_results table
+func (db *DB) migration2(tx *sql.Tx) error {
+	schema := `
+	-- Discovery results table (stores complete discovery data)
+	CREATE TABLE discovery_results (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		identifier TEXT NOT NULL UNIQUE,
+		provider_data JSON NOT NULL,
+		model_families JSON,
+		models JSON,
+		sdk_data JSON,
+		validated BOOLEAN DEFAULT 0,
+		validation_log TEXT,
+		sources JSON,
+		discovered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+		ttl_expires_at TIMESTAMP
+	);
+
+	-- Index for cache lookups
+	CREATE INDEX idx_discovery_identifier ON discovery_results(identifier);
+	CREATE INDEX idx_discovery_ttl ON discovery_results(ttl_expires_at);
 	`
 
 	_, err := tx.Exec(schema)

@@ -4,6 +4,8 @@ import (
 	"crypto/sha256"
 	"database/sql"
 	"encoding/hex"
+	"encoding/json"
+	"fmt"
 	"time"
 )
 
@@ -423,4 +425,71 @@ func (db *DB) GetUsageStats(modelID string, since time.Time) (map[string]interfa
 	}
 
 	return stats, nil
+}
+
+// SaveDiscoveryResult saves a discovery result to the database
+func (db *DB) SaveDiscoveryResult(identifier string, result interface{}, ttl time.Duration) error {
+	resultJSON, err := json.Marshal(result)
+	if err != nil {
+		return fmt.Errorf("failed to marshal discovery result: %w", err)
+	}
+
+	var ttlExpires *time.Time
+	if ttl > 0 {
+		expires := time.Now().Add(ttl)
+		ttlExpires = &expires
+	}
+
+	query := `
+		INSERT INTO discovery_results (identifier, provider_data, ttl_expires_at)
+		VALUES (?, ?, ?)
+		ON CONFLICT(identifier) DO UPDATE SET
+			provider_data = ?,
+			ttl_expires_at = ?,
+			discovered_at = CURRENT_TIMESTAMP
+	`
+	_, err = db.conn.Exec(query, identifier, resultJSON, ttlExpires, resultJSON, ttlExpires)
+	return err
+}
+
+// GetDiscoveryResult retrieves a discovery result from the database
+func (db *DB) GetDiscoveryResult(identifier string) (map[string]interface{}, bool, error) {
+	query := `
+		SELECT provider_data, ttl_expires_at
+		FROM discovery_results
+		WHERE identifier = ?
+	`
+
+	var resultJSON string
+	var ttlExpires *time.Time
+	err := db.conn.QueryRow(query, identifier).Scan(&resultJSON, &ttlExpires)
+	if err == sql.ErrNoRows {
+		return nil, false, nil
+	}
+	if err != nil {
+		return nil, false, err
+	}
+
+	// Check TTL
+	if ttlExpires != nil && time.Now().After(*ttlExpires) {
+		// Expired, delete and return not found
+		_, _ = db.conn.Exec("DELETE FROM discovery_results WHERE identifier = ?", identifier)
+		return nil, false, nil
+	}
+
+	var result map[string]interface{}
+	if err := json.Unmarshal([]byte(resultJSON), &result); err != nil {
+		return nil, false, fmt.Errorf("failed to unmarshal discovery result: %w", err)
+	}
+
+	return result, true, nil
+}
+
+// DeleteExpiredDiscoveryResults removes expired cache entries
+func (db *DB) DeleteExpiredDiscoveryResults() (int64, error) {
+	result, err := db.conn.Exec("DELETE FROM discovery_results WHERE ttl_expires_at IS NOT NULL AND ttl_expires_at < ?", time.Now())
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
 }

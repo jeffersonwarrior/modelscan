@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"sync"
 	"time"
 )
 
@@ -13,6 +14,7 @@ import (
 type Source interface {
 	Fetch(ctx context.Context, identifier string) (SourceResult, error)
 	Name() string
+	Priority() int // Lower number = higher priority for conflict resolution
 }
 
 // SourceResult holds data from a single source
@@ -46,6 +48,104 @@ type ModelData struct {
 	Capabilities  []string
 }
 
+// SourceStats tracks scraping statistics per source
+type SourceStats struct {
+	mu          sync.RWMutex
+	stats       map[string]*SourceStat
+	totalCalls  int
+	totalErrors int
+}
+
+// SourceStat holds statistics for a single source
+type SourceStat struct {
+	SourceName   string
+	TotalCalls   int
+	SuccessCalls int
+	FailedCalls  int
+	LastSuccess  time.Time
+	LastFailure  time.Time
+	LastError    string
+	AvgLatencyMS int64
+	totalLatency int64
+}
+
+// NewSourceStats creates a new statistics tracker
+func NewSourceStats() *SourceStats {
+	return &SourceStats{
+		stats: make(map[string]*SourceStat),
+	}
+}
+
+// RecordSuccess records a successful fetch
+func (ss *SourceStats) RecordSuccess(sourceName string, latencyMS int64) {
+	ss.mu.Lock()
+	defer ss.mu.Unlock()
+
+	if ss.stats[sourceName] == nil {
+		ss.stats[sourceName] = &SourceStat{SourceName: sourceName}
+	}
+
+	stat := ss.stats[sourceName]
+	stat.TotalCalls++
+	stat.SuccessCalls++
+	stat.LastSuccess = time.Now()
+	stat.totalLatency += latencyMS
+	stat.AvgLatencyMS = stat.totalLatency / int64(stat.TotalCalls)
+
+	ss.totalCalls++
+}
+
+// RecordFailure records a failed fetch
+func (ss *SourceStats) RecordFailure(sourceName string, err error) {
+	ss.mu.Lock()
+	defer ss.mu.Unlock()
+
+	if ss.stats[sourceName] == nil {
+		ss.stats[sourceName] = &SourceStat{SourceName: sourceName}
+	}
+
+	stat := ss.stats[sourceName]
+	stat.TotalCalls++
+	stat.FailedCalls++
+	stat.LastFailure = time.Now()
+	if err != nil {
+		stat.LastError = err.Error()
+	}
+
+	ss.totalCalls++
+	ss.totalErrors++
+}
+
+// GetStats returns a snapshot of current statistics
+func (ss *SourceStats) GetStats() map[string]SourceStat {
+	ss.mu.RLock()
+	defer ss.mu.RUnlock()
+
+	snapshot := make(map[string]SourceStat)
+	for name, stat := range ss.stats {
+		snapshot[name] = *stat
+	}
+	return snapshot
+}
+
+// GetSummary returns overall summary statistics
+func (ss *SourceStats) GetSummary() map[string]interface{} {
+	ss.mu.RLock()
+	defer ss.mu.RUnlock()
+
+	successRate := 0.0
+	if ss.totalCalls > 0 {
+		successRate = float64(ss.totalCalls-ss.totalErrors) / float64(ss.totalCalls) * 100
+	}
+
+	return map[string]interface{}{
+		"total_calls":   ss.totalCalls,
+		"total_errors":  ss.totalErrors,
+		"success_rate":  successRate,
+		"sources_count": len(ss.stats),
+	}
+}
+
 // ModelsDevSource scrapes models.dev API
 type ModelsDevSource struct {
 	apiURL     string
@@ -64,6 +164,10 @@ func NewModelsDevSource() Source {
 
 func (s *ModelsDevSource) Name() string {
 	return "models.dev"
+}
+
+func (s *ModelsDevSource) Priority() int {
+	return 1 // Highest priority - most reliable pricing/capability data
 }
 
 func (s *ModelsDevSource) Fetch(ctx context.Context, identifier string) (SourceResult, error) {
@@ -147,6 +251,10 @@ func (s *GPUStackSource) Name() string {
 	return "GPUStack"
 }
 
+func (s *GPUStackSource) Priority() int {
+	return 2 // Hardware/deployment specs
+}
+
 func (s *GPUStackSource) Fetch(ctx context.Context, identifier string) (SourceResult, error) {
 	req, err := http.NewRequestWithContext(ctx, "GET", s.catalogURL, nil)
 	if err != nil {
@@ -201,6 +309,10 @@ func NewModelScopeSource() Source {
 
 func (s *ModelScopeSource) Name() string {
 	return "ModelScope"
+}
+
+func (s *ModelScopeSource) Priority() int {
+	return 3 // Chinese model hub - supplementary data
 }
 
 func (s *ModelScopeSource) Fetch(ctx context.Context, identifier string) (SourceResult, error) {
@@ -271,6 +383,10 @@ func NewHuggingFaceSource() Source {
 
 func (s *HuggingFaceSource) Name() string {
 	return "HuggingFace"
+}
+
+func (s *HuggingFaceSource) Priority() int {
+	return 4 // Lowest priority - often requires auth, rate limited
 }
 
 func (s *HuggingFaceSource) Fetch(ctx context.Context, identifier string) (SourceResult, error) {

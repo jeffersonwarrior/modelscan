@@ -1,37 +1,10 @@
 You are a worker agent focused on implementing a single feature.
 
 ## Your Task
-Provider 1: ElevenLabs TTS - Implement ElevenLabs text-to-speech with voice cloning support
+Test filesystem tool access by creating a simple test file
 
 ## Orchestration Context
-Implement 18 AI provider SDKs with zero dependencies, 90%+ test coverage, and programmatic validation enforcement.
-
-## Providers to Implement (Tier 2)
-1. ElevenLabs TTS - text-to-speech with voice cloning
-2. Deepgram STT - live streaming transcription
-3. OpenAI Whisper - audio transcription extension
-4. OpenAI TTS - text-to-speech extension
-5. PlayHT - ultra-realistic TTS
-6. Luma AI Video - Dream Machine video generation
-7. Runway ML - Gen-2 video generation
-8. OpenAI Extended - refactor to use internal HTTP client
-9. Anthropic Extended Thinking - extended thinking mode
-10. Google Gemini Thinking - thinking modes
-11. DeepSeek Extended - refactor to use internal HTTP client
-12. Cerebras Extended - refactor to use internal HTTP client
-13. FAL Extended - refactor to use internal HTTP client
-14. Midjourney - V6 text-to-image
-15. OpenAI Embeddings - embeddings extension
-16. Cohere Embeddings - embed-english-v3.0
-17. Voyage AI - embeddings provider
-18. OpenAI Realtime API - real-time voice conversation
-
-## Requirements
-- Zero external dependencies (pure Go stdlib)
-- 90%+ test coverage (enforced by validation script)
-- Use internal/http client (no external SDKs)
-- Pass all 7 validation gates (build, test, coverage, race, vet, fmt, interface)
-- Workers MUST use bash scripts/swarm-mark-complete.sh to mark complete
+Tool access validation test - verify workers can use Read, Write, and Edit tools after the --mode delegate fix.
 
 ## Project Context Files
 ### From CLAUDE.md:
@@ -154,49 +127,29 @@ ModelScan supports Model Context Protocol (MCP) servers for extended functionali
 - **Context-Engine** 
 ... (truncated)
 
+### From .claude/settings.json:
+{
+  "permissions": {
+    "allow": ["*"],
+    "defaultMode": "delegate"
+  }
+}
 
-## Implementation Steps (REQUIRED)
 
-### Phase 1: Get Your Bearings (ALWAYS START HERE)
-1. Run 'pwd' to see your working directory
-2. Read git logs: 'git log --oneline -20' to see recent work
-3. Read claude-progress.txt (if it exists) to understand what was recently done
-4. Read the feature list to understand overall progress
-5. If init.sh exists, read it to understand how to run/test the project
 
-### Phase 2: Verify Environment Health
-1. Run basic tests or start development server (if applicable)
-2. Verify the codebase is in a working state
-3. If broken, fix critical bugs BEFORE implementing your feature
-4. Document any fixes in your .done file
+## Instructions
+1. Focus ONLY on implementing this specific feature
+2. Make small, incremental changes
+3. Test your changes as you go
+4. When you are DONE, create a file at: .claude/orchestrator/workers/feature-1.done
+   with a brief summary of what you implemented
 
-### Phase 3: Implement Your Feature
-1. Read the relevant source files to understand current implementation
-2. Make the necessary code changes using Edit or Write tools
-3. Test your changes thoroughly:
-   - Run automated tests (unit, integration)
-   - For web features: Use Chrome DevTools MCP to test in browser as a user would
-   - Verify syntax, check behavior end-to-end
-   - Take screenshots of working features if applicable
-4. ONLY AFTER code changes are complete AND tested: Create .claude/orchestrator/workers/feature-1.done
+5. Do NOT commit your changes - the orchestrator will handle commits
 
-   The .done file MUST contain:
-   - List of files you modified (with line numbers if applicable)
-   - Summary of changes made to each file
-   - Any tests you ran and their results
-   - If BLOCKED: explain what blocked you and what you tried
-
-### Phase 4: Leave Environment Clean
-1. Do NOT commit - the orchestrator handles commits
-2. Ensure all tests pass
-3. Ensure code is in a working state for the next worker
-
-## Critical Requirements
-- You MUST make actual code changes - reading files is not enough
-- You MUST use Edit/Write tools to modify source code
-- Do NOT create the .done file until you have modified code
-- If you encounter a blocker, document it in .done and explain what prevented completion
-- Keep changes minimal and focused on this single feature
+## Important
+- Do not work on other features
+- If you encounter a blocker, document it in the .done file and stop
+- Keep changes minimal and focused
 - NEVER commit, stage, or git add ANY of these files:
   - .claude/ (entire directory - orchestrator state, logs, prompts, worker files)
   - claude-progress.txt
@@ -205,117 +158,6 @@ ModelScan supports Model Context Protocol (MCP) servers for extended functionali
 
 
 ## Additional Context
-# Provider Implementation: ElevenLabs TTS
-
-## Mission
-Implement ElevenLabs text-to-speech provider with **90%+ test coverage** and full validation compliance.
-
-## Non-Negotiable Requirements
-
-**You CANNOT mark complete unless validation passes:**
-```bash
-bash /home/agent/modelscan/scripts/validate-provider.sh elevenlabs 90
-```
-
-**If ANY gate fails:**
-- ❌ DO NOT mark complete
-- ✅ FIX the issue
-- ✅ Re-run validation
-- ✅ Repeat until ALL gates pass
-
-## 7 Validation Gates
-1. Build: `go build ./providers/elevenlabs.go` succeeds
-2. Tests: All unit tests pass
-3. Coverage: EXACTLY 90.0%+ (not 89.9%)
-4. Race: `go test -race` clean
-5. Vet: `go vet` clean
-6. Fmt: `gofmt` clean
-7. Interface: All Provider methods implemented
-
-## Mark Complete (ONLY via validation)
-```bash
-bash /home/agent/modelscan/scripts/swarm-mark-complete.sh feature-1 elevenlabs
-```
-
-**No manual override. No exceptions.**
-
-## Implementation Spec
-
-### Files to Create
-1. `providers/elevenlabs.go` - Provider implementation
-2. `providers/elevenlabs_test.go` - Unit tests (90%+ coverage)
-
-### Provider Interface
-```go
-type Provider interface {
-    ValidateEndpoints(ctx context.Context, verbose bool) error
-    ListModels(ctx context.Context, verbose bool) ([]Model, error)
-    GetCapabilities() ProviderCapabilities
-    GetEndpoints() []Endpoint
-    TestModel(ctx context.Context, modelID string, verbose bool) error
-}
-```
-
-### Use Internal HTTP Client
-```go
-import "github.com/jeffersonwarrior/modelscan/internal/http"
-
-client := http.NewClient(http.Config{
-    BaseURL: "https://api.elevenlabs.io/v1",
-    APIKey:  apiKey,
-    Timeout: 30 * time.Second,
-    Retry: http.RetryConfig{
-        MaxAttempts: 3,
-        BaseDelay:   1 * time.Second,
-    },
-})
-```
-
-### ElevenLabs API Details
-- Base URL: https://api.elevenlabs.io/v1
-- Auth: `xi-api-key` header
-- Endpoints:
-  - GET /voices - List voices (models)
-  - POST /text-to-speech/{voice_id} - Generate audio
-  - GET /models - List TTS models
-  - GET /user/subscription - Get quota info
-
-### Test Requirements (Minimum 15 tests)
-- NewElevenLabsProvider (valid key, empty key)
-- ListModels (success, error, timeout, cancellation)
-- ValidateEndpoints (all working, some failed, network error)
-- TestModel (success, invalid model, rate limit, auth failure)
-- GetCapabilities (correct values)
-- Rate limiting tests
-- Cost tracking tests
-- TextToSpeech helper method tests
-
-## API Documentation
-- Official: https://elevenlabs.io/docs/api-reference/text-to-speech
-- Models: https://elevenlabs.io/docs/voices/overview
-- Pricing: Character-based billing ($180 per 1M chars Creator tier)
-
-## Git Workflow
-```bash
-# Work on main branch (sequential execution)
-git add providers/elevenlabs.go providers/elevenlabs_test.go
-git commit -m "feat(elevenlabs): TTS provider with 90%+ coverage
-
-✅ All validation gates passing
-✅ Coverage: XX.X%
-✅ Tests: XX passing
-✅ Interface fully implemented
-
-🤖 Generated with [Claude Code](https://claude.com/claude-code)
-
-Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
-```
-
-## Philosophy
-> "90% means 90%. Not 89.9%. Exact compliance."
-
-The validation script is the source of truth. No human judgment, no negotiation.
-
-**Ready? Implement, test, validate, complete.**
+Use the Write tool to create a file at /home/agent/modelscan/.swarm-tool-test.txt with the content "Tool access works! Timestamp: $(date)". Then use the Read tool to verify the file was created. Finally, use Bash to run 'ls -la /home/agent/modelscan/.swarm-tool-test.txt' and report success.
 
 Begin implementing the feature now.

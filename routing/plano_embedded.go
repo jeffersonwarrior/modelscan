@@ -64,7 +64,7 @@ func (r *PlanoEmbeddedRouter) Start() error {
 		return fmt.Errorf("failed to resolve config path: %w", err)
 	}
 
-	if _, err := os.Stat(configPath); err != nil {
+	if _, err = os.Stat(configPath); err != nil {
 		return fmt.Errorf("config file not found: %w", err)
 	}
 
@@ -99,7 +99,7 @@ func (r *PlanoEmbeddedRouter) Start() error {
 	r.containerID = strings.TrimSpace(string(output))
 
 	// Wait for container to be healthy
-	if err := r.waitForHealthy(); err != nil {
+	if err = r.waitForHealthy(); err != nil {
 		// Cleanup on failure
 		_ = r.Stop()
 		return fmt.Errorf("container failed health check: %w", err)

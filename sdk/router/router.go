@@ -362,7 +362,8 @@ func (r *Router) getHealth(providerName string) *ProviderHealth {
 	defer r.mu.Unlock()
 
 	// Double-check after acquiring write lock
-	if health, exists := r.healthTracker[providerName]; exists {
+	health, exists = r.healthTracker[providerName]
+	if exists {
 		return health
 	}
 

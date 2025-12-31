@@ -1,34 +1,39 @@
 package discovery
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"log"
-	"net/http"
-	"os"
 	"strings"
 	"time"
 )
 
 // Agent discovers provider information using LLM-powered analysis
 type Agent struct {
-	model         string     // claude-sonnet-4-5, gpt-4o, etc.
-	sources       []Source   // Data sources to scrape
-	validator     *Validator // TDD validation
-	cache         *Cache     // Result cache
-	parallelBatch int        // Concurrent scraping limit
-	maxRetries    int        // Max validation retries
+	llm           *LLMSynthesizer // LLM client with fallback
+	sources       []Source        // Data sources to scrape
+	validator     *Validator      // TDD validation
+	cache         *Cache          // In-memory cache (fast)
+	db            DB              // Database persistence (durable)
+	stats         *SourceStats    // Source scraping statistics
+	cacheTTL      time.Duration
+	parallelBatch int // Concurrent scraping limit
+	maxRetries    int // Max validation retries
+}
+
+// DB interface for database operations
+type DB interface {
+	SaveDiscoveryResult(identifier string, result interface{}, ttl time.Duration) error
+	GetDiscoveryResult(identifier string) (map[string]interface{}, bool, error)
 }
 
 // Config holds agent configuration
 type Config struct {
-	Model         string
 	ParallelBatch int
 	CacheDays     int
 	MaxRetries    int
+	DB            DB // Database for persistent cache
 }
 
 // DiscoveryRequest represents a request to discover a provider
@@ -104,9 +109,6 @@ type ParameterInfo struct {
 
 // NewAgent creates a new discovery agent
 func NewAgent(cfg Config) (*Agent, error) {
-	if cfg.Model == "" {
-		cfg.Model = "claude-sonnet-4-5"
-	}
 	if cfg.ParallelBatch == 0 {
 		cfg.ParallelBatch = 5
 	}
@@ -117,7 +119,8 @@ func NewAgent(cfg Config) (*Agent, error) {
 		cfg.MaxRetries = 3
 	}
 
-	cache := NewCache(time.Duration(cfg.CacheDays) * 24 * time.Hour)
+	cacheTTL := time.Duration(cfg.CacheDays) * 24 * time.Hour
+	cache := NewCache(cacheTTL)
 
 	sources := []Source{
 		NewModelsDevSource(),
@@ -127,12 +130,17 @@ func NewAgent(cfg Config) (*Agent, error) {
 	}
 
 	validator := NewValidator(cfg.MaxRetries)
+	llm := NewLLMSynthesizer()
+	stats := NewSourceStats()
 
 	return &Agent{
-		model:         cfg.Model,
+		llm:           llm,
 		sources:       sources,
 		validator:     validator,
 		cache:         cache,
+		db:            cfg.DB,
+		stats:         stats,
+		cacheTTL:      cacheTTL,
 		parallelBatch: cfg.ParallelBatch,
 		maxRetries:    cfg.MaxRetries,
 	}, nil
@@ -140,9 +148,20 @@ func NewAgent(cfg Config) (*Agent, error) {
 
 // Discover discovers provider information from multiple sources
 func (a *Agent) Discover(ctx context.Context, req DiscoveryRequest) (*DiscoveryResult, error) {
-	// Check cache first
+	// Check in-memory cache first (fastest)
 	if cached, ok := a.cache.Get(req.Identifier); ok {
 		return cached, nil
+	}
+
+	// Check database cache (persistent)
+	if a.db != nil {
+		if _, found, err := a.db.GetDiscoveryResult(req.Identifier); err == nil && found {
+			// TODO: Reconstruct DiscoveryResult from database map
+			// For now, just proceed to fresh discovery
+			log.Printf("Found cached result in database for %s (reconstruction not yet implemented)", req.Identifier)
+		} else if err != nil {
+			log.Printf("Database cache lookup failed for %s: %v", req.Identifier, err)
+		}
 	}
 
 	// Scrape from all sources in parallel
@@ -151,11 +170,17 @@ func (a *Agent) Discover(ctx context.Context, req DiscoveryRequest) (*DiscoveryR
 
 	for _, source := range a.sources {
 		go func(s Source) {
+			start := time.Now()
 			result, err := s.Fetch(ctx, req.Identifier)
+			latency := time.Since(start).Milliseconds()
+
 			if err != nil {
+				a.stats.RecordFailure(s.Name(), err)
 				errCh <- err
 				return
 			}
+
+			a.stats.RecordSuccess(s.Name(), latency)
 			sourceCh <- result
 		}(source)
 	}
@@ -199,7 +224,14 @@ func (a *Agent) Discover(ctx context.Context, req DiscoveryRequest) (*DiscoveryR
 
 	result.DiscoveredAt = time.Now()
 
-	// Cache result
+	// Save to database (persistent cache)
+	if a.db != nil {
+		if err := a.db.SaveDiscoveryResult(req.Identifier, result, a.cacheTTL); err != nil {
+			log.Printf("Failed to save discovery result to database for %s: %v", req.Identifier, err)
+		}
+	}
+
+	// Cache result in memory
 	a.cache.Set(req.Identifier, result)
 
 	return result, nil
@@ -211,17 +243,14 @@ func (a *Agent) synthesize(ctx context.Context, sources []SourceResult) (*Discov
 		return nil, fmt.Errorf("no sources available")
 	}
 
-	// Build prompt from source data
-	prompt := a.buildSynthesisPrompt(sources)
-
-	// Call LLM API
-	response, err := a.callLLM(ctx, prompt)
+	// Call LLM API with automatic fallback
+	response, err := a.llm.Synthesize(ctx, sources)
 	if err != nil {
-		return nil, fmt.Errorf("LLM call failed: %w", err)
+		return nil, fmt.Errorf("LLM synthesis failed: %w", err)
 	}
 
 	// Parse LLM response into DiscoveryResult
-	result, err := a.parseDiscoveryResult(response, sources)
+	result, err := parseDiscoveryResult(response, sources)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse LLM response: %w", err)
 	}
@@ -229,110 +258,8 @@ func (a *Agent) synthesize(ctx context.Context, sources []SourceResult) (*Discov
 	return result, nil
 }
 
-// buildSynthesisPrompt creates a prompt from source results
-func (a *Agent) buildSynthesisPrompt(sources []SourceResult) string {
-	var sb strings.Builder
-	sb.WriteString("You are an AI provider discovery agent. Analyze the following information about an AI provider and extract structured data.\n\n")
-	sb.WriteString("Source Data:\n")
-	for i, src := range sources {
-		sb.WriteString(fmt.Sprintf("\n--- Source %d: %s ---\n", i+1, src.SourceName))
-		sb.WriteString(fmt.Sprintf("Provider ID: %s\n", src.ProviderID))
-		sb.WriteString(fmt.Sprintf("Provider Name: %s\n", src.ProviderName))
-		sb.WriteString(fmt.Sprintf("Base URL: %s\n", src.BaseURL))
-		sb.WriteString(fmt.Sprintf("Documentation: %s\n", src.DocumentationURL))
-		if len(src.RawData) > 0 {
-			if rawJSON, err := json.Marshal(src.RawData); err == nil {
-				sb.WriteString(fmt.Sprintf("Additional Data: %s\n", string(rawJSON)))
-			}
-		}
-	}
-
-	sb.WriteString("\n\nExtract and return ONLY a JSON object with this structure (no markdown, no explanation):\n")
-	sb.WriteString(`{
-  "provider": {
-    "id": "unique-provider-id",
-    "name": "Provider Name",
-    "base_url": "https://api.example.com/v1",
-    "auth_method": "bearer",
-    "auth_header": "Authorization",
-    "pricing_model": "pay-per-token",
-    "documentation": "https://docs.example.com"
-  },
-  "sdk_type": "openai-compatible"
-}`)
-
-	return sb.String()
-}
-
-// callLLM makes an API call to the configured LLM
-func (a *Agent) callLLM(ctx context.Context, prompt string) (string, error) {
-	// Get API key from environment (injected via psst)
-	apiKey := os.Getenv("ANTHROPIC_API_KEY")
-	if apiKey == "" {
-		return "", fmt.Errorf("ANTHROPIC_API_KEY not set")
-	}
-
-	// Build request
-	reqBody := map[string]interface{}{
-		"model": a.model,
-		"max_tokens": 4096,
-		"messages": []map[string]string{
-			{"role": "user", "content": prompt},
-		},
-	}
-
-	jsonBody, err := json.Marshal(reqBody)
-	if err != nil {
-		return "", fmt.Errorf("failed to marshal request: %w", err)
-	}
-
-	req, err := http.NewRequestWithContext(ctx, "POST", "https://api.anthropic.com/v1/messages", bytes.NewReader(jsonBody))
-	if err != nil {
-		return "", fmt.Errorf("failed to create request: %w", err)
-	}
-
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("x-api-key", apiKey)
-	req.Header.Set("anthropic-version", "2023-06-01")
-
-	// Make request
-	client := &http.Client{Timeout: 60 * time.Second}
-	resp, err := client.Do(req)
-	if err != nil {
-		return "", fmt.Errorf("request failed: %w", err)
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return "", fmt.Errorf("failed to read response: %w", err)
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("API error (status %d): %s", resp.StatusCode, string(body))
-	}
-
-	// Parse response
-	var apiResp struct {
-		Content []struct {
-			Type string `json:"type"`
-			Text string `json:"text"`
-		} `json:"content"`
-	}
-
-	if err := json.Unmarshal(body, &apiResp); err != nil {
-		return "", fmt.Errorf("failed to parse response: %w", err)
-	}
-
-	if len(apiResp.Content) == 0 {
-		return "", fmt.Errorf("empty response from LLM")
-	}
-
-	return apiResp.Content[0].Text, nil
-}
-
 // parseDiscoveryResult parses LLM JSON response into DiscoveryResult
-func (a *Agent) parseDiscoveryResult(llmResponse string, sources []SourceResult) (*DiscoveryResult, error) {
+func parseDiscoveryResult(llmResponse string, sources []SourceResult) (*DiscoveryResult, error) {
 	// Remove markdown code blocks if present
 	llmResponse = strings.TrimPrefix(llmResponse, "```json\n")
 	llmResponse = strings.TrimPrefix(llmResponse, "```\n")
@@ -377,6 +304,16 @@ func (a *Agent) parseDiscoveryResult(llmResponse string, sources []SourceResult)
 		},
 		Sources: sourceNames,
 	}, nil
+}
+
+// GetSourceStats returns scraping statistics
+func (a *Agent) GetSourceStats() map[string]SourceStat {
+	return a.stats.GetStats()
+}
+
+// GetStatsSummary returns overall statistics summary
+func (a *Agent) GetStatsSummary() map[string]interface{} {
+	return a.stats.GetSummary()
 }
 
 // Close cleans up agent resources

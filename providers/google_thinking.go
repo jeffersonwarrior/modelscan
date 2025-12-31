@@ -187,9 +187,9 @@ func (p *GoogleThinkingProvider) testEndpoint(ctx context.Context, endpoint *End
 			},
 		}
 
-		bodyBytes, err := json.Marshal(reqBody)
-		if err != nil {
-			return fmt.Errorf("failed to marshal request: %w", err)
+		bodyBytes, marshalErr := json.Marshal(reqBody)
+		if marshalErr != nil {
+			return fmt.Errorf("failed to marshal request: %w", marshalErr)
 		}
 
 		req, err = http.NewRequestWithContext(ctx, endpoint.Method, url, bytes.NewReader(bodyBytes))

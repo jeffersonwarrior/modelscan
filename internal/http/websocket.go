@@ -71,7 +71,7 @@ func DialWebSocket(ctx context.Context, urlStr string, headers map[string]string
 
 	// Generate WebSocket key (16 random bytes, base64 encoded)
 	key := make([]byte, 16)
-	if _, err := rand.Read(key); err != nil {
+	if _, err = rand.Read(key); err != nil {
 		conn.Close()
 		return nil, fmt.Errorf("failed to generate key: %w", err)
 	}
@@ -100,7 +100,7 @@ func DialWebSocket(ctx context.Context, urlStr string, headers map[string]string
 	req += "\r\n"
 
 	// Send upgrade request
-	if _, err := conn.Write([]byte(req)); err != nil {
+	if _, err = conn.Write([]byte(req)); err != nil {
 		conn.Close()
 		return nil, fmt.Errorf("failed to send upgrade: %w", err)
 	}

@@ -239,6 +239,196 @@ func TestHandleStats(t *testing.T) {
 	}
 }
 
+func TestHandleAddKey(t *testing.T) {
+	api := NewAPI(Config{}, &mockDB{}, &mockDiscovery{}, &mockGenerator{}, &mockKeyManager{})
+
+	body := map[string]string{
+		"provider_id": "openai",
+		"api_key":     "sk-test-key",
+	}
+	jsonBody, _ := json.Marshal(body)
+
+	req := httptest.NewRequest("POST", "/api/keys/add", bytes.NewBuffer(jsonBody))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+
+	api.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("expected status 200, got %d", w.Code)
+	}
+
+	var response APIKey
+	if err := json.NewDecoder(w.Body).Decode(&response); err != nil {
+		t.Fatalf("failed to decode response: %v", err)
+	}
+
+	if response.ProviderID != "openai" {
+		t.Errorf("expected provider_id openai, got %s", response.ProviderID)
+	}
+	if !response.Active {
+		t.Error("expected active key")
+	}
+}
+
+func TestHandleDiscover(t *testing.T) {
+	api := NewAPI(Config{}, &mockDB{}, &mockDiscovery{}, &mockGenerator{}, &mockKeyManager{})
+
+	body := map[string]string{
+		"identifier": "test-provider",
+		"api_key":    "sk-test",
+	}
+	jsonBody, _ := json.Marshal(body)
+
+	req := httptest.NewRequest("POST", "/api/discover", bytes.NewBuffer(jsonBody))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+
+	api.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("expected status 200, got %d", w.Code)
+	}
+
+	var response DiscoveryResult
+	if err := json.NewDecoder(w.Body).Decode(&response); err != nil {
+		t.Fatalf("failed to decode response: %v", err)
+	}
+
+	if response.ProviderID != "test-provider" {
+		t.Errorf("expected provider_id test-provider, got %s", response.ProviderID)
+	}
+	if !response.Success {
+		t.Error("expected success=true")
+	}
+}
+
+func TestHandleGenerateSDK(t *testing.T) {
+	api := NewAPI(Config{}, &mockDB{}, &mockDiscovery{}, &mockGenerator{}, &mockKeyManager{})
+
+	body := map[string]string{
+		"provider_id": "openai",
+	}
+	jsonBody, _ := json.Marshal(body)
+
+	req := httptest.NewRequest("POST", "/api/sdks/generate", bytes.NewBuffer(jsonBody))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+
+	api.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("expected status 200, got %d", w.Code)
+	}
+
+	var response GenerateResult
+	if err := json.NewDecoder(w.Body).Decode(&response); err != nil {
+		t.Fatalf("failed to decode response: %v", err)
+	}
+
+	if response.FilePath != "/tmp/test_generated.go" {
+		t.Errorf("expected file_path /tmp/test_generated.go, got %s", response.FilePath)
+	}
+	if !response.Success {
+		t.Error("expected success=true")
+	}
+}
+
+func TestHandleAddProvider_InvalidJSON(t *testing.T) {
+	api := NewAPI(Config{}, &mockDB{}, &mockDiscovery{}, &mockGenerator{}, &mockKeyManager{})
+
+	req := httptest.NewRequest("POST", "/api/providers/add", bytes.NewBufferString("invalid json"))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+
+	api.ServeHTTP(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("expected status 400, got %d", w.Code)
+	}
+}
+
+func TestHandleAddKey_InvalidJSON(t *testing.T) {
+	api := NewAPI(Config{}, &mockDB{}, &mockDiscovery{}, &mockGenerator{}, &mockKeyManager{})
+
+	req := httptest.NewRequest("POST", "/api/keys/add", bytes.NewBufferString("invalid"))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+
+	api.ServeHTTP(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("expected status 400, got %d", w.Code)
+	}
+}
+
+func TestHandleDiscover_InvalidJSON(t *testing.T) {
+	api := NewAPI(Config{}, &mockDB{}, &mockDiscovery{}, &mockGenerator{}, &mockKeyManager{})
+
+	req := httptest.NewRequest("POST", "/api/discover", bytes.NewBufferString("invalid"))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+
+	api.ServeHTTP(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("expected status 400, got %d", w.Code)
+	}
+}
+
+func TestHandleGenerateSDK_InvalidJSON(t *testing.T) {
+	api := NewAPI(Config{}, &mockDB{}, &mockDiscovery{}, &mockGenerator{}, &mockKeyManager{})
+
+	req := httptest.NewRequest("POST", "/api/sdks/generate", bytes.NewBufferString("invalid"))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+
+	api.ServeHTTP(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("expected status 400, got %d", w.Code)
+	}
+}
+
+func TestHandleKeys_MethodNotAllowed(t *testing.T) {
+	api := NewAPI(Config{}, &mockDB{}, &mockDiscovery{}, &mockGenerator{}, &mockKeyManager{})
+
+	req := httptest.NewRequest("POST", "/api/keys", nil)
+	w := httptest.NewRecorder()
+
+	api.ServeHTTP(w, req)
+
+	if w.Code != http.StatusMethodNotAllowed {
+		t.Errorf("expected status 405, got %d", w.Code)
+	}
+}
+
+func TestHandleSDKs_MethodNotAllowed(t *testing.T) {
+	api := NewAPI(Config{}, &mockDB{}, &mockDiscovery{}, &mockGenerator{}, &mockKeyManager{})
+
+	req := httptest.NewRequest("POST", "/api/sdks", nil)
+	w := httptest.NewRecorder()
+
+	api.ServeHTTP(w, req)
+
+	if w.Code != http.StatusMethodNotAllowed {
+		t.Errorf("expected status 405, got %d", w.Code)
+	}
+}
+
+func TestHandleStats_MissingModel(t *testing.T) {
+	api := NewAPI(Config{}, &mockDB{}, &mockDiscovery{}, &mockGenerator{}, &mockKeyManager{})
+
+	req := httptest.NewRequest("GET", "/api/stats", nil)
+	w := httptest.NewRecorder()
+
+	api.ServeHTTP(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("expected status 400, got %d", w.Code)
+	}
+}
+
 func TestMethodNotAllowed(t *testing.T) {
 	api := NewAPI(Config{}, &mockDB{}, &mockDiscovery{}, &mockGenerator{}, &mockKeyManager{})
 
