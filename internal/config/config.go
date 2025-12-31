@@ -31,6 +31,8 @@ type DiscoveryConfig struct {
 	AgentModel    string `yaml:"agent_model"`    // claude-sonnet-4-5, gpt-4o, etc.
 	ParallelBatch int    `yaml:"parallel_batch"` // concurrent discovery tasks
 	CacheDays     int    `yaml:"cache_days"`     // cache scraped data
+	OutputDir     string `yaml:"output_dir"`     // directory for generated SDKs
+	RoutingMode   string `yaml:"routing_mode"`   // routing mode: direct, proxy, embedded
 }
 
 // Load reads config from YAML file with graceful fallback
@@ -74,6 +76,8 @@ func DefaultConfig() *Config {
 			AgentModel:    getEnv("MODELSCAN_AGENT_MODEL", "claude-sonnet-4-5"),
 			ParallelBatch: getEnvInt("MODELSCAN_PARALLEL_BATCH", 5),
 			CacheDays:     getEnvInt("MODELSCAN_CACHE_DAYS", 7),
+			OutputDir:     getEnv("MODELSCAN_OUTPUT_DIR", "generated"),
+			RoutingMode:   getEnv("MODELSCAN_ROUTING_MODE", "direct"),
 		},
 	}
 	return cfg
@@ -105,6 +109,12 @@ func (c *Config) applyEnvOverrides() {
 			c.Discovery.CacheDays = days
 		}
 	}
+	if v := os.Getenv("MODELSCAN_OUTPUT_DIR"); v != "" {
+		c.Discovery.OutputDir = v
+	}
+	if v := os.Getenv("MODELSCAN_ROUTING_MODE"); v != "" {
+		c.Discovery.RoutingMode = v
+	}
 }
 
 // applyDefaults fills in missing values with defaults
@@ -126,6 +136,12 @@ func (c *Config) applyDefaults() {
 	}
 	if c.Discovery.CacheDays == 0 {
 		c.Discovery.CacheDays = 7
+	}
+	if c.Discovery.OutputDir == "" {
+		c.Discovery.OutputDir = "generated"
+	}
+	if c.Discovery.RoutingMode == "" {
+		c.Discovery.RoutingMode = "direct"
 	}
 	if c.APIKeys == nil {
 		c.APIKeys = make(map[string][]string)

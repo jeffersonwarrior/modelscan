@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -161,16 +162,22 @@ func (a *Agent) Discover(ctx context.Context, req DiscoveryRequest) (*DiscoveryR
 
 	// Collect results
 	var sourceResults []SourceResult
+	var failedSources int
 	for i := 0; i < len(a.sources); i++ {
 		select {
 		case result := <-sourceCh:
 			sourceResults = append(sourceResults, result)
 		case err := <-errCh:
 			// Log error but continue with other sources
-			_ = err
+			failedSources++
+			log.Printf("Discovery source failed for %s: %v", req.Identifier, err)
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		}
+	}
+
+	if failedSources > 0 {
+		log.Printf("Discovery completed with %d/%d source failures for %s", failedSources, len(a.sources), req.Identifier)
 	}
 
 	if len(sourceResults) == 0 {

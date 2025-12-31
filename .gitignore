@@ -1,8 +1,8 @@
-# Binaries
-modelscan
-modelscan-server
-pv
-validator
+# Binaries (only in root, not source directories)
+/modelscan
+/modelscan-server
+/pv
+/validator
 *.exe
 *.dll
 *.so
