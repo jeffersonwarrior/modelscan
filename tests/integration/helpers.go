@@ -4,63 +4,14 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"os/exec"
-	"strings"
 	"testing"
 	"time"
 
 	"github.com/jeffersonwarrior/modelscan/internal/database"
 	"github.com/jeffersonwarrior/modelscan/internal/discovery"
 	"github.com/jeffersonwarrior/modelscan/internal/keymanager"
-	"github.com/jeffersonwarrior/modelscan/internal/service"
 	"github.com/jeffersonwarrior/modelscan/routing"
 )
-
-// skipIfNoKeys skips the test if psst keys are not available
-func skipIfNoKeys(t *testing.T, keys ...string) {
-	t.Helper()
-
-	for _, key := range keys {
-		if !hasSecret(key) {
-			t.Skipf("Skipping test: %s not available in psst vault or environment", key)
-		}
-	}
-}
-
-// hasSecret checks if a secret is available via psst or environment
-func hasSecret(name string) bool {
-	// Check environment first
-	if os.Getenv(name) != "" {
-		return true
-	}
-
-	// Check psst vault
-	cmd := exec.Command("psst", "list", "--json")
-	output, err := cmd.Output()
-	if err != nil {
-		return false
-	}
-
-	return strings.Contains(string(output), fmt.Sprintf(`"%s"`, name))
-}
-
-// getSecret retrieves a secret via psst (never exposed to tests)
-// This is used internally by test helpers, not directly by tests
-func getSecret(name string) (string, error) {
-	// Try environment first
-	if val := os.Getenv(name); val != "" {
-		return val, nil
-	}
-
-	// Use psst to get secret
-	cmd := exec.Command("psst", "get", name)
-	output, err := cmd.Output()
-	if err != nil {
-		return "", fmt.Errorf("failed to get secret %s: %w", name, err)
-	}
-
-	return strings.TrimSpace(string(output)), nil
-}
 
 // setupTestDB creates a temporary test database
 func setupTestDB(t *testing.T) *database.DB {
@@ -81,54 +32,6 @@ func setupTestDB(t *testing.T) *database.DB {
 	})
 
 	return db
-}
-
-// setupTestService creates a test service instance
-func setupTestService(t *testing.T) *service.Service {
-	t.Helper()
-
-	tmpDB := fmt.Sprintf("/tmp/modelscan_service_test_%d.db", time.Now().UnixNano())
-	tmpOut := fmt.Sprintf("/tmp/modelscan_sdk_test_%d", time.Now().UnixNano())
-
-	t.Cleanup(func() {
-		os.Remove(tmpDB)
-		os.RemoveAll(tmpOut)
-	})
-
-	svc := service.NewService(&service.Config{
-		DatabasePath:  tmpDB,
-		ServerHost:    "127.0.0.1",
-		ServerPort:    0, // Random port
-		AgentModel:    "claude-sonnet-4-5",
-		ParallelBatch: 4,
-		CacheDays:     7,
-		OutputDir:     tmpOut,
-		RoutingMode:   "direct",
-	})
-
-	if err := svc.Initialize(); err != nil {
-		t.Fatalf("Failed to initialize test service: %v", err)
-	}
-
-	t.Cleanup(func() {
-		svc.Stop()
-	})
-
-	return svc
-}
-
-// addTestAPIKey adds an API key to the database for testing
-func addTestAPIKey(t *testing.T, db *database.DB, providerID, secretName string) error {
-	t.Helper()
-
-	secret, err := getSecret(secretName)
-	if err != nil {
-		return err
-	}
-
-	// Add key to database
-	_, err = db.CreateAPIKey(providerID, secret)
-	return err
 }
 
 // setupDiscoveryAgent creates a test discovery agent

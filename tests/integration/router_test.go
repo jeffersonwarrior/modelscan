@@ -180,7 +180,7 @@ func TestRouterFactory(t *testing.T) {
 			hasErr: false,
 		},
 		{
-			name: "nil config",
+			name:   "nil config",
 			config: nil,
 			hasErr: true,
 		},

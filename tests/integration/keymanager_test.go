@@ -34,8 +34,7 @@ func TestKeyManager_RoundRobin(t *testing.T) {
 	// Add multiple API keys
 	for i := 1; i <= 3; i++ {
 		key := fmt.Sprintf("test-key-%d", i)
-		_, err := db.CreateAPIKey("test-provider", key)
-		if err != nil {
+		if _, err = db.CreateAPIKey("test-provider", key); err != nil {
 			t.Fatalf("Failed to add API key %d: %v", i, err)
 		}
 	}

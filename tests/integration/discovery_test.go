@@ -99,11 +99,6 @@ func TestDiscoveryAgent_Statistics(t *testing.T) {
 		t.Error("Expected non-nil statistics")
 	}
 
-	// Statistics structure check - GetSourceStats returns map[string]SourceStat
-	if len(stats) < 0 {
-		t.Error("Stats map length should not be negative")
-	}
-
 	t.Logf("Source Statistics:")
 	t.Logf("  Total sources: %d", len(stats))
 
