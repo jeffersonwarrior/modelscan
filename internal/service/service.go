@@ -335,9 +335,36 @@ func (s *Service) loadGeneratedClient(providerID, sdkPath string) error {
 	provider.SDKPath = &sdkPath
 	// Note: Would need to add UpdateProvider method to database
 
-	// TODO: Register client with router
-	// s.router.RegisterClient(providerID, client)
+	// TODO: Once dynamic loading is implemented, register client with full middleware:
+	// client := loadDynamicClient(sdkPath)
+	// if directRouter, ok := s.router.(*routing.DirectRouter); ok {
+	//     directRouter.RegisterClientWithFullMiddleware(providerID, client, s.keyManager)
+	// }
 
+	return nil
+}
+
+// RegisterClient registers a client with the router using full middleware stack
+func (s *Service) RegisterClient(providerID string, client routing.Client) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if !s.initialized {
+		return fmt.Errorf("service not initialized")
+	}
+
+	// Check if router is DirectRouter (supports client registration)
+	directRouter, ok := s.router.(*routing.DirectRouter)
+	if !ok {
+		return fmt.Errorf("current router mode does not support client registration")
+	}
+
+	// Register with full middleware (key management + tooling)
+	if err := directRouter.RegisterClientWithFullMiddleware(providerID, client, s.keyManager); err != nil {
+		return fmt.Errorf("failed to register client: %w", err)
+	}
+
+	log.Printf("✓ Registered client for %s with full middleware stack", providerID)
 	return nil
 }
 

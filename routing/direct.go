@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"time"
+
+	"github.com/jeffersonwarrior/modelscan/internal/keymanager"
 )
 
 // DirectRouter routes requests directly to SDK clients without any proxy
@@ -46,6 +48,29 @@ func (r *DirectRouter) RegisterClientWithTooling(provider string, client Client)
 	if err != nil {
 		return err
 	}
+	r.clients[provider] = toolingClient
+	return nil
+}
+
+// RegisterClientWithKeyManagement registers an SDK client wrapped with key management
+func (r *DirectRouter) RegisterClientWithKeyManagement(provider string, client Client, keyMgr *keymanager.KeyManager) {
+	keyClient := NewKeySelectingClient(provider, client, keyMgr)
+	r.clients[provider] = keyClient
+}
+
+// RegisterClientWithFullMiddleware registers an SDK client with both key management and tooling
+func (r *DirectRouter) RegisterClientWithFullMiddleware(provider string, client Client, keyMgr *keymanager.KeyManager) error {
+	// Wrap with key management first
+	keyClient := NewKeySelectingClient(provider, client, keyMgr)
+
+	// Then wrap with tooling middleware
+	toolingClient, err := NewToolingClient(provider, keyClient)
+	if err != nil {
+		// If tooling fails, still register with just key management
+		r.clients[provider] = keyClient
+		return nil // Don't fail if tooling unavailable
+	}
+
 	r.clients[provider] = toolingClient
 	return nil
 }
