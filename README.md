@@ -2,14 +2,21 @@
 
 **21 Production-Ready Go SDKs for LLM Providers** • Zero Dependencies • 100% Go Stdlib
 
-> **Version 0.3** - Auto-Discovering SDK Service
+> **Version 0.3.1** - Auto-Discovering SDK Service
 > by Jefferson Nunn and Claude Sonnet 4.5
 
 A comprehensive Go toolkit providing production-ready SDKs for all major LLM providers. **NEW in v0.3**: Auto-discovering service that generates SDKs on-demand for any AI model with intelligent provider onboarding.
 
-## 🆕 What's New in v0.3
+## 🆕 What's New in v0.3.1
 
-**Auto-Discovering SDK Service** - Add any AI model by identifier, and ModelScan will:
+**Security & UX Improvements** - Enhanced security, configuration, and user experience:
+- 🔒 Improved filesystem permissions (0700 for database directories)
+- ⚙️ Configurable output directory and routing mode via env vars or YAML
+- 🎯 Forced shutdown support (press Ctrl+C twice)
+- 📊 Discovery source failure logging with statistics
+- ✅ Better error messages with default values and guidance
+
+**v0.3 - Auto-Discovering SDK Service** - Add any AI model by identifier:
 - 🔍 Discover metadata from 4 sources (models.dev, GPUStack, ModelScope, HuggingFace)
 - 🤖 Use Claude Sonnet 4.5/GPT-4o to synthesize API structure
 - ⚡ Auto-generate working Go SDK code
@@ -17,13 +24,15 @@ A comprehensive Go toolkit providing production-ready SDKs for all major LLM pro
 - 🔄 Hot-reload into routing layer
 - 🔑 Manage up to 100 API keys per provider with intelligent round-robin
 
-**Quick Start v0.3**:
+**Quick Start v0.3.1**:
 ```bash
 # Build and initialize
 go build -o modelscan ./cmd/modelscan/
 ./modelscan --init
 
-# Start service
+# Start service (customize via config or env vars)
+export MODELSCAN_OUTPUT_DIR="./sdks"
+export MODELSCAN_ROUTING_MODE="proxy"
 ./modelscan
 
 # Add any model (e.g., DeepSeek Coder)
@@ -34,6 +43,8 @@ curl -X POST http://localhost:8080/api/providers/add \
 curl http://localhost:8080/v1/chat/completions \
   -H "Authorization: Bearer YOUR_KEY" \
   -d '{"model": "deepseek-coder", "messages": [...]}'
+
+# Graceful shutdown (press Ctrl+C, or twice to force)
 ```
 
 📖 **Documentation**: [V0.3 Architecture](V0.3_ARCHITECTURE.md) | [Usage Guide](USAGE.md) | [Quick Reference](QUICKREF.md)
@@ -334,10 +345,40 @@ func main() {
 
 ---
 
-## 🔑 API Key Setup
+## 🔑 Configuration & API Keys
+
+### Configuration Files
+
+Create `config.yaml` for service configuration:
+```yaml
+database:
+  path: "modelscan.db"
+
+server:
+  host: "127.0.0.1"
+  port: 8080
+
+discovery:
+  agent_model: "claude-sonnet-4-5"
+  parallel_batch: 5
+  cache_days: 7
+  output_dir: "generated"      # SDK output directory
+  routing_mode: "direct"       # direct, proxy, or embedded
+```
 
 ### Environment Variables (Recommended)
 
+#### Service Configuration
+```bash
+export MODELSCAN_DB_PATH="./modelscan.db"
+export MODELSCAN_HOST="127.0.0.1"
+export MODELSCAN_PORT="8080"
+export MODELSCAN_AGENT_MODEL="claude-sonnet-4-5"
+export MODELSCAN_OUTPUT_DIR="generated"
+export MODELSCAN_ROUTING_MODE="direct"
+```
+
+#### Provider API Keys
 ```bash
 export OPENAI_API_KEY="sk-..."
 export ANTHROPIC_API_KEY="sk-ant-..."

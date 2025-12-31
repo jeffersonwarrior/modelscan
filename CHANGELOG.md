@@ -5,6 +5,108 @@ All notable changes to ModelScan will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.1] - 2025-12-31
+
+### 🔒 Security
+
+#### Fixed
+- **Database directory permissions** - Changed from 0755 to 0700 for enhanced security (cmd/modelscan/main.go:114)
+- **Gitignore pattern fix** - Updated to only ignore binaries in root directory, not source directories
+
+### ⚙️ Configuration
+
+#### Added
+- **Configurable output directory** - New `MODELSCAN_OUTPUT_DIR` environment variable
+- **Configurable routing mode** - New `MODELSCAN_ROUTING_MODE` environment variable
+- Both values now configurable via `config.yaml` or environment variables
+
+#### Changed
+- Extracted hardcoded `OutputDir` and `RoutingMode` values to config struct
+- Improved config load failure messages with detailed defaults and guidance
+- Enhanced feedback when config file is missing or malformed
+
+### 🎯 User Experience
+
+#### Added
+- **Forced shutdown support** - Press Ctrl+C twice to force immediate shutdown
+- **Discovery logging** - Added logging for individual source failures with failure counts
+- Enhanced shutdown messages: "Press Ctrl+C to shutdown (press twice to force)"
+
+#### Improved
+- Config load errors now show expected default values
+- Clear guidance pointing to config.example.yaml when config fails
+- Discovery failures logged with summary statistics
+
+### 🧪 Testing
+
+#### Changed
+- All changes validated with full test suite
+- `go build ./...` ✓
+- `go vet ./...` ✓
+- `go test ./... -race` ✓
+
+### 📦 Files Changed
+- `.gitignore` - Fixed binary ignore pattern
+- `cmd/modelscan/main.go` - Added security and UX improvements
+- `cmd/modelscan-server/main.go` - Added forced shutdown and better config feedback
+- `internal/config/config.go` - Added OutputDir and RoutingMode to config struct
+- `internal/discovery/agent.go` - Added source failure logging
+
+### Impact
+- Enhanced security posture with proper filesystem permissions
+- Improved operator experience with better error messages and forced shutdown
+- More observable discovery process with failure logging
+- Fully configurable via environment variables or YAML
+
+---
+
+## [0.3.0] - 2025-12-30
+
+### 🏗️ Architecture
+
+#### Changed
+- **Single-module consolidation** - Converted from 8 independent modules to unified structure
+- Eliminated all `internal/*/go.mod` files
+- Simplified dependency management (removed replace directives)
+- Added .gitignore safety nets to prevent multi-module regression
+
+#### Removed
+- `internal/integration` package (700+ lines of duplicate code)
+- `cmd/modelscan-server/adapters.go` (81 lines of dead code)
+- All internal go.mod files
+
+#### Added
+- Centralized `internal/admin/adapters.go` for type conversions
+- Comprehensive architecture documentation in `codedocs/`
+
+### ✅ Testing
+
+#### Added
+- **Database tests** - 10 new test cases, 87.8% coverage (0% → 87.8%)
+- **Service layer tests** - 8 new test cases, 79.5% coverage (9.8% → 79.5%)
+- Overall test coverage improved to 73.4%
+
+#### Changed
+- All tests passing with race detector
+- Zero build warnings or errors
+
+### 🔧 Code Quality
+
+#### Changed
+- `cmd/modelscan-server/main.go` - Simplified from 305 lines → 87 lines
+- Refactored service layer to use unified adapter pattern
+- Eliminated 8 module boundaries
+- Net reduction of 543 lines while improving functionality
+
+### 📚 Documentation
+
+#### Added
+- `codedocs/ARCHITECTURE_RECOMMENDATIONS.md`
+- `codedocs/CLEANUP_REPORT.md`
+- Documented architectural decisions and refactoring rationale
+
+---
+
 ## [1.0.0] - 2024-12-17
 
 ### 🎉 Initial Release
