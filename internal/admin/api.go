@@ -87,7 +87,7 @@ type Provider struct {
 type APIKey struct {
 	ID            int
 	ProviderID    string
-	KeyHash       string  // SHA256 hash of the key (not exposed in JSON)
+	KeyHash       string // SHA256 hash of the key (not exposed in JSON)
 	KeyPrefix     *string
 	RequestsCount int
 	TokensCount   int

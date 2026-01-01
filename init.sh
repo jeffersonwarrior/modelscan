@@ -1,6 +1,6 @@
 #!/bin/bash
 # Claude Orchestrator - Init Script
-# Generated: 2025-12-31T20:55:17.144Z
+# Generated: 2026-01-01T03:35:29.592Z
 #
 # This script sets up the environment for the orchestration session.
 # Run this at the start of each session to ensure proper setup.

@@ -24,22 +24,22 @@ func NewClientAPI(clientRepo *database.ClientRepository) *ClientAPI {
 
 // ClientRegistrationRequest represents the request body for client registration
 type ClientRegistrationRequest struct {
-	Name         string                  `json:"name"`
-	Version      string                  `json:"version"`
-	Capabilities []string                `json:"capabilities,omitempty"`
-	Config       *database.ClientConfig  `json:"config,omitempty"`
+	Name         string                 `json:"name"`
+	Version      string                 `json:"version"`
+	Capabilities []string               `json:"capabilities,omitempty"`
+	Config       *database.ClientConfig `json:"config,omitempty"`
 }
 
 // ClientResponse represents a client in API responses (token hidden for list operations)
 type ClientResponse struct {
-	ID           string                 `json:"id"`
-	Name         string                 `json:"name"`
-	Version      string                 `json:"version"`
-	Token        string                 `json:"token,omitempty"`
-	Capabilities []string               `json:"capabilities"`
-	Config       database.ClientConfig  `json:"config"`
-	CreatedAt    time.Time              `json:"created_at"`
-	LastSeenAt   *time.Time             `json:"last_seen_at,omitempty"`
+	ID           string                `json:"id"`
+	Name         string                `json:"name"`
+	Version      string                `json:"version"`
+	Token        string                `json:"token,omitempty"`
+	Capabilities []string              `json:"capabilities"`
+	Config       database.ClientConfig `json:"config"`
+	CreatedAt    time.Time             `json:"created_at"`
+	LastSeenAt   *time.Time            `json:"last_seen_at,omitempty"`
 }
 
 // ClientRegistrationResponse represents the response after successful registration

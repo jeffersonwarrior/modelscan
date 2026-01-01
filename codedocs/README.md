@@ -20,17 +20,40 @@ Production-ready Go SDKs for 21+ LLM providers with zero dependencies.
 | [internal/http](./http-client.md) | Production | 85% | HTTP client with retry logic |
 | [internal/service](./V0.3_ARCHITECTURE.md#7-service-orchestration) | Production | 80% | Service orchestration |
 
+## v0.5.5 MClaude Integration Packages
+
+| Package | Status | Coverage | Description |
+|---------|--------|----------|-------------|
+| [internal/proxy](./proxy.md) | Production | 80%+ | LLM API proxy with SSE streaming |
+| [internal/admin](./admin-api.md) | Production | 80%+ | REST API for clients, aliases, remaps |
+| [internal/keymanager](./keymanager.md) | Production | 85% | Round-robin key selection, rate limiting |
+| [internal/tooling](./tooling.md) | Production | 80%+ | Universal tool calling across providers |
+| [cmd/modelscan/setup](./setup.md) | Production | 75% | Interactive setup wizard |
+
+## Audits & Quality
+
+- **[Audit Report 2026-01-01](./AUDIT-2026-01-01.md)** - Full codebase audit (123 issues identified)
+- **[Audit Fixes 2026-01-01](./AUDIT-FIXES-2026-01-01.md)** - ✓ 37 critical/high issues fixed
+- [Cleanup Report](./CLEANUP_REPORT.md) - Codebase cleanup analysis
+- [Architecture Recommendations](./ARCHITECTURE_RECOMMENDATIONS.md) - Future improvements
+
 ## Design Documents
 
 - [Tool Calling Standards](./TOOLING-STANDARDS.md) - Tool calling standardization (design phase)
 - [SDK Autogen Design](./SDK_AUTOGEN_DESIGN.md) - SDK generation architecture
 - [Model Autoconfig](./MODEL_AUTOCONFIG.md) - Model auto-configuration
-- [Architecture Recommendations](./ARCHITECTURE_RECOMMENDATIONS.md) - Future improvements
-- [Cleanup Report](./CLEANUP_REPORT.md) - Codebase cleanup analysis
+
+## Agentic Tooling (v0.5.5+)
+
+- [Swarm Integration](./agentic/MODELSCAN-SWARM-INTEGRATION.md) - Multi-agent orchestration
+- [Swarm Protocol](./agentic/SWARM-OVERSIGHT-PROTOCOL.md) - Worker oversight protocol
+- [v0.5.0 Swarm Tracker](./agentic/V0.5.0-TRACKER.md) - Feature implementation tracking
 
 ## Status
 
-**Version**: 0.3.1
-**Last Updated**: December 31, 2025
+**Version**: 0.5.5
+**Last Updated**: January 1, 2026
 **Build**: ✓ All packages passing
+**Tests**: ✓ Race detection enabled
 **Coverage**: 81% average across tested packages
+**Audit**: 123 issues identified (13 critical, 24 high) - see [Audit Report](./AUDIT-2026-01-01.md)

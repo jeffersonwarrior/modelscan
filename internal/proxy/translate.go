@@ -85,21 +85,21 @@ type Usage struct {
 
 // OpenAIRequest represents an OpenAI Chat Completions API request.
 type OpenAIRequest struct {
-	Model            string          `json:"model"`
-	Messages         []OpenAIMessage `json:"messages"`
-	MaxTokens        *int            `json:"max_tokens,omitempty"`
-	MaxCompletionTokens *int         `json:"max_completion_tokens,omitempty"`
-	Temperature      *float64        `json:"temperature,omitempty"`
-	TopP             *float64        `json:"top_p,omitempty"`
-	N                *int            `json:"n,omitempty"`
-	Stop             []string        `json:"stop,omitempty"`
-	Stream           bool            `json:"stream,omitempty"`
-	StreamOptions    *StreamOptions  `json:"stream_options,omitempty"`
-	Tools            []OpenAITool    `json:"tools,omitempty"`
-	ToolChoice       interface{}     `json:"tool_choice,omitempty"`
-	FrequencyPenalty *float64        `json:"frequency_penalty,omitempty"`
-	PresencePenalty  *float64        `json:"presence_penalty,omitempty"`
-	User             string          `json:"user,omitempty"`
+	Model               string          `json:"model"`
+	Messages            []OpenAIMessage `json:"messages"`
+	MaxTokens           *int            `json:"max_tokens,omitempty"`
+	MaxCompletionTokens *int            `json:"max_completion_tokens,omitempty"`
+	Temperature         *float64        `json:"temperature,omitempty"`
+	TopP                *float64        `json:"top_p,omitempty"`
+	N                   *int            `json:"n,omitempty"`
+	Stop                []string        `json:"stop,omitempty"`
+	Stream              bool            `json:"stream,omitempty"`
+	StreamOptions       *StreamOptions  `json:"stream_options,omitempty"`
+	Tools               []OpenAITool    `json:"tools,omitempty"`
+	ToolChoice          interface{}     `json:"tool_choice,omitempty"`
+	FrequencyPenalty    *float64        `json:"frequency_penalty,omitempty"`
+	PresencePenalty     *float64        `json:"presence_penalty,omitempty"`
+	User                string          `json:"user,omitempty"`
 }
 
 // StreamOptions configures streaming behavior.
@@ -109,18 +109,18 @@ type StreamOptions struct {
 
 // OpenAIMessage represents a message in the OpenAI format.
 type OpenAIMessage struct {
-	Role       string         `json:"role"`
-	Content    interface{}    `json:"content"` // string or []ContentBlock
-	Name       string         `json:"name,omitempty"`
+	Role       string           `json:"role"`
+	Content    interface{}      `json:"content"` // string or []ContentBlock
+	Name       string           `json:"name,omitempty"`
 	ToolCalls  []OpenAIToolCall `json:"tool_calls,omitempty"`
-	ToolCallID string         `json:"tool_call_id,omitempty"`
+	ToolCallID string           `json:"tool_call_id,omitempty"`
 }
 
 // OpenAIToolCall represents a tool call in OpenAI format.
 type OpenAIToolCall struct {
-	ID       string           `json:"id"`
-	Type     string           `json:"type"`
-	Function OpenAIFunction   `json:"function"`
+	ID       string         `json:"id"`
+	Type     string         `json:"type"`
+	Function OpenAIFunction `json:"function"`
 }
 
 // OpenAIFunction represents a function call.
@@ -131,8 +131,8 @@ type OpenAIFunction struct {
 
 // OpenAITool represents a tool definition in OpenAI format.
 type OpenAITool struct {
-	Type     string             `json:"type"`
-	Function OpenAIFunctionDef  `json:"function"`
+	Type     string            `json:"type"`
+	Function OpenAIFunctionDef `json:"function"`
 }
 
 // OpenAIFunctionDef is the function definition within a tool.
@@ -144,13 +144,13 @@ type OpenAIFunctionDef struct {
 
 // OpenAIResponse represents an OpenAI Chat Completions API response.
 type OpenAIResponse struct {
-	ID                string           `json:"id"`
-	Object            string           `json:"object"`
-	Created           int64            `json:"created"`
-	Model             string           `json:"model"`
-	Choices           []OpenAIChoice   `json:"choices"`
-	Usage             *OpenAIUsage     `json:"usage,omitempty"`
-	SystemFingerprint string           `json:"system_fingerprint,omitempty"`
+	ID                string         `json:"id"`
+	Object            string         `json:"object"`
+	Created           int64          `json:"created"`
+	Model             string         `json:"model"`
+	Choices           []OpenAIChoice `json:"choices"`
+	Usage             *OpenAIUsage   `json:"usage,omitempty"`
+	SystemFingerprint string         `json:"system_fingerprint,omitempty"`
 }
 
 // OpenAIChoice represents a completion choice.
@@ -171,32 +171,32 @@ type OpenAIUsage struct {
 
 // AnthropicStreamEvent represents a streaming event from Anthropic.
 type AnthropicStreamEvent struct {
-	Type         string        `json:"type"`
+	Type         string             `json:"type"`
 	Message      *AnthropicResponse `json:"message,omitempty"`
-	Index        int           `json:"index,omitempty"`
-	ContentBlock *ContentPart  `json:"content_block,omitempty"`
-	Delta        *StreamDelta  `json:"delta,omitempty"`
-	Usage        *Usage        `json:"usage,omitempty"`
+	Index        int                `json:"index,omitempty"`
+	ContentBlock *ContentPart       `json:"content_block,omitempty"`
+	Delta        *StreamDelta       `json:"delta,omitempty"`
+	Usage        *Usage             `json:"usage,omitempty"`
 }
 
 // StreamDelta represents incremental content in a stream.
 type StreamDelta struct {
-	Type         string                 `json:"type,omitempty"`
-	Text         string                 `json:"text,omitempty"`
-	PartialJSON  string                 `json:"partial_json,omitempty"`
-	StopReason   string                 `json:"stop_reason,omitempty"`
-	StopSequence string                 `json:"stop_sequence,omitempty"`
+	Type         string `json:"type,omitempty"`
+	Text         string `json:"text,omitempty"`
+	PartialJSON  string `json:"partial_json,omitempty"`
+	StopReason   string `json:"stop_reason,omitempty"`
+	StopSequence string `json:"stop_sequence,omitempty"`
 }
 
 // OpenAIStreamChunk represents a streaming chunk from OpenAI.
 type OpenAIStreamChunk struct {
-	ID                string                 `json:"id"`
-	Object            string                 `json:"object"`
-	Created           int64                  `json:"created"`
-	Model             string                 `json:"model"`
-	Choices           []OpenAIStreamChoice   `json:"choices"`
-	Usage             *OpenAIUsage           `json:"usage,omitempty"`
-	SystemFingerprint string                 `json:"system_fingerprint,omitempty"`
+	ID                string               `json:"id"`
+	Object            string               `json:"object"`
+	Created           int64                `json:"created"`
+	Model             string               `json:"model"`
+	Choices           []OpenAIStreamChoice `json:"choices"`
+	Usage             *OpenAIUsage         `json:"usage,omitempty"`
+	SystemFingerprint string               `json:"system_fingerprint,omitempty"`
 }
 
 // OpenAIStreamChoice represents a choice in a stream chunk.
@@ -208,8 +208,8 @@ type OpenAIStreamChoice struct {
 
 // OpenAIStreamDelta represents the delta content in streaming.
 type OpenAIStreamDelta struct {
-	Role      string           `json:"role,omitempty"`
-	Content   string           `json:"content,omitempty"`
+	Role      string                `json:"role,omitempty"`
+	Content   string                `json:"content,omitempty"`
 	ToolCalls []OpenAIToolCallDelta `json:"tool_calls,omitempty"`
 }
 

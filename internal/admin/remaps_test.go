@@ -11,9 +11,9 @@ import (
 
 // mockRemapStore implements RemapStore for testing
 type mockRemapStore struct {
-	rules    map[int]*RemapRule
-	nextID   int
-	err      error // if set, methods return this error
+	rules  map[int]*RemapRule
+	nextID int
+	err    error // if set, methods return this error
 }
 
 func newMockRemapStore() *mockRemapStore {
@@ -422,9 +422,9 @@ func TestRemapAPI_HandleUpdateRemap_Multiple(t *testing.T) {
 
 	enabled := false
 	body := map[string]interface{}{
-		"to_model":   "new-model",
+		"to_model":    "new-model",
 		"to_provider": "new-provider",
-		"enabled":    enabled,
+		"enabled":     enabled,
 	}
 	jsonBody, _ := json.Marshal(body)
 

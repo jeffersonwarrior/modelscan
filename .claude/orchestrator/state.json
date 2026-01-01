@@ -1,23 +1,357 @@
 {
   "projectDir": "/home/agent/modelscan",
-  "taskDescription": "Tool access validation test - verify workers can use Read, Write, and Edit tools after the --mode delegate fix.",
+  "taskDescription": "ModelScan v0.5.5: MClaude Integration API. Implement proxy endpoints (/v1/messages, /v1/chat/completions), SSE streaming, model remapping, dynamic port with PID file, daemon mode, client registration, aliases, and enhanced key management. See modelscan.0.5.5.plan.md for specs.",
   "features": [
     {
       "id": "feature-1",
-      "description": "Test filesystem tool access by creating a simple test file",
-      "status": "in_progress",
+      "description": "F1: Port Discovery - internal/service/portfile.go - FindOpenPort() scanning 10000-10500",
+      "status": "completed",
       "attempts": 1,
-      "workerId": "cc-worker-feature-1-mjuhwdnm",
-      "startedAt": "2025-12-31T20:55:23.948Z"
+      "startedAt": "2026-01-01T03:35:56.579Z",
+      "completedAt": "2026-01-01T03:42:31.659Z"
+    },
+    {
+      "id": "feature-2",
+      "description": "F2: PID File - internal/service/portfile.go - WritePIDFile, ReadPIDFile, RemovePIDFile for ~/.modelscan/modelscan.pid",
+      "status": "completed",
+      "attempts": 1,
+      "startedAt": "2026-01-01T03:35:56.572Z",
+      "completedAt": "2026-01-01T03:42:31.820Z"
+    },
+    {
+      "id": "feature-3",
+      "description": "F3: Server Detection - internal/service/portfile.go - IsServerRunning() checking process existence",
+      "status": "completed",
+      "attempts": 1,
+      "startedAt": "2026-01-01T03:35:56.574Z",
+      "completedAt": "2026-01-01T03:39:44.818Z"
+    },
+    {
+      "id": "feature-4",
+      "description": "F4: Anthropic Proxy - internal/proxy/anthropic.go - POST /v1/messages handler with SSE streaming",
+      "status": "completed",
+      "attempts": 1,
+      "startedAt": "2026-01-01T03:44:24.672Z",
+      "completedAt": "2026-01-01T03:48:50.557Z",
+      "dependsOn": [
+        "feature-6",
+        "feature-7"
+      ]
+    },
+    {
+      "id": "feature-5",
+      "description": "F5: OpenAI Proxy - internal/proxy/openai.go - POST /v1/chat/completions handler with SSE streaming",
+      "status": "completed",
+      "attempts": 1,
+      "startedAt": "2026-01-01T03:48:50.841Z",
+      "completedAt": "2026-01-01T03:53:30.349Z",
+      "dependsOn": [
+        "feature-6",
+        "feature-7"
+      ]
+    },
+    {
+      "id": "feature-6",
+      "description": "F6: SSE Stream Writer - internal/proxy/stream.go - StreamWriter for chunked responses",
+      "status": "completed",
+      "attempts": 1,
+      "startedAt": "2026-01-01T03:35:56.577Z",
+      "completedAt": "2026-01-01T03:42:03.322Z"
+    },
+    {
+      "id": "feature-7",
+      "description": "F7: Format Translation - internal/proxy/translate.go - Anthropic to OpenAI bidirectional conversion",
+      "status": "completed",
+      "attempts": 1,
+      "startedAt": "2026-01-01T03:35:56.581Z",
+      "completedAt": "2026-01-01T03:42:40.356Z"
+    },
+    {
+      "id": "feature-8",
+      "description": "F8: Daemon Mode - cmd/modelscan-server/daemon.go - Background service with --daemon flag",
+      "status": "completed",
+      "attempts": 1,
+      "startedAt": "2026-01-01T03:44:24.665Z",
+      "completedAt": "2026-01-01T03:48:50.694Z"
+    },
+    {
+      "id": "feature-9",
+      "description": "F9: ListAllModels - internal/service/service.go - Aggregate models from all providers with caching",
+      "status": "completed",
+      "attempts": 1,
+      "startedAt": "2026-01-01T03:36:09.460Z",
+      "completedAt": "2026-01-01T03:43:59.720Z"
+    },
+    {
+      "id": "feature-10",
+      "description": "F10: GetKey Method - internal/service/service.go - Return actual API key string for provider",
+      "status": "completed",
+      "attempts": 1,
+      "startedAt": "2026-01-01T03:36:09.447Z",
+      "completedAt": "2026-01-01T03:44:24.486Z"
+    },
+    {
+      "id": "feature-11",
+      "description": "F11: GetProxyURL - internal/service/service.go - Return http://host:port URL string",
+      "status": "completed",
+      "attempts": 1,
+      "startedAt": "2026-01-01T03:36:09.451Z",
+      "completedAt": "2026-01-01T03:39:45.006Z"
+    },
+    {
+      "id": "feature-12",
+      "description": "F12: Client Model - internal/database/clients.go - Client struct and ClientRepository",
+      "status": "completed",
+      "attempts": 1,
+      "startedAt": "2026-01-01T03:36:09.461Z",
+      "completedAt": "2026-01-01T03:43:59.876Z"
+    },
+    {
+      "id": "feature-13",
+      "description": "F13: Client Registration - internal/admin/clients.go - POST /api/clients/register endpoint",
+      "status": "completed",
+      "attempts": 1,
+      "startedAt": "2026-01-01T03:44:24.668Z",
+      "completedAt": "2026-01-01T03:50:24.605Z"
+    },
+    {
+      "id": "feature-14",
+      "description": "F14: Client Middleware - internal/admin/middleware.go - X-Client-Token validation",
+      "status": "completed",
+      "attempts": 1,
+      "startedAt": "2026-01-01T03:44:24.670Z",
+      "completedAt": "2026-01-01T03:50:24.751Z"
+    },
+    {
+      "id": "feature-15",
+      "description": "F15: Model Hierarchy - internal/admin/models.go - GET /api/models?format=hierarchy grouped by provider/family",
+      "status": "completed",
+      "attempts": 1,
+      "startedAt": "2026-01-01T03:44:24.675Z",
+      "completedAt": "2026-01-01T03:50:24.911Z"
+    },
+    {
+      "id": "feature-16",
+      "description": "F16: Aliases Table - internal/database/aliases.go - Alias model with default aliases (sonnet, opus, haiku, gpt4)",
+      "status": "completed",
+      "attempts": 1,
+      "startedAt": "2026-01-01T03:36:09.466Z",
+      "completedAt": "2026-01-01T03:44:00.042Z"
+    },
+    {
+      "id": "feature-17",
+      "description": "F17: Alias Endpoints - internal/admin/aliases.go - GET/POST/DELETE /api/aliases",
+      "status": "completed",
+      "attempts": 1,
+      "startedAt": "2026-01-01T03:49:12.456Z",
+      "completedAt": "2026-01-01T03:55:20.512Z"
+    },
+    {
+      "id": "feature-18",
+      "description": "F18: Remap Rules Model - internal/database/remaps.go - RemapRule with glob pattern support",
+      "status": "completed",
+      "attempts": 1,
+      "startedAt": "2026-01-01T03:36:19.533Z",
+      "completedAt": "2026-01-01T03:44:00.250Z"
+    },
+    {
+      "id": "feature-19",
+      "description": "F19: Remap Endpoints - internal/admin/remaps.go - CRUD for /api/rules/remap",
+      "status": "completed",
+      "attempts": 1,
+      "startedAt": "2026-01-01T03:53:30.636Z",
+      "completedAt": "2026-01-01T03:59:28.832Z"
+    },
+    {
+      "id": "feature-20",
+      "description": "F20: Remap Middleware - internal/admin/middleware.go - Apply remap rules to proxy requests",
+      "status": "completed",
+      "attempts": 1,
+      "startedAt": "2026-01-01T03:59:29.270Z",
+      "completedAt": "2026-01-01T04:03:12.549Z",
+      "dependsOn": [
+        "feature-18",
+        "feature-19"
+      ]
+    },
+    {
+      "id": "feature-21",
+      "description": "F21: Key Test - internal/admin/api.go - POST /api/keys/{id}/test endpoint",
+      "status": "completed",
+      "attempts": 1,
+      "startedAt": "2026-01-01T03:49:12.458Z",
+      "completedAt": "2026-01-01T03:53:30.485Z"
+    },
+    {
+      "id": "feature-22",
+      "description": "F22: Key Delete - internal/admin/api.go - DELETE /api/keys/{id} endpoint",
+      "status": "completed",
+      "attempts": 1,
+      "startedAt": "2026-01-01T03:53:30.638Z",
+      "completedAt": "2026-01-01T03:57:44.508Z"
+    },
+    {
+      "id": "feature-23",
+      "description": "F23: Key Stats - internal/admin/api.go - GET /api/keys/{id}/stats endpoint",
+      "status": "completed",
+      "attempts": 1,
+      "startedAt": "2026-01-01T03:55:25.738Z",
+      "completedAt": "2026-01-01T03:59:28.978Z"
+    },
+    {
+      "id": "feature-24",
+      "description": "F24: Server Info - internal/admin/server.go - GET /api/server/info endpoint",
+      "status": "completed",
+      "attempts": 1,
+      "startedAt": "2026-01-01T03:55:25.731Z",
+      "completedAt": "2026-01-01T04:01:20.227Z"
+    },
+    {
+      "id": "feature-25",
+      "description": "F25: Server Shutdown - internal/admin/server.go - POST /api/server/shutdown endpoint",
+      "status": "completed",
+      "attempts": 1,
+      "startedAt": "2026-01-01T03:59:29.272Z",
+      "completedAt": "2026-01-01T04:03:12.733Z"
+    },
+    {
+      "id": "feature-26",
+      "description": "F26: Request Logging - internal/database/requests.go - RequestLog model and repository",
+      "status": "completed",
+      "attempts": 1,
+      "startedAt": "2026-01-01T03:36:19.525Z",
+      "completedAt": "2026-01-01T03:44:00.431Z"
+    },
+    {
+      "id": "feature-27",
+      "description": "F27: Client Rate Limit - internal/admin/ratelimit.go - Per-client rate limiting",
+      "status": "completed",
+      "attempts": 1,
+      "startedAt": "2026-01-01T03:55:25.734Z",
+      "completedAt": "2026-01-01T04:03:12.957Z"
+    },
+    {
+      "id": "feature-28",
+      "description": "F28: Client Stats - internal/admin/clients.go - GET /api/clients/{id}/stats",
+      "status": "completed",
+      "attempts": 1,
+      "startedAt": "2026-01-01T03:55:25.736Z",
+      "completedAt": "2026-01-01T03:59:29.118Z"
+    },
+    {
+      "id": "feature-29",
+      "description": "F29: Schema Migration - internal/database/schema.go - Add new tables for clients, aliases, remaps, logs",
+      "status": "completed",
+      "attempts": 1,
+      "startedAt": "2026-01-01T03:36:19.529Z",
+      "completedAt": "2026-01-01T03:44:00.587Z"
+    },
+    {
+      "id": "feature-30",
+      "description": "F30: Integration Tests - tests/integration/proxy_test.go - Proxy and API endpoint tests",
+      "status": "completed",
+      "attempts": 1,
+      "startedAt": "2026-01-01T03:55:25.740Z",
+      "completedAt": "2026-01-01T04:01:20.397Z",
+      "dependsOn": [
+        "feature-4",
+        "feature-5",
+        "feature-29"
+      ]
+    },
+    {
+      "id": "feature-31",
+      "description": "F31: Documentation - Update AI-README.md and codedocs with v0.5.5 features",
+      "status": "completed",
+      "attempts": 1,
+      "startedAt": "2026-01-01T04:01:20.632Z",
+      "dependsOn": [
+        "feature-30"
+      ],
+      "completedAt": "2026-01-01T04:06:18.641Z"
     }
   ],
   "workers": [],
-  "status": "in_progress",
-  "startTime": "2025-12-31T20:55:17.144Z",
-  "lastUpdated": "2025-12-31T20:55:50.868Z",
+  "status": "completed",
+  "startTime": "2026-01-01T03:35:29.591Z",
+  "lastUpdated": "2026-01-01T04:06:18.642Z",
   "progressLog": [
-    "[2025-12-31T20:55:17.144Z] Orchestration initialized with 1 features",
-    "[2025-12-31T20:55:23.948Z] Started worker for feature-1: Test filesystem tool access by creating a simple test file",
-    "[2025-12-31T20:55:50.868Z] ⚠️ Worker crashed: feature-1 - Worker session ended unexpectedly.  Last output:  **Tools Attempted**: - Write: Not available - Bash... - use mark_complete to update status"
-  ]
+    "[2026-01-01T03:35:29.591Z] Orchestration initialized with 31 features",
+    "[2026-01-01T03:35:40.370Z] Set dependencies for feature-4: feature-6, feature-7",
+    "[2026-01-01T03:35:40.536Z] Set dependencies for feature-5: feature-6, feature-7",
+    "[2026-01-01T03:35:40.706Z] Set dependencies for feature-20: feature-18, feature-19",
+    "[2026-01-01T03:35:40.997Z] Set dependencies for feature-30: feature-4, feature-5, feature-29",
+    "[2026-01-01T03:35:41.164Z] Set dependencies for feature-31: feature-30",
+    "[2026-01-01T03:35:56.581Z] Started 5 parallel workers: feature-1, feature-2, feature-3, feature-6, feature-7",
+    "[2026-01-01T03:36:09.466Z] Started 5 parallel workers: feature-9, feature-10, feature-11, feature-12, feature-16",
+    "[2026-01-01T03:36:19.533Z] Started 3 parallel workers: feature-18, feature-26, feature-29",
+    "[2026-01-01T03:37:12.839Z] 🔔 Worker completed: feature-11 - use mark_complete to update status",
+    "[2026-01-01T03:37:42.830Z] 🔔 Worker completed: feature-3 - use mark_complete to update status",
+    "[2026-01-01T03:39:44.818Z] ✅ Completed: feature-3 - F3: Server Detection - internal/service/portfile.go - IsServerRunning() checking process existence",
+    "[2026-01-01T03:39:45.006Z] ✅ Completed: feature-11 - F11: GetProxyURL - internal/service/service.go - Return http://host:port URL string",
+    "[2026-01-01T03:40:12.932Z] 🔔 Worker completed: feature-6 - use mark_complete to update status",
+    "[2026-01-01T03:42:02.991Z] 🔔 Worker completed: feature-2 - use mark_complete to update status",
+    "[2026-01-01T03:42:03.322Z] ✅ Completed: feature-6 - F6: SSE Stream Writer - internal/proxy/stream.go - StreamWriter for chunked responses",
+    "[2026-01-01T03:42:12.989Z] 🔔 Worker completed: feature-1 - use mark_complete to update status",
+    "[2026-01-01T03:42:13.022Z] 🔔 Worker completed: feature-12 - use mark_complete to update status",
+    "[2026-01-01T03:42:13.028Z] 🔔 Worker completed: feature-16 - use mark_complete to update status",
+    "[2026-01-01T03:42:31.659Z] ✅ Completed: feature-1 - F1: Port Discovery - internal/service/portfile.go - FindOpenPort() scanning 10000-10500",
+    "[2026-01-01T03:42:31.820Z] ✅ Completed: feature-2 - F2: PID File - internal/service/portfile.go - WritePIDFile, ReadPIDFile, RemovePIDFile for ~/.modelscan/modelscan.pid",
+    "[2026-01-01T03:42:33.043Z] 🔔 Worker completed: feature-26 - use mark_complete to update status",
+    "[2026-01-01T03:42:40.356Z] ✅ Completed: feature-7 - F7: Format Translation - internal/proxy/translate.go - Anthropic to OpenAI bidirectional conversion",
+    "[2026-01-01T03:42:43.002Z] 🔔 Worker completed: feature-9 - use mark_complete to update status",
+    "[2026-01-01T03:42:43.030Z] 🔔 Worker completed: feature-29 - use mark_complete to update status",
+    "[2026-01-01T03:42:53.039Z] 🔔 Worker completed: feature-18 - use mark_complete to update status",
+    "[2026-01-01T03:43:59.720Z] ✅ Completed: feature-9 - F9: ListAllModels - internal/service/service.go - Aggregate models from all providers with caching",
+    "[2026-01-01T03:43:59.876Z] ✅ Completed: feature-12 - F12: Client Model - internal/database/clients.go - Client struct and ClientRepository",
+    "[2026-01-01T03:44:00.042Z] ✅ Completed: feature-16 - F16: Aliases Table - internal/database/aliases.go - Alias model with default aliases (sonnet, opus, haiku, gpt4)",
+    "[2026-01-01T03:44:00.250Z] ✅ Completed: feature-18 - F18: Remap Rules Model - internal/database/remaps.go - RemapRule with glob pattern support",
+    "[2026-01-01T03:44:00.431Z] ✅ Completed: feature-26 - F26: Request Logging - internal/database/requests.go - RequestLog model and repository",
+    "[2026-01-01T03:44:00.587Z] ✅ Completed: feature-29 - F29: Schema Migration - internal/database/schema.go - Add new tables for clients, aliases, remaps, logs",
+    "[2026-01-01T03:44:24.486Z] ✅ Completed: feature-10 - F10: GetKey Method - internal/service/service.go - Return actual API key string for provider",
+    "[2026-01-01T03:44:24.675Z] Started 5 parallel workers: feature-4, feature-8, feature-13, feature-14, feature-15",
+    "[2026-01-01T03:47:53.187Z] 🔔 Worker completed: feature-4 - use mark_complete to update status",
+    "[2026-01-01T03:48:13.201Z] 🔔 Worker completed: feature-8 - use mark_complete to update status",
+    "[2026-01-01T03:48:50.557Z] ✅ Completed: feature-4 - F4: Anthropic Proxy - internal/proxy/anthropic.go - POST /v1/messages handler with SSE streaming",
+    "[2026-01-01T03:48:50.694Z] ✅ Completed: feature-8 - F8: Daemon Mode - cmd/modelscan-server/daemon.go - Background service with --daemon flag",
+    "[2026-01-01T03:48:50.841Z] Started worker for feature-5: F5: OpenAI Proxy - internal/proxy/openai.go - POST /v1/chat/completions handler with SSE streaming",
+    "[2026-01-01T03:49:12.458Z] Started 2 parallel workers: feature-17, feature-21",
+    "[2026-01-01T03:49:23.224Z] 🔔 Worker completed: feature-13 - use mark_complete to update status",
+    "[2026-01-01T03:49:43.311Z] 🔔 Worker completed: feature-14 - use mark_complete to update status",
+    "[2026-01-01T03:50:13.253Z] 🔔 Worker completed: feature-15 - use mark_complete to update status",
+    "[2026-01-01T03:50:24.605Z] ✅ Completed: feature-13 - F13: Client Registration - internal/admin/clients.go - POST /api/clients/register endpoint",
+    "[2026-01-01T03:50:24.752Z] ✅ Completed: feature-14 - F14: Client Middleware - internal/admin/middleware.go - X-Client-Token validation",
+    "[2026-01-01T03:50:24.911Z] ✅ Completed: feature-15 - F15: Model Hierarchy - internal/admin/models.go - GET /api/models?format=hierarchy grouped by provider/family",
+    "[2026-01-01T03:52:43.331Z] 🔔 Worker completed: feature-5 - use mark_complete to update status",
+    "[2026-01-01T03:52:53.349Z] 🔔 Worker completed: feature-21 - use mark_complete to update status",
+    "[2026-01-01T03:53:30.349Z] ✅ Completed: feature-5 - F5: OpenAI Proxy - internal/proxy/openai.go - POST /v1/chat/completions handler with SSE streaming",
+    "[2026-01-01T03:53:30.485Z] ✅ Completed: feature-21 - F21: Key Test - internal/admin/api.go - POST /api/keys/{id}/test endpoint",
+    "[2026-01-01T03:53:30.638Z] Started 2 parallel workers: feature-19, feature-22",
+    "[2026-01-01T03:55:13.397Z] 🔔 Worker completed: feature-17 - use mark_complete to update status",
+    "[2026-01-01T03:55:20.512Z] ✅ Completed: feature-17 - F17: Alias Endpoints - internal/admin/aliases.go - GET/POST/DELETE /api/aliases",
+    "[2026-01-01T03:55:25.740Z] Started 5 parallel workers: feature-23, feature-24, feature-27, feature-28, feature-30",
+    "[2026-01-01T03:56:13.429Z] 🔔 Worker completed: feature-22 - use mark_complete to update status",
+    "[2026-01-01T03:57:44.508Z] ✅ Completed: feature-22 - F22: Key Delete - internal/admin/api.go - DELETE /api/keys/{id} endpoint",
+    "[2026-01-01T03:58:03.493Z] 🔔 Worker completed: feature-19 - use mark_complete to update status",
+    "[2026-01-01T03:58:13.548Z] 🔔 Worker completed: feature-28 - use mark_complete to update status",
+    "[2026-01-01T03:58:23.515Z] 🔔 Worker completed: feature-23 - use mark_complete to update status",
+    "[2026-01-01T03:59:28.832Z] ✅ Completed: feature-19 - F19: Remap Endpoints - internal/admin/remaps.go - CRUD for /api/rules/remap",
+    "[2026-01-01T03:59:28.978Z] ✅ Completed: feature-23 - F23: Key Stats - internal/admin/api.go - GET /api/keys/{id}/stats endpoint",
+    "[2026-01-01T03:59:29.118Z] ✅ Completed: feature-28 - F28: Client Stats - internal/admin/clients.go - GET /api/clients/{id}/stats",
+    "[2026-01-01T03:59:29.272Z] Started 2 parallel workers: feature-20, feature-25",
+    "[2026-01-01T04:00:13.583Z] 🔔 Worker completed: feature-24 - use mark_complete to update status",
+    "[2026-01-01T04:00:13.601Z] 🔔 Worker completed: feature-30 - use mark_complete to update status",
+    "[2026-01-01T04:01:20.227Z] ✅ Completed: feature-24 - F24: Server Info - internal/admin/server.go - GET /api/server/info endpoint",
+    "[2026-01-01T04:01:20.397Z] ✅ Completed: feature-30 - F30: Integration Tests - tests/integration/proxy_test.go - Proxy and API endpoint tests",
+    "[2026-01-01T04:01:20.632Z] Started worker for feature-31: F31: Documentation - Update AI-README.md and codedocs with v0.5.5 features",
+    "[2026-01-01T04:02:13.634Z] 🔔 Worker completed: feature-20 - use mark_complete to update status",
+    "[2026-01-01T04:02:23.648Z] 🔔 Worker completed: feature-25 - use mark_complete to update status",
+    "[2026-01-01T04:02:23.653Z] 🔔 Worker completed: feature-27 - use mark_complete to update status",
+    "[2026-01-01T04:03:12.549Z] ✅ Completed: feature-20 - F20: Remap Middleware - internal/admin/middleware.go - Apply remap rules to proxy requests",
+    "[2026-01-01T04:03:12.734Z] ✅ Completed: feature-25 - F25: Server Shutdown - internal/admin/server.go - POST /api/server/shutdown endpoint",
+    "[2026-01-01T04:03:12.957Z] ✅ Completed: feature-27 - F27: Client Rate Limit - internal/admin/ratelimit.go - Per-client rate limiting",
+    "[2026-01-01T04:06:18.641Z] ✅ Completed: feature-31 - F31: Documentation - Update AI-README.md and codedocs with v0.5.5 features",
+    "[2026-01-01T04:06:18.642Z] 🏁 Orchestration completed successfully"
+  ],
+  "completedAt": "2026-01-01T04:06:18.642Z"
 }

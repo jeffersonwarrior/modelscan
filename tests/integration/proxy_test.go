@@ -752,8 +752,8 @@ func TestOpenAIProxy_WithMockUpstream_NonStreaming(t *testing.T) {
 
 	// Create request
 	body := map[string]interface{}{
-		"model":   "gpt-4",
-		"stream":  false,
+		"model":  "gpt-4",
+		"stream": false,
 		"messages": []map[string]string{
 			{"role": "user", "content": "Hello"},
 		},
@@ -823,8 +823,8 @@ func TestOpenAIProxy_WithMockUpstream_Streaming(t *testing.T) {
 	p := proxy.NewOpenAIProxy(cfg, newMockKeyProvider(), nil)
 
 	body := map[string]interface{}{
-		"model":   "gpt-4",
-		"stream":  true,
+		"model":  "gpt-4",
+		"stream": true,
 		"messages": []map[string]string{
 			{"role": "user", "content": "Hello"},
 		},

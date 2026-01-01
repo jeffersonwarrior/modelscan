@@ -14,14 +14,14 @@ type ShutdownFunc func() error
 
 // ServerAPI handles server info and control endpoints
 type ServerAPI struct {
-	startTime        time.Time
-	version          string
-	port             int
-	requestsServed   *int64
-	clientCounter    ClientCounter
-	providerCounter  ProviderCounter
-	keyCounter       KeyCounter
-	shutdownFunc     ShutdownFunc
+	startTime       time.Time
+	version         string
+	port            int
+	requestsServed  *int64
+	clientCounter   ClientCounter
+	providerCounter ProviderCounter
+	keyCounter      KeyCounter
+	shutdownFunc    ShutdownFunc
 }
 
 // ClientCounter interface for counting clients

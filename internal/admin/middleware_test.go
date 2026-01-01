@@ -320,7 +320,7 @@ func TestClientMiddleware_ClientConfig(t *testing.T) {
 
 // mockRemapRuleStore implements RemapRuleStore for testing
 type mockRemapRuleStore struct {
-	rules          map[string]*RemapRule // key is "clientID:model"
+	rules           map[string]*RemapRule // key is "clientID:model"
 	findMatchingErr error
 }
 

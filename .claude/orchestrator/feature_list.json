@@ -1,13 +1,193 @@
 {
   "projectDir": "/home/agent/modelscan",
-  "taskDescription": "Tool access validation test - verify workers can use Read, Write, and Edit tools after the --mode delegate fix.",
-  "lastUpdated": "2025-12-31T20:55:50.868Z",
+  "taskDescription": "ModelScan v0.5.5: MClaude Integration API. Implement proxy endpoints (/v1/messages, /v1/chat/completions), SSE streaming, model remapping, dynamic port with PID file, daemon mode, client registration, aliases, and enhanced key management. See modelscan.0.5.5.plan.md for specs.",
+  "lastUpdated": "2026-01-01T04:06:18.642Z",
   "features": [
     {
       "id": "feature-1",
-      "description": "Test filesystem tool access by creating a simple test file",
-      "status": "in_progress",
-      "passes": false
+      "description": "F1: Port Discovery - internal/service/portfile.go - FindOpenPort() scanning 10000-10500",
+      "status": "completed",
+      "passes": true
+    },
+    {
+      "id": "feature-2",
+      "description": "F2: PID File - internal/service/portfile.go - WritePIDFile, ReadPIDFile, RemovePIDFile for ~/.modelscan/modelscan.pid",
+      "status": "completed",
+      "passes": true
+    },
+    {
+      "id": "feature-3",
+      "description": "F3: Server Detection - internal/service/portfile.go - IsServerRunning() checking process existence",
+      "status": "completed",
+      "passes": true
+    },
+    {
+      "id": "feature-4",
+      "description": "F4: Anthropic Proxy - internal/proxy/anthropic.go - POST /v1/messages handler with SSE streaming",
+      "status": "completed",
+      "passes": true
+    },
+    {
+      "id": "feature-5",
+      "description": "F5: OpenAI Proxy - internal/proxy/openai.go - POST /v1/chat/completions handler with SSE streaming",
+      "status": "completed",
+      "passes": true
+    },
+    {
+      "id": "feature-6",
+      "description": "F6: SSE Stream Writer - internal/proxy/stream.go - StreamWriter for chunked responses",
+      "status": "completed",
+      "passes": true
+    },
+    {
+      "id": "feature-7",
+      "description": "F7: Format Translation - internal/proxy/translate.go - Anthropic to OpenAI bidirectional conversion",
+      "status": "completed",
+      "passes": true
+    },
+    {
+      "id": "feature-8",
+      "description": "F8: Daemon Mode - cmd/modelscan-server/daemon.go - Background service with --daemon flag",
+      "status": "completed",
+      "passes": true
+    },
+    {
+      "id": "feature-9",
+      "description": "F9: ListAllModels - internal/service/service.go - Aggregate models from all providers with caching",
+      "status": "completed",
+      "passes": true
+    },
+    {
+      "id": "feature-10",
+      "description": "F10: GetKey Method - internal/service/service.go - Return actual API key string for provider",
+      "status": "completed",
+      "passes": true
+    },
+    {
+      "id": "feature-11",
+      "description": "F11: GetProxyURL - internal/service/service.go - Return http://host:port URL string",
+      "status": "completed",
+      "passes": true
+    },
+    {
+      "id": "feature-12",
+      "description": "F12: Client Model - internal/database/clients.go - Client struct and ClientRepository",
+      "status": "completed",
+      "passes": true
+    },
+    {
+      "id": "feature-13",
+      "description": "F13: Client Registration - internal/admin/clients.go - POST /api/clients/register endpoint",
+      "status": "completed",
+      "passes": true
+    },
+    {
+      "id": "feature-14",
+      "description": "F14: Client Middleware - internal/admin/middleware.go - X-Client-Token validation",
+      "status": "completed",
+      "passes": true
+    },
+    {
+      "id": "feature-15",
+      "description": "F15: Model Hierarchy - internal/admin/models.go - GET /api/models?format=hierarchy grouped by provider/family",
+      "status": "completed",
+      "passes": true
+    },
+    {
+      "id": "feature-16",
+      "description": "F16: Aliases Table - internal/database/aliases.go - Alias model with default aliases (sonnet, opus, haiku, gpt4)",
+      "status": "completed",
+      "passes": true
+    },
+    {
+      "id": "feature-17",
+      "description": "F17: Alias Endpoints - internal/admin/aliases.go - GET/POST/DELETE /api/aliases",
+      "status": "completed",
+      "passes": true
+    },
+    {
+      "id": "feature-18",
+      "description": "F18: Remap Rules Model - internal/database/remaps.go - RemapRule with glob pattern support",
+      "status": "completed",
+      "passes": true
+    },
+    {
+      "id": "feature-19",
+      "description": "F19: Remap Endpoints - internal/admin/remaps.go - CRUD for /api/rules/remap",
+      "status": "completed",
+      "passes": true
+    },
+    {
+      "id": "feature-20",
+      "description": "F20: Remap Middleware - internal/admin/middleware.go - Apply remap rules to proxy requests",
+      "status": "completed",
+      "passes": true
+    },
+    {
+      "id": "feature-21",
+      "description": "F21: Key Test - internal/admin/api.go - POST /api/keys/{id}/test endpoint",
+      "status": "completed",
+      "passes": true
+    },
+    {
+      "id": "feature-22",
+      "description": "F22: Key Delete - internal/admin/api.go - DELETE /api/keys/{id} endpoint",
+      "status": "completed",
+      "passes": true
+    },
+    {
+      "id": "feature-23",
+      "description": "F23: Key Stats - internal/admin/api.go - GET /api/keys/{id}/stats endpoint",
+      "status": "completed",
+      "passes": true
+    },
+    {
+      "id": "feature-24",
+      "description": "F24: Server Info - internal/admin/server.go - GET /api/server/info endpoint",
+      "status": "completed",
+      "passes": true
+    },
+    {
+      "id": "feature-25",
+      "description": "F25: Server Shutdown - internal/admin/server.go - POST /api/server/shutdown endpoint",
+      "status": "completed",
+      "passes": true
+    },
+    {
+      "id": "feature-26",
+      "description": "F26: Request Logging - internal/database/requests.go - RequestLog model and repository",
+      "status": "completed",
+      "passes": true
+    },
+    {
+      "id": "feature-27",
+      "description": "F27: Client Rate Limit - internal/admin/ratelimit.go - Per-client rate limiting",
+      "status": "completed",
+      "passes": true
+    },
+    {
+      "id": "feature-28",
+      "description": "F28: Client Stats - internal/admin/clients.go - GET /api/clients/{id}/stats",
+      "status": "completed",
+      "passes": true
+    },
+    {
+      "id": "feature-29",
+      "description": "F29: Schema Migration - internal/database/schema.go - Add new tables for clients, aliases, remaps, logs",
+      "status": "completed",
+      "passes": true
+    },
+    {
+      "id": "feature-30",
+      "description": "F30: Integration Tests - tests/integration/proxy_test.go - Proxy and API endpoint tests",
+      "status": "completed",
+      "passes": true
+    },
+    {
+      "id": "feature-31",
+      "description": "F31: Documentation - Update AI-README.md and codedocs with v0.5.5 features",
+      "status": "completed",
+      "passes": true
     }
   ]
 }

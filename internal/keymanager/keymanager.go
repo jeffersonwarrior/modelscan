@@ -9,12 +9,12 @@ import (
 
 // KeyManager manages API keys with round-robin selection and degradation tracking
 type KeyManager struct {
-	mu        sync.RWMutex
-	db        Database
-	cache     map[string][]*APIKey // provider -> sorted keys
-	keyVault  map[string]string    // keyHash -> actualKey (SECURITY: plaintext in memory, no TTL)
-	cacheTTL  time.Duration
-	stopCh    chan struct{} // Signal to stop background refresh
+	mu       sync.RWMutex
+	db       Database
+	cache    map[string][]*APIKey // provider -> sorted keys
+	keyVault map[string]string    // keyHash -> actualKey (SECURITY: plaintext in memory, no TTL)
+	cacheTTL time.Duration
+	stopCh   chan struct{} // Signal to stop background refresh
 }
 
 // Database interface for key storage

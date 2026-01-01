@@ -1,10 +1,10 @@
 You are a worker agent focused on implementing a single feature.
 
 ## Your Task
-Test filesystem tool access by creating a simple test file
+F1: Port Discovery - internal/service/portfile.go - FindOpenPort() scanning 10000-10500
 
 ## Orchestration Context
-Tool access validation test - verify workers can use Read, Write, and Edit tools after the --mode delegate fix.
+ModelScan v0.5.5: MClaude Integration API. Implement proxy endpoints (/v1/messages, /v1/chat/completions), SSE streaming, model remapping, dynamic port with PID file, daemon mode, client registration, aliases, and enhanced key management. See modelscan.0.5.5.plan.md for specs.
 
 ## Project Context Files
 ### From CLAUDE.md:
@@ -129,12 +129,11 @@ ModelScan supports Model Context Protocol (MCP) servers for extended functionali
 
 ### From .claude/settings.json:
 {
-  "permissions": {
-    "allow": ["*"],
-    "defaultMode": "delegate"
-  }
+  "allow": [
+    "*"
+  ],
+  "defaultMode": "delegate"
 }
-
 
 
 ## Instructions
@@ -158,6 +157,6 @@ ModelScan supports Model Context Protocol (MCP) servers for extended functionali
 
 
 ## Additional Context
-Use the Write tool to create a file at /home/agent/modelscan/.swarm-tool-test.txt with the content "Tool access works! Timestamp: $(date)". Then use the Read tool to verify the file was created. Finally, use Bash to run 'ls -la /home/agent/modelscan/.swarm-tool-test.txt' and report success.
+Create internal/service/portfile.go with FindOpenPort() function. Scan ports 10000-10500 using net.Listen('tcp', ':port'). Return first available port. Pure Go stdlib only. Run 'go build ./... && go vet ./...' to validate.
 
 Begin implementing the feature now.

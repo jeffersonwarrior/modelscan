@@ -26,15 +26,15 @@ type RateLimitStore interface {
 
 // ClientRateLimit represents a client's rate limit configuration
 type ClientRateLimit struct {
-	ID           int        `json:"id"`
-	ClientID     string     `json:"client_id"`
-	RPMLimit     *int       `json:"rpm_limit,omitempty"`     // Requests per minute limit
-	TPMLimit     *int       `json:"tpm_limit,omitempty"`     // Tokens per minute limit
-	DailyLimit   *int       `json:"daily_limit,omitempty"`   // Daily request limit
-	CurrentRPM   int        `json:"current_rpm"`             // Current requests this minute
-	CurrentTPM   int        `json:"current_tpm"`             // Current tokens this minute
-	CurrentDaily int        `json:"current_daily"`           // Current requests today
-	LastReset    time.Time  `json:"last_reset"`              // When counters were last reset
+	ID           int       `json:"id"`
+	ClientID     string    `json:"client_id"`
+	RPMLimit     *int      `json:"rpm_limit,omitempty"`   // Requests per minute limit
+	TPMLimit     *int      `json:"tpm_limit,omitempty"`   // Tokens per minute limit
+	DailyLimit   *int      `json:"daily_limit,omitempty"` // Daily request limit
+	CurrentRPM   int       `json:"current_rpm"`           // Current requests this minute
+	CurrentTPM   int       `json:"current_tpm"`           // Current tokens this minute
+	CurrentDaily int       `json:"current_daily"`         // Current requests today
+	LastReset    time.Time `json:"last_reset"`            // When counters were last reset
 }
 
 // RateLimitAPI handles client rate limit management endpoints
@@ -64,8 +64,8 @@ type RateLimitUpdateRequest struct {
 
 // RateLimitCheckResponse represents the response for rate limit check
 type RateLimitCheckResponse struct {
-	WithinLimits bool   `json:"within_limits"`
-	LimitType    string `json:"limit_type,omitempty"` // "rpm", "tpm", or "daily" if exceeded
+	WithinLimits bool             `json:"within_limits"`
+	LimitType    string           `json:"limit_type,omitempty"` // "rpm", "tpm", or "daily" if exceeded
 	RateLimit    *ClientRateLimit `json:"rate_limit,omitempty"`
 }
 

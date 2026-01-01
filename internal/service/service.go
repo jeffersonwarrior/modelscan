@@ -36,10 +36,10 @@ type Service struct {
 	initialized bool
 
 	// Model cache with TTL
-	modelCache      []ModelWithProvider
-	modelCacheTime  time.Time
-	modelCacheTTL   time.Duration
-	modelCacheMu    sync.RWMutex
+	modelCache     []ModelWithProvider
+	modelCacheTime time.Time
+	modelCacheTTL  time.Duration
+	modelCacheMu   sync.RWMutex
 }
 
 // ModelWithProvider extends providers.Model with the source provider
