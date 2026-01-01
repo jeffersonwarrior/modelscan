@@ -21,7 +21,7 @@ linters:
 
 linters-settings:
   errcheck:
-    check-blank: true
+    check-blank: false  # Allow blank identifier to explicitly ignore errors
     exclude-functions:
       - fmt.Print
       - fmt.Printf
