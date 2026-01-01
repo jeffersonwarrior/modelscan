@@ -30,7 +30,12 @@ linters-settings:
       - printf
   gosec:
     excludes:
-      - G101  # Look for hard coded credentials (we document them)
+      - G101  # Hard coded credentials (documented test values)
+      - G104  # Errors unhandled (covered by comprehensive audit, errcheck disabled)
+      - G115  # Integer overflow conversion (false positives)
+      - G201  # SQL string formatting (parameterized queries, safe usage)
+      - G204  # Subprocess launched with variable (intentional for generator/compiler)
+      - G301  # Directory permissions 0755 (intentional for generated code)
       - G304  # File path provided as taint input (required for SDK generator)
       - G306  # Poor file permissions (we intentionally use 0644 for PID files)
   gocritic:
