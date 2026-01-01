@@ -88,7 +88,7 @@ func (r *ClientRateLimitRepository) List() ([]*ClientRateLimit, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to list client rate limits: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var limits []*ClientRateLimit
 	for rows.Next() {

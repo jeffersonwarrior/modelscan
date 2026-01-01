@@ -50,7 +50,7 @@ func (c *Compiler) CompileBatch(filePaths []string) []*CompileResult {
 	results := make([]*CompileResult, len(filePaths))
 
 	for i, path := range filePaths {
-		result, _ := c.Compile(path)
+		result, _ := c.Compile(path) // Error is captured in result.Error
 		results[i] = result
 	}
 

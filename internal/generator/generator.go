@@ -126,7 +126,7 @@ func (g *Generator) GenerateBatch(requests []GenerateRequest) []*GenerateResult 
 	// Generate in parallel
 	for i, req := range requests {
 		go func(idx int, r GenerateRequest) {
-			result, _ := g.Generate(r)
+			result, _ := g.Generate(r) // Error is captured in result.Error
 			resultCh <- struct {
 				idx    int
 				result *GenerateResult

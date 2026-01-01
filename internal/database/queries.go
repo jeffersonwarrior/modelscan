@@ -60,7 +60,7 @@ func (db *DB) ListProviders() ([]*Provider, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var providers []*Provider
 	for rows.Next() {
@@ -114,7 +114,7 @@ func (db *DB) ListModels() ([]*Model, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var models []*Model
 	for rows.Next() {
@@ -138,7 +138,7 @@ func (db *DB) ListModelsByStatus(status string) ([]*Model, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var models []*Model
 	for rows.Next() {
@@ -225,7 +225,7 @@ func (db *DB) ListActiveAPIKeys(providerID string) ([]*APIKey, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var keys []*APIKey
 	for rows.Next() {
@@ -357,7 +357,7 @@ func (db *DB) ListSDKVersions(providerID string) ([]*SDKVersion, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var versions []*SDKVersion
 	for rows.Next() {

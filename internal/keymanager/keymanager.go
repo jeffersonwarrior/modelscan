@@ -212,7 +212,7 @@ func (km *KeyManager) refreshLoop() {
 
 			// Refresh each provider's keys
 			for _, provider := range providers {
-				km.refreshCache(provider)
+				_ = km.refreshCache(provider) // Best-effort refresh, errors logged internally
 			}
 		case <-km.stopCh:
 			return

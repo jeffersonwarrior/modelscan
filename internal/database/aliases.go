@@ -85,7 +85,7 @@ func (db *DB) ListAliases(clientID *string) ([]*Alias, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to list aliases: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var aliases []*Alias
 	for rows.Next() {
@@ -105,7 +105,7 @@ func (db *DB) ListAllAliases() ([]*Alias, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to list all aliases: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var aliases []*Alias
 	for rows.Next() {

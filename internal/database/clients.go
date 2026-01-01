@@ -134,7 +134,7 @@ func (r *ClientRepository) List() ([]*Client, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to list clients: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var clients []*Client
 	for rows.Next() {

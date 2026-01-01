@@ -124,7 +124,7 @@ func (db *DB) ListRequestLogs(filter *RequestLogFilter) ([]*RequestLog, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to list request logs: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var logs []*RequestLog
 	for rows.Next() {

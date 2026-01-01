@@ -94,7 +94,7 @@ func (r *RemapRuleRepository) List(clientID *string) ([]*RemapRule, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to list remap rules: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var rules []*RemapRule
 	for rows.Next() {
@@ -175,7 +175,7 @@ func (r *RemapRuleRepository) FindMatching(model string, clientID string) (*Rema
 	if err != nil {
 		return nil, fmt.Errorf("failed to query remap rules: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	for rows.Next() {
 		rule := &RemapRule{}
