@@ -72,7 +72,7 @@ func (c *ClaudeClient) Synthesize(ctx context.Context, prompt string) (string, e
 	if err != nil {
 		return "", fmt.Errorf("request failed: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -155,7 +155,7 @@ func (g *GPT4Client) Synthesize(ctx context.Context, prompt string) (string, err
 	if err != nil {
 		return "", fmt.Errorf("request failed: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {

@@ -120,7 +120,7 @@ func (v *Validator) testConnectivity(ctx context.Context, baseURL string) error 
 	if err != nil {
 		return fmt.Errorf("connectivity failed: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	// Accept any response (including 404, 401) - we just want to confirm the server responds
 	if resp.StatusCode >= 200 && resp.StatusCode < 600 {
@@ -171,7 +171,7 @@ func (v *Validator) testAuth(ctx context.Context, result *DiscoveryResult, apiKe
 			lastErr = err
 			continue
 		}
-		defer resp.Body.Close()
+		defer func() { _ = resp.Body.Close() }()
 
 		// Success if we get a valid response (not 401/403)
 		if resp.StatusCode != http.StatusUnauthorized && resp.StatusCode != http.StatusForbidden {
@@ -219,7 +219,7 @@ func (v *Validator) testEndpoint(ctx context.Context, result *DiscoveryResult, a
 	if err != nil {
 		return fmt.Errorf("request failed: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	// Accept any non-500 error as success (endpoint exists)
 	if resp.StatusCode < 500 {
@@ -262,7 +262,7 @@ func (v *Validator) testListModels(ctx context.Context, result *DiscoveryResult,
 		if err != nil {
 			continue
 		}
-		defer resp.Body.Close()
+		defer func() { _ = resp.Body.Close() }()
 
 		if resp.StatusCode != http.StatusOK {
 			continue

@@ -234,7 +234,7 @@ func (db *DB) GetRequestLogStats(filter *RequestLogFilter) (*RequestLogStats, er
 	if err != nil {
 		return nil, fmt.Errorf("failed to get tokens by provider: %w", err)
 	}
-	defer providerRows.Close()
+	defer func() { _ = providerRows.Close() }()
 
 	for providerRows.Next() {
 		var provider string
@@ -259,7 +259,7 @@ func (db *DB) GetRequestLogStats(filter *RequestLogFilter) (*RequestLogStats, er
 	if err != nil {
 		return nil, fmt.Errorf("failed to get requests by model: %w", err)
 	}
-	defer modelRows.Close()
+	defer func() { _ = modelRows.Close() }()
 
 	for modelRows.Next() {
 		var model string
@@ -284,7 +284,7 @@ func (db *DB) GetRequestLogStats(filter *RequestLogFilter) (*RequestLogStats, er
 	if err != nil {
 		return nil, fmt.Errorf("failed to get requests by client: %w", err)
 	}
-	defer clientRows.Close()
+	defer func() { _ = clientRows.Close() }()
 
 	for clientRows.Next() {
 		var clientID string

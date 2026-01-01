@@ -180,7 +180,7 @@ func (s *ModelsDevSource) Fetch(ctx context.Context, identifier string) (SourceR
 	if err != nil {
 		return SourceResult{}, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		return SourceResult{}, fmt.Errorf("models.dev returned %d", resp.StatusCode)
@@ -265,7 +265,7 @@ func (s *GPUStackSource) Fetch(ctx context.Context, identifier string) (SourceRe
 	if err != nil {
 		return SourceResult{}, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		return SourceResult{}, fmt.Errorf("GPUStack returned %d", resp.StatusCode)
@@ -332,7 +332,7 @@ func (s *ModelScopeSource) Fetch(ctx context.Context, identifier string) (Source
 	if err != nil {
 		return SourceResult{}, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		return SourceResult{}, fmt.Errorf("ModelScope returned %d", resp.StatusCode)
@@ -408,7 +408,7 @@ func (s *HuggingFaceSource) Fetch(ctx context.Context, identifier string) (Sourc
 	if err != nil {
 		return SourceResult{}, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		return SourceResult{}, fmt.Errorf("HuggingFace returned %d", resp.StatusCode)
