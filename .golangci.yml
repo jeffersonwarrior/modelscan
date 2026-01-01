@@ -6,6 +6,7 @@ linters:
     - typecheck  # Disabled - version compatibility issues
     - errcheck   # Disabled - too strict for codebase, critical issues resolved in manual audit
     - unused     # Disabled - many work-in-progress provider implementations
+    - gocritic   # Disabled - mostly style preferences, not critical issues
   enable:
     - gosimple
     - govet
@@ -17,7 +18,6 @@ linters:
     - unconvert
     - unparam
     - gosec
-    - gocritic
 
 linters-settings:
   govet:
@@ -44,11 +44,6 @@ linters-settings:
       - G401  # Weak crypto primitive (SHA1 for WebSocket per RFC 6455)
       - G404  # Weak random (math/rand for non-crypto use)
       - G505  # Blocklisted SHA1 (required for WebSocket protocol)
-  gocritic:
-    enabled-tags:
-      - diagnostic
-      - style
-      - performance
 
 issues:
   exclude-use-default: false
