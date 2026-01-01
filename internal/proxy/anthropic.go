@@ -89,7 +89,7 @@ func (p *AnthropicProxy) HandleMessages(w http.ResponseWriter, r *http.Request) 
 		p.writeError(w, "failed to read request body", http.StatusBadRequest)
 		return
 	}
-	defer r.Body.Close()
+	defer func() { _ = r.Body.Close() }()
 
 	var req AnthropicRequest
 	if err := json.Unmarshal(body, &req); err != nil {
@@ -171,7 +171,7 @@ func (p *AnthropicProxy) handleNonStreamingRequest(ctx context.Context, w http.R
 		p.writeError(w, fmt.Sprintf("upstream request failed: %v", err), http.StatusBadGateway)
 		return
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	// Copy response headers
 	for key, values := range resp.Header {
@@ -200,14 +200,14 @@ func (p *AnthropicProxy) handleStreamingRequest(ctx context.Context, w http.Resp
 	// Build upstream request
 	reqBody, err := json.Marshal(req)
 	if err != nil {
-		sw.WriteError(fmt.Errorf("failed to marshal request: %w", err))
+		_ = sw.WriteError(fmt.Errorf("failed to marshal request: %w", err))
 		return
 	}
 
 	upstreamURL := p.getUpstreamURL(provider)
 	upstreamReq, err := http.NewRequestWithContext(ctx, http.MethodPost, upstreamURL, bytes.NewReader(reqBody))
 	if err != nil {
-		sw.WriteError(fmt.Errorf("failed to create upstream request: %w", err))
+		_ = sw.WriteError(fmt.Errorf("failed to create upstream request: %w", err))
 		return
 	}
 
@@ -217,19 +217,19 @@ func (p *AnthropicProxy) handleStreamingRequest(ctx context.Context, w http.Resp
 	// Execute request with streaming client (no timeout)
 	resp, err := p.streamingClient.Do(upstreamReq)
 	if err != nil {
-		sw.WriteError(fmt.Errorf("upstream request failed: %w", err))
+		_ = sw.WriteError(fmt.Errorf("upstream request failed: %w", err))
 		return
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	// Check for non-2xx status
 	if resp.StatusCode >= 400 {
 		body, err := io.ReadAll(resp.Body)
 		if err != nil {
-			sw.WriteError(fmt.Errorf("upstream error (status %d): failed to read error body: %w", resp.StatusCode, err))
+			_ = sw.WriteError(fmt.Errorf("upstream error (status %d): failed to read error body: %w", resp.StatusCode, err))
 			return
 		}
-		sw.WriteError(fmt.Errorf("upstream error (status %d): %s", resp.StatusCode, string(body)))
+		_ = sw.WriteError(fmt.Errorf("upstream error (status %d): %s", resp.StatusCode, string(body)))
 		return
 	}
 
@@ -263,13 +263,13 @@ func (p *AnthropicProxy) streamSSEEvents(ctx context.Context, sw *StreamWriter, 
 
 				// Check for [DONE] marker
 				if data == "[DONE]" {
-					sw.Close()
+					_ = sw.Close()
 					return
 				}
 
 				// Forward the event
 				if eventType != "" {
-					sw.WriteEventWithType(eventType, []byte(data))
+					_ = sw.WriteEventWithType(eventType, []byte(data))
 				} else {
 					sw.WriteEvent([]byte(data))
 				}
@@ -295,11 +295,11 @@ func (p *AnthropicProxy) streamSSEEvents(ctx context.Context, sw *StreamWriter, 
 	}
 
 	if err := scanner.Err(); err != nil {
-		sw.WriteError(fmt.Errorf("stream read error: %w", err))
+		_ = sw.WriteError(fmt.Errorf("stream read error: %w", err))
 	}
 
 	// Close stream
-	sw.Close()
+	_ = sw.Close()
 }
 
 // getUpstreamURL returns the upstream URL for a provider

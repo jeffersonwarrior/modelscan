@@ -76,7 +76,7 @@ func (p *OpenAIProxy) HandleChatCompletions(w http.ResponseWriter, r *http.Reque
 		p.writeError(w, "failed to read request body", "invalid_request_error", http.StatusBadRequest)
 		return
 	}
-	defer r.Body.Close()
+	defer func() { _ = r.Body.Close() }()
 
 	var req OpenAIRequest
 	if err := json.Unmarshal(body, &req); err != nil {
@@ -159,7 +159,7 @@ func (p *OpenAIProxy) handleNonStreamingRequest(ctx context.Context, w http.Resp
 		p.writeError(w, fmt.Sprintf("upstream request failed: %v", err), "server_error", http.StatusBadGateway)
 		return
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	// Copy response headers
 	for key, values := range resp.Header {
@@ -208,7 +208,7 @@ func (p *OpenAIProxy) handleStreamingRequest(ctx context.Context, w http.Respons
 		sw.WriteError(fmt.Errorf("upstream request failed: %w", err))
 		return
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	// Check for non-2xx status
 	if resp.StatusCode >= 400 {
