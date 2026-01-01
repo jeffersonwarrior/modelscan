@@ -1,11 +1,69 @@
+run:
+  timeout: 5m
+
 linters:
+  disable:
+    - typecheck  # Disabled - version compatibility issues
   enable:
-    - govet
     - errcheck
-    - staticcheck
+    - gosimple
+    - govet
     - ineffassign
-    - typecheck
+    - staticcheck
     - unused
+    - gofmt
+    - goimports
+    - misspell
+    - unconvert
+    - unparam
+    - gosec
+    - gocritic
+
+linters-settings:
+  errcheck:
+    check-blank: true
+    exclude-functions:
+      - fmt.Print
+      - fmt.Printf
+      - fmt.Println
+      - io.Copy
+  govet:
+    enable:
+      - assign
+      - atomic
+      - bools
+      - buildtag
+      - nilfunc
+      - printf
+  gosec:
+    excludes:
+      - G101  # Look for hard coded credentials (we document them)
+      - G304  # File path provided as taint input (required for SDK generator)
+      - G306  # Poor file permissions (we intentionally use 0644 for PID files)
+  gocritic:
+    enabled-tags:
+      - diagnostic
+      - style
+      - performance
 
 issues:
   exclude-use-default: false
+  max-issues-per-linter: 0
+  max-same-issues: 0
+  exclude-dirs:
+    - .claude
+    - examples
+    - scripts
+    - sdk
+
+  exclude-rules:
+    # Exclude some linters from running on tests files
+    - path: _test\.go
+      linters:
+        - errcheck
+        - gosec
+        - unparam
+    # Exclude generated code
+    - path: _gen\.go
+      linters:
+        - all
