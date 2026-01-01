@@ -3,6 +3,7 @@ package service
 import (
 	"fmt"
 	"log"
+	"sync"
 )
 
 // EventHandler is a function that handles service events
@@ -27,6 +28,7 @@ type EventData struct {
 
 // HookRegistry manages event handlers
 type HookRegistry struct {
+	mu       sync.RWMutex
 	handlers map[EventType][]EventHandler
 }
 
@@ -39,12 +41,17 @@ func newHookRegistry() *HookRegistry {
 
 // Register adds an event handler for a specific event type
 func (hr *HookRegistry) Register(eventType EventType, handler EventHandler) {
+	hr.mu.Lock()
+	defer hr.mu.Unlock()
 	hr.handlers[eventType] = append(hr.handlers[eventType], handler)
 }
 
 // Trigger executes all handlers for a given event
 func (hr *HookRegistry) Trigger(event EventData) error {
+	hr.mu.RLock()
 	handlers, ok := hr.handlers[event.Type]
+	hr.mu.RUnlock()
+
 	if !ok || len(handlers) == 0 {
 		return nil
 	}

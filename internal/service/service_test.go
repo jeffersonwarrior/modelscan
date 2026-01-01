@@ -70,7 +70,7 @@ func TestServiceHealth_Initialized(t *testing.T) {
 func TestServiceHealth_Restarting(t *testing.T) {
 	service := NewService(&Config{})
 	service.initialized = true
-	service.restarting = true
+	service.restarting.Store(true)
 
 	health := service.Health()
 
@@ -365,5 +365,65 @@ func TestKeyManagerDatabaseAdapter(t *testing.T) {
 	err = adapter.ResetKeyLimits(key.ID)
 	if err != nil {
 		t.Fatalf("ResetKeyLimits failed: %v", err)
+	}
+}
+
+func TestListAllModels_Caching(t *testing.T) {
+	service := NewService(&Config{})
+
+	// Set a very short TTL for testing
+	service.SetModelCacheTTL(100 * time.Millisecond)
+
+	// Test that cache is initially empty
+	service.modelCacheMu.RLock()
+	if len(service.modelCache) != 0 {
+		t.Error("Expected empty cache initially")
+	}
+	service.modelCacheMu.RUnlock()
+
+	// Test InvalidateModelCache
+	service.modelCacheMu.Lock()
+	service.modelCache = []ModelWithProvider{
+		{Provider: "test"},
+	}
+	service.modelCacheTime = time.Now()
+	service.modelCacheMu.Unlock()
+
+	service.InvalidateModelCache()
+
+	service.modelCacheMu.RLock()
+	if len(service.modelCache) != 0 {
+		t.Error("Expected cache to be cleared after invalidation")
+	}
+	service.modelCacheMu.RUnlock()
+}
+
+func TestModelWithProvider(t *testing.T) {
+	model := ModelWithProvider{
+		Provider: "anthropic",
+	}
+	model.ID = "claude-3-opus"
+	model.Name = "Claude 3 Opus"
+
+	if model.Provider != "anthropic" {
+		t.Errorf("Expected provider 'anthropic', got '%s'", model.Provider)
+	}
+	if model.ID != "claude-3-opus" {
+		t.Errorf("Expected ID 'claude-3-opus', got '%s'", model.ID)
+	}
+}
+
+func TestSetModelCacheTTL(t *testing.T) {
+	service := NewService(&Config{})
+
+	// Default TTL should be 5 minutes
+	if service.modelCacheTTL != 5*time.Minute {
+		t.Errorf("Expected default TTL of 5 minutes, got %v", service.modelCacheTTL)
+	}
+
+	// Set new TTL
+	service.SetModelCacheTTL(10 * time.Minute)
+	if service.modelCacheTTL != 10*time.Minute {
+		t.Errorf("Expected TTL of 10 minutes, got %v", service.modelCacheTTL)
 	}
 }

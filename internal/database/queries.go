@@ -11,6 +11,20 @@ import (
 
 // CreateProvider inserts a new provider
 func (db *DB) CreateProvider(p *Provider) error {
+	// Validate required fields
+	if p == nil {
+		return fmt.Errorf("provider cannot be nil")
+	}
+	if p.ID == "" {
+		return fmt.Errorf("provider ID is required")
+	}
+	if p.Name == "" {
+		return fmt.Errorf("provider name is required")
+	}
+	if p.BaseURL == "" {
+		return fmt.Errorf("provider base URL is required")
+	}
+
 	query := `
 		INSERT INTO providers (
 			id, name, base_url, auth_method, auth_header,
@@ -193,6 +207,13 @@ func (db *DB) GetAPIKey(id int) (*APIKey, error) {
 	return k, err
 }
 
+// DeleteAPIKey deletes an API key by ID
+func (db *DB) DeleteAPIKey(id int) error {
+	query := `DELETE FROM api_keys WHERE id = ?`
+	_, err := db.conn.Exec(query, id)
+	return err
+}
+
 // ListActiveAPIKeys lists active, non-degraded API keys for a provider
 func (db *DB) ListActiveAPIKeys(providerID string) ([]*APIKey, error) {
 	query := `
@@ -255,6 +276,17 @@ func (db *DB) ResetKeyLimits(keyID int) error {
 	`
 	_, err := db.conn.Exec(query, time.Now(), keyID)
 	return err
+}
+
+// CountAPIKeys returns the total number of API keys across all providers
+func (db *DB) CountAPIKeys() (int, error) {
+	query := `SELECT COUNT(*) FROM api_keys`
+	var count int
+	err := db.conn.QueryRow(query).Scan(&count)
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
 }
 
 // RecordUsage records a usage event
@@ -492,4 +524,73 @@ func (db *DB) DeleteExpiredDiscoveryResults() (int64, error) {
 		return 0, err
 	}
 	return result.RowsAffected()
+}
+
+// KeyStats represents usage statistics for an API key
+type KeyStats struct {
+	RequestsToday    int     `json:"requests_today"`
+	TokensToday      int     `json:"tokens_today"`
+	RateLimitPercent float64 `json:"rate_limit_percent"`
+	DegradationCount int     `json:"degradation_count"`
+}
+
+// GetKeyStats retrieves usage statistics for an API key since a given time
+func (db *DB) GetKeyStats(keyID int, since time.Time) (*KeyStats, error) {
+	// First get the key to calculate rate limit percentage
+	key, err := db.GetAPIKey(keyID)
+	if err != nil {
+		return nil, err
+	}
+	if key == nil {
+		return nil, nil
+	}
+
+	// Query usage tracking for stats since the given time
+	query := `
+		SELECT
+			COALESCE(SUM(requests), 0) as total_requests,
+			COALESCE(SUM(tokens_in + tokens_out), 0) as total_tokens
+		FROM usage_tracking
+		WHERE api_key_id = ? AND timestamp >= ?
+	`
+
+	var requestsToday, tokensToday int
+	err = db.conn.QueryRow(query, keyID, since).Scan(&requestsToday, &tokensToday)
+	if err != nil {
+		return nil, err
+	}
+
+	// Calculate rate limit percentage based on RPM or daily limit
+	var rateLimitPercent float64
+	if key.DailyLimit != nil && *key.DailyLimit > 0 {
+		rateLimitPercent = float64(requestsToday) / float64(*key.DailyLimit) * 100
+	} else if key.RPMLimit != nil && *key.RPMLimit > 0 {
+		// For RPM, calculate based on requests in the last minute
+		minuteAgo := time.Now().Add(-time.Minute)
+		var recentRequests int
+		err = db.conn.QueryRow(`
+			SELECT COALESCE(SUM(requests), 0)
+			FROM usage_tracking
+			WHERE api_key_id = ? AND timestamp >= ?
+		`, keyID, minuteAgo).Scan(&recentRequests)
+		if err != nil {
+			return nil, err
+		}
+		rateLimitPercent = float64(recentRequests) / float64(*key.RPMLimit) * 100
+	}
+
+	// Count degradation events (number of times key was marked degraded)
+	var degradationCount int
+	// We use the degraded field - if key is currently degraded it counts as 1
+	// For historical count, we'd need a separate log table
+	if key.Degraded {
+		degradationCount = 1
+	}
+
+	return &KeyStats{
+		RequestsToday:    requestsToday,
+		TokensToday:      tokensToday,
+		RateLimitPercent: rateLimitPercent,
+		DegradationCount: degradationCount,
+	}, nil
 }

@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	CurrentSchemaVersion = 2
+	CurrentSchemaVersion = 5
 )
 
 // DB wraps the SQLite database
@@ -93,6 +93,18 @@ func (db *DB) runMigration(version int) error {
 		}
 	case 2:
 		if err = db.migration2(tx); err != nil {
+			return err
+		}
+	case 3:
+		if err = db.migration3(tx); err != nil {
+			return err
+		}
+	case 4:
+		if err = db.migration4(tx); err != nil {
+			return err
+		}
+	case 5:
+		if err = db.migration5(tx); err != nil {
 			return err
 		}
 	default:
@@ -272,6 +284,132 @@ func (db *DB) migration2(tx *sql.Tx) error {
 	return err
 }
 
+// migration3 creates clients and request_logs tables for MClaude integration
+func (db *DB) migration3(tx *sql.Tx) error {
+	schema := `
+	-- Clients table for MClaude integration
+	CREATE TABLE clients (
+		id TEXT PRIMARY KEY,
+		name TEXT NOT NULL,
+		version TEXT NOT NULL,
+		token TEXT NOT NULL UNIQUE,
+		capabilities JSON NOT NULL DEFAULT '[]',
+		config JSON NOT NULL DEFAULT '{}',
+		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+		last_seen_at TIMESTAMP
+	);
+
+	-- Index for client token lookups
+	CREATE INDEX idx_clients_token ON clients(token);
+
+	-- Request logs table for observability
+	CREATE TABLE request_logs (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		client_id TEXT,
+		provider TEXT NOT NULL,
+		model TEXT NOT NULL,
+		endpoint TEXT NOT NULL,
+		request_tokens INTEGER DEFAULT 0,
+		response_tokens INTEGER DEFAULT 0,
+		latency_ms INTEGER DEFAULT 0,
+		status_code INTEGER,
+		error_message TEXT,
+		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+		FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE SET NULL
+	);
+
+	-- Indexes for request log queries
+	CREATE INDEX idx_request_logs_client ON request_logs(client_id);
+	CREATE INDEX idx_request_logs_created ON request_logs(created_at);
+	CREATE INDEX idx_request_logs_provider ON request_logs(provider);
+	`
+
+	_, err := tx.Exec(schema)
+	return err
+}
+
+// migration4 creates aliases table for model name aliases
+func (db *DB) migration4(tx *sql.Tx) error {
+	schema := `
+	-- Aliases table for model name aliases
+	-- Uses unique constraint on (name, client_id) with a workaround for NULL client_id
+	CREATE TABLE aliases (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		name TEXT NOT NULL,
+		model_id TEXT NOT NULL,
+		client_id TEXT,
+		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+		FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE
+	);
+
+	-- Unique index for alias lookups (NULL client_id means global alias)
+	CREATE UNIQUE INDEX idx_aliases_name_client ON aliases(name, client_id);
+	CREATE INDEX idx_aliases_client ON aliases(client_id);
+	CREATE INDEX idx_aliases_name ON aliases(name);
+	`
+
+	_, err := tx.Exec(schema)
+	return err
+}
+
+// migration5 creates remap_rules, client_rate_limits tables and default aliases
+func (db *DB) migration5(tx *sql.Tx) error {
+	schema := `
+	-- Remap rules table for model remapping
+	CREATE TABLE remap_rules (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		client_id TEXT NOT NULL,
+		from_model TEXT NOT NULL,
+		to_model TEXT NOT NULL,
+		to_provider TEXT NOT NULL,
+		priority INTEGER DEFAULT 0,
+		enabled BOOLEAN DEFAULT 1,
+		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+		FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE
+	);
+
+	-- Indexes for remap rule lookups
+	CREATE INDEX idx_remap_rules_client ON remap_rules(client_id);
+	CREATE INDEX idx_remap_rules_enabled ON remap_rules(client_id, enabled);
+	CREATE INDEX idx_remap_rules_priority ON remap_rules(client_id, priority DESC);
+
+	-- Client rate limits table
+	CREATE TABLE client_rate_limits (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		client_id TEXT NOT NULL UNIQUE,
+		rpm_limit INTEGER,
+		tpm_limit INTEGER,
+		daily_limit INTEGER,
+		current_rpm INTEGER DEFAULT 0,
+		current_tpm INTEGER DEFAULT 0,
+		current_daily INTEGER DEFAULT 0,
+		last_reset TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+		FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE
+	);
+
+	-- Index for rate limit lookups
+	CREATE INDEX idx_client_rate_limits_client ON client_rate_limits(client_id);
+	`
+
+	_, err := tx.Exec(schema)
+	if err != nil {
+		return err
+	}
+
+	// Insert default global aliases (client_id = NULL for global)
+	defaultAliases := `
+	INSERT OR IGNORE INTO aliases (name, model_id, client_id) VALUES
+		('sonnet', 'claude-sonnet-4-5-20250929', NULL),
+		('opus', 'claude-opus-4-5-20250929', NULL),
+		('haiku', 'claude-3-5-haiku-20241022', NULL),
+		('gpt4', 'gpt-4o', NULL),
+		('gemini', 'gemini-1.5-pro', NULL);
+	`
+
+	_, err = tx.Exec(defaultAliases)
+	return err
+}
+
 // Provider represents a provider in the database
 type Provider struct {
 	ID                string
@@ -373,4 +511,23 @@ type SDKVersion struct {
 	SDKPath      string
 	CreatedAt    time.Time
 	DeprecatedAt *time.Time
+}
+
+// NOTE: Client, Alias, RemapRule, and RequestLog types are defined in their respective files:
+// - clients.go
+// - aliases.go
+// - remaps.go
+// - requests.go
+
+// ClientRateLimit represents a client's rate limit configuration
+type ClientRateLimit struct {
+	ID           int
+	ClientID     string
+	RPMLimit     *int
+	TPMLimit     *int
+	DailyLimit   *int
+	CurrentRPM   int
+	CurrentTPM   int
+	CurrentDaily int
+	LastReset    time.Time
 }

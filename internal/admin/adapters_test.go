@@ -290,7 +290,7 @@ func TestNewGeneratorAdapter(t *testing.T) {
 // Tests for KeyManagerAdapter
 func TestNewKeyManagerAdapter(t *testing.T) {
 	km := &keymanager.KeyManager{}
-	adapter := NewKeyManagerAdapter(km)
+	adapter := NewKeyManagerAdapter(km, nil) // db can be nil for this simple test
 	if adapter == nil {
 		t.Fatal("expected non-nil adapter")
 	}

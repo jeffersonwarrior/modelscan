@@ -9,10 +9,12 @@ import (
 
 // KeyManager manages API keys with round-robin selection and degradation tracking
 type KeyManager struct {
-	mu       sync.RWMutex
-	db       Database
-	cache    map[string][]*APIKey // provider -> sorted keys
-	cacheTTL time.Duration
+	mu        sync.RWMutex
+	db        Database
+	cache     map[string][]*APIKey // provider -> sorted keys
+	keyVault  map[string]string    // keyHash -> actualKey (SECURITY: plaintext in memory, no TTL)
+	cacheTTL  time.Duration
+	stopCh    chan struct{} // Signal to stop background refresh
 }
 
 // Database interface for key storage
@@ -63,7 +65,9 @@ func NewKeyManager(db Database, cfg Config) *KeyManager {
 	km := &KeyManager{
 		db:       db,
 		cache:    make(map[string][]*APIKey),
+		keyVault: make(map[string]string),
 		cacheTTL: cfg.CacheTTL,
+		stopCh:   make(chan struct{}),
 	}
 
 	// Start background refresh
@@ -93,26 +97,24 @@ func (km *KeyManager) GetKey(ctx context.Context, providerID string) (*APIKey, e
 		}
 	}
 
-	// Check for degraded keys that can be re-enabled
-	now := time.Now()
-	for _, key := range keys {
-		if key.Degraded && key.DegradedUntil != nil && now.After(*key.DegradedUntil) {
-			// Re-enable key
-			key.Degraded = false
-			key.DegradedUntil = nil
-		}
-	}
-
 	// Find key with lowest usage (round-robin)
+	// Note: We don't modify keys in-place to avoid race conditions.
+	// Degraded keys that have expired will be re-enabled on next cache refresh.
 	var bestKey *APIKey
 	minUsage := int(^uint(0) >> 1) // Max int
+	now := time.Now()
 
 	for _, key := range keys {
+		// Skip degraded keys (unless they've expired)
 		if key.Degraded {
-			continue
+			if key.DegradedUntil == nil || !now.After(*key.DegradedUntil) {
+				continue
+			}
+			// Key degradation has expired, can use it (cache will update on next refresh)
 		}
 
-		// Check rate limits
+		// Check rate limits (reading these values is racy, but acceptable
+		// as they're approximate metrics and limits are soft)
 		if key.RPMLimit != nil && key.RequestsCount >= *key.RPMLimit {
 			continue
 		}
@@ -155,6 +157,9 @@ func (km *KeyManager) MarkDegraded(ctx context.Context, keyID int, duration time
 	if err != nil {
 		return err
 	}
+	if key == nil {
+		return fmt.Errorf("key %d not found", keyID)
+	}
 
 	km.mu.Lock()
 	defer km.mu.Unlock()
@@ -195,19 +200,30 @@ func (km *KeyManager) refreshLoop() {
 	ticker := time.NewTicker(km.cacheTTL)
 	defer ticker.Stop()
 
-	for range ticker.C {
-		km.mu.RLock()
-		providers := make([]string, 0, len(km.cache))
-		for provider := range km.cache {
-			providers = append(providers, provider)
-		}
-		km.mu.RUnlock()
+	for {
+		select {
+		case <-ticker.C:
+			km.mu.RLock()
+			providers := make([]string, 0, len(km.cache))
+			for provider := range km.cache {
+				providers = append(providers, provider)
+			}
+			km.mu.RUnlock()
 
-		// Refresh each provider's keys
-		for _, provider := range providers {
-			km.refreshCache(provider)
+			// Refresh each provider's keys
+			for _, provider := range providers {
+				km.refreshCache(provider)
+			}
+		case <-km.stopCh:
+			return
 		}
 	}
+}
+
+// Close stops the background refresh loop and cleans up resources
+func (km *KeyManager) Close() error {
+	close(km.stopCh)
+	return nil
 }
 
 // ListKeys lists all keys for a provider
@@ -215,7 +231,29 @@ func (km *KeyManager) ListKeys(ctx context.Context, providerID string) ([]*APIKe
 	return km.db.ListActiveAPIKeys(providerID)
 }
 
-// Close cleans up resources
-func (km *KeyManager) Close() error {
-	return nil
+// RegisterActualKey stores the actual API key value in memory, keyed by its hash.
+// This must be called when a key is added so the actual value can be retrieved later.
+func (km *KeyManager) RegisterActualKey(keyHash, actualKey string) {
+	km.mu.Lock()
+	defer km.mu.Unlock()
+	km.keyVault[keyHash] = actualKey
+}
+
+// GetActualKey retrieves the actual API key string for a provider.
+// Uses round-robin selection to choose the best key, then returns its actual value.
+func (km *KeyManager) GetActualKey(ctx context.Context, providerID string) (string, error) {
+	key, err := km.GetKey(ctx, providerID)
+	if err != nil {
+		return "", err
+	}
+
+	km.mu.RLock()
+	actualKey, ok := km.keyVault[key.KeyHash]
+	km.mu.RUnlock()
+
+	if !ok {
+		return "", fmt.Errorf("actual key not found for provider %s (hash: %s)", providerID, key.KeyHash[:8])
+	}
+
+	return actualKey, nil
 }
