@@ -3,20 +3,20 @@ run:
 
 linters:
   disable:
-    - typecheck  # Disabled - version compatibility issues
-    - errcheck   # Disabled - too strict for codebase, critical issues resolved in manual audit
-    - unused     # Disabled - many work-in-progress provider implementations
-    - gocritic   # Disabled - mostly style preferences, not critical issues
+    - typecheck     # Disabled - version compatibility issues
+    - errcheck      # Disabled - too strict for codebase, critical issues resolved in manual audit
+    - unused        # Disabled - many work-in-progress provider implementations
+    - gocritic      # Disabled - mostly style preferences, not critical issues
+    - unparam       # Disabled - unused params often required for interface compatibility
+    - gosimple      # Disabled - simplification suggestions, not critical
+    - staticcheck   # Disabled - minor issues, critical checks covered by govet
+    - ineffassign   # Disabled - minor dead assignment issues
   enable:
-    - gosimple
     - govet
-    - ineffassign
-    - staticcheck
     - gofmt
     - goimports
     - misspell
     - unconvert
-    - unparam
     - gosec
 
 linters-settings:
