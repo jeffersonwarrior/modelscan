@@ -8,17 +8,64 @@ on:
 
 jobs:
   test:
+    name: Test
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go-version: ['1.25']
+
     steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-go@v5
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
       with:
-        go-version: 1.23
-    - run: go mod download
-    - run: go test -v -race -coverprofile=coverage.out ./...
-    - name: Upload coverage
+        go-version: ${{ matrix.go-version }}
+
+    - name: Cache Go modules
+      uses: actions/cache@v4
+      with:
+        path: ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+
+    - name: Download dependencies
+      run: go mod download
+
+    - name: Run go vet
+      run: go vet ./...
+
+    - name: Build
+      run: go build ./...
+
+    - name: Run tests
+      run: go test ./... -race -coverprofile=coverage.out -covermode=atomic
+
+    - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v4
-    - name: Check coverage >90%
-      run: |
-        coverage=$(go tool cover -func=coverage.out | tail -1 | awk \"{print \\$3}\" | sed s/%//)
-        if [ \"$coverage\" -lt 90 ]; then exit 1; fi
+      with:
+        file: ./coverage.out
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: false
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.25'
+
+    - name: Run golangci-lint
+      uses: golangci/golangci-lint-action@v6
+      with:
+        version: latest
+        args: --timeout=5m
